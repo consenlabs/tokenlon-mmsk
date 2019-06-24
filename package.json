@@ -33,7 +33,7 @@
     "0x.js": "1.0.8",
     "@babel/runtime": "7.3.1",
     "@sentry/node": "4.5.3",
-    "axios": "0.18.0",
+    "axios": "0.19.0",
     "babel-polyfill": "6.26.0",
     "binance-api-node": "0.8.18",
     "keythereum": "1.0.4",
