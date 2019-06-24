@@ -7,6 +7,7 @@ import checkPairs from './pairs'
 import checkIndicativePrice from './indicativePrice'
 import checkPrice from './price'
 import checkDeal from './deal'
+import { connectClient } from '../request/marketMaker/zerorpc'
 
 export const checkMMSK = async (config: ConfigForStart) => {
   const arr = [
@@ -31,6 +32,9 @@ export const checkMMSK = async (config: ConfigForStart) => {
   setConfig(config)
 
   const wallet = getWallet()
+  if (config.USE_ZERORPC) {
+    connectClient(config.ZERORPC_SERVER_ENDPOINT)
+  }
   await startUpdater(wallet)
 
   for (let i = 0; i < arr.length; i += 1) {
