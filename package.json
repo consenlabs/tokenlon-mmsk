@@ -40,7 +40,7 @@
     "koa": "2.5.3",
     "koa-bodyparser": "4.2.1",
     "koa-router": "7.4.0",
-    "lodash": "4.17.11",
+    "lodash": "4.17.14",
     "readline-sync": "1.4.9",
     "sockjs-client": "1.3.0",
     "stompjs": "2.3.3",
