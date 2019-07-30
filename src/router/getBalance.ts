@@ -3,9 +3,10 @@ import { getSupportedTokens } from '../utils/token'
 import { getTokenlonTokenBalance } from '../utils/balance'
 
 export const getBalance = async (ctx) => {
+  const { query } = ctx
   try {
     const tokenList = getSupportedTokens()
-    const token = tokenList.find(t => t.symbol.toUpperCase() === ctx.query.token.toUpperCase())
+    const token = query.token ? tokenList.find(t => t.symbol.toUpperCase() === query.token.toUpperCase()) : null
 
     if (token && token.contractAddress) {
       const balance = await getTokenlonTokenBalance(token)
@@ -16,7 +17,7 @@ export const getBalance = async (ctx) => {
     } else {
       ctx.body = {
         result: false,
-        message: `Don't support token ${ctx.query.token} trade`,
+        message: `Don't support token ${query.token} trade`,
       }
     }
   } catch (e) {
