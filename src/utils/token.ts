@@ -61,10 +61,14 @@ export const translateBaseQuote = (baseQuote) => {
   const tokens = getSupportedTokens()
   if (_.isString(baseQuote.base)) {
     const found = tokens.find(t => t.symbol.toUpperCase() === baseQuote.base.toUpperCase())
-    baseQuote.base = found.symbol
+    if (found) {
+      baseQuote.base = found.symbol
+    }
   }
   if (_.isString(baseQuote.quote)) {
     const found = tokens.find(t => t.symbol.toUpperCase() === baseQuote.quote.toUpperCase())
-    baseQuote.quote = found.symbol
+    if (found) {
+      baseQuote.quote = found.symbol
+    }
   }
 }
