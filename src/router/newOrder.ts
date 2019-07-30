@@ -2,13 +2,14 @@ import * as _ from 'lodash'
 import { getPrice } from '../request/marketMaker'
 import { PriceApiResult } from '../request/marketMaker/interface'
 import { getFormatedSignedOrder } from '../utils/order'
-import { getSupportedTokens } from '../utils/token'
+import { getSupportedTokens, translateBaseQuote } from '../utils/token'
 import { updaterStack } from '../utils/intervalUpdater'
 import { checkParams } from '../validations'
 import { transferPriceResultToRateBody } from '../utils/rate'
 
 export const newOrder = async (ctx) => {
   const { query } = ctx
+  translateBaseQuote(query)
   const checkResult = checkParams(query, true)
   let rateBody = {} as any
 

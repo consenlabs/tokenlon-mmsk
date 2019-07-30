@@ -5,7 +5,7 @@ import { getTokenlonTokenBalance } from '../utils/balance'
 export const getBalance = async (ctx) => {
   try {
     const tokenList = getSupportedTokens()
-    const token = tokenList.find(t => t.symbol === ctx.query.token)
+    const token = tokenList.find(t => t.symbol.toUpperCase() === ctx.query.token.toUpperCase())
 
     if (token && token.contractAddress) {
       const balance = await getTokenlonTokenBalance(token)

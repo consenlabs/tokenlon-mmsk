@@ -55,3 +55,16 @@ export const isSupportedBaseQuote = (tokens: SupportedToken[], baseQuote): boole
 export const getTokenBySymbol = (tokens, symbol) => {
   return tokens.find(t => t.symbol === symbol)
 }
+
+// 处理接口大小写情况，转换为系统设定格式
+export const translateBaseQuote = (baseQuote) => {
+  const tokens = getSupportedTokens()
+  if (_.isString(baseQuote.base)) {
+    const found = tokens.find(t => t.symbol.toUpperCase() === baseQuote.base.toUpperCase())
+    baseQuote.base = found.symbol
+  }
+  if (_.isString(baseQuote.quote)) {
+    const found = tokens.find(t => t.symbol.toUpperCase() === baseQuote.quote.toUpperCase())
+    baseQuote.quote = found.symbol
+  }
+}
