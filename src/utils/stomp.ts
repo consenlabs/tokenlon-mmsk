@@ -30,7 +30,7 @@ export default class StompForExchange {
           triedFailedTimes: this.triedFailedTimes,
         },
       })
-      throw new Error('connecting')
+      return
     }
 
     if (this.isTriedMaxTimes()) {
@@ -41,7 +41,7 @@ export default class StompForExchange {
           triedFailedTimes: this.triedFailedTimes,
         },
       })
-      throw new Error(`tried ${this.triedFailedTimes} times still can not connect`)
+      return
     }
 
     this.connecting = true
