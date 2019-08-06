@@ -58,7 +58,7 @@ export default class StompForExchange {
           this.connected = true
           this.resetTriedTimes()
         },
-        async (error) => {
+        (error) => {
           tracker.captureEvent({
             message: 'disconnect',
             level: Sentry.Severity.Warning,
