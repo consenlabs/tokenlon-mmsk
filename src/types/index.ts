@@ -21,7 +21,7 @@ export interface Wallet {
 export interface ConfigForStart {
   EXCHANGE_URL: string
   WEBSOCKET_URL: string
-  PROVIDER_URL: string
+  PROVIDER_URL: string | string[]
 
   WALLET_ADDRESS: string
   USE_KEYSTORE?: boolean
