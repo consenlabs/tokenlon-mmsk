@@ -37,19 +37,20 @@ export const newOrder = async (ctx) => {
 
   } else {
     const { rate, minAmount, maxAmount, quoteId } = rateBody
-    const { userAddr } = query
+    const { userAddr, feefactor } = query
     const config = updaterStack.markerMakerConfigUpdater.cacheResult
     const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
     const tokenList = getSupportedTokens()
     try {
-      const orderFormated = getFormatedSignedOrder(
-        ctx.query,
+      const orderFormated = getFormatedSignedOrder({
+        simpleOrder: ctx.query,
         rate,
-        userAddr.toLowerCase(),
+        userAddr: userAddr.toLowerCase(),
         tokenList,
         tokenConfigs,
         config,
-      )
+        queryFeeFactor: feefactor,
+      })
       ctx.body = {
         result: true,
         exchangeable: true,

@@ -14,7 +14,21 @@ const getFixPrecision = (decimal) => {
   return decimal < 8 ? decimal : 9
 }
 
-const getOrderAndFeeFactor = (simpleOrder, rate, tokenList: Token[], tokenConfigs: TokenConfig[], config: MarketMakerConfig) => {
+interface GetOrderAndFeeFactorParams {
+  simpleOrder: any
+  rate: number | string
+  tokenList: Token[]
+  tokenConfigs: TokenConfig[]
+  config: MarketMakerConfig
+  queryFeeFactor?: number
+}
+
+interface GetFormatedSignedOrderParams extends GetOrderAndFeeFactorParams {
+  userAddr: string
+}
+
+const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
+  const {simpleOrder, rate, tokenList, tokenConfigs, config, queryFeeFactor } = params
   const { side, amount } = simpleOrder
   const baseToken = getTokenBySymbol(tokenList, simpleOrder.base)
   const quoteToken = getTokenBySymbol(tokenList, simpleOrder.quote)
@@ -75,7 +89,9 @@ const getOrderAndFeeFactor = (simpleOrder, rate, tokenList: Token[], tokenConfig
   }
 
   const foundTokenConfig = tokenConfigs.find(t => t.symbol === takerToken.symbol)
-  const feeFactor = foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
+  const feeFactor = queryFeeFactor && +queryFeeFactor ? +queryFeeFactor : (
+    foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
+  )
 
   return {
     order,
@@ -83,8 +99,9 @@ const getOrderAndFeeFactor = (simpleOrder, rate, tokenList: Token[], tokenConfig
   }
 }
 
-export const getFormatedSignedOrder = (simpleOrder, rate, userAddr, tokenList: Token[], tokenConfigs: TokenConfig[], config: MarketMakerConfig) => {
-  const { order, feeFactor } = getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config)
+export const getFormatedSignedOrder = (params: GetFormatedSignedOrderParams) => {
+  const { userAddr } = params
+  const { order, feeFactor } = getOrderAndFeeFactor(params)
   const wallet = getWallet()
 
   const o = {
