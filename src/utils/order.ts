@@ -89,7 +89,7 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
   }
 
   const foundTokenConfig = tokenConfigs.find(t => t.symbol === takerToken.symbol)
-  const feeFactor = queryFeeFactor && +queryFeeFactor ? +queryFeeFactor : (
+  const feeFactor = queryFeeFactor && +queryFeeFactor > 0 ? +queryFeeFactor : (
     foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
   )
 
