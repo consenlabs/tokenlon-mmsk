@@ -1,5 +1,6 @@
 import { MarketMakerConfig, Token, TokenConfig } from '../types'
 import { assetDataUtils, generatePseudoRandomSalt, orderHashUtils, signatureUtils, SignerType, SignatureType } from '0x.js'
+import * as _ from 'lodash'
 import * as ethUtils from 'ethereumjs-util'
 import { toBN } from './math'
 import { getTokenBySymbol } from './token'
@@ -89,7 +90,7 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
   }
 
   const foundTokenConfig = tokenConfigs.find(t => t.symbol === takerToken.symbol)
-  const feeFactor = queryFeeFactor && +queryFeeFactor > 0 ? +queryFeeFactor : (
+  const feeFactor = !_.isUndefined(queryFeeFactor) && !_.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0 ? +queryFeeFactor : (
     foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
   )
 
