@@ -1,6 +1,7 @@
-import { IndicativePriceApiParams, IndicativePriceApiResult, PriceApiParams, PriceApiResult, DealApiParams, DealApiResult } from './interface'
+import { IndicativePriceApiParams, IndicativePriceApiResult, PriceApiParams, PriceApiResult, DealApiResult } from './interface'
 import { sendRequest } from '../_request'
 import { config } from '../../config'
+import { DealOrder } from '../../types'
 
 export const getPairs = async (): Promise<string[]> => {
   return sendRequest({
@@ -27,7 +28,7 @@ export const getPrice = async (data: PriceApiParams): Promise<PriceApiResult> =>
   })
 }
 
-export const dealOrder = async (data: DealApiParams): Promise<DealApiResult> => {
+export const dealOrder = async (data: DealOrder): Promise<DealApiResult> => {
   return sendRequest({
     method: 'post',
     url: `${config.HTTP_SERVER_ENDPOINT}/deal`,

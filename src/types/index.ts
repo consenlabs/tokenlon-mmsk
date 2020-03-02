@@ -40,8 +40,8 @@ export interface ConfigForStart {
 export interface DealOrder {
   makerToken: string
   takerToken: string
-  makerTokenAmount: string
-  takerTokenAmount: string
+  makerTokenAmount: number
+  takerTokenAmount: number
   quoteId: string
   timestamp: number
 }

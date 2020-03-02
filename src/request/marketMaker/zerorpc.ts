@@ -1,5 +1,6 @@
 import * as zerorpc from 'zerorpc'
-import { IndicativePriceApiParams, IndicativePriceApiResult, PriceApiParams, PriceApiResult, DealApiParams, DealApiResult } from './interface'
+import { IndicativePriceApiParams, IndicativePriceApiResult, PriceApiParams, PriceApiResult, DealApiResult } from './interface'
+import { DealOrder } from '../../types'
 
 const client = new zerorpc.Client()
 
@@ -32,6 +33,6 @@ export const getPrice = async (data: PriceApiParams): Promise<PriceApiResult> =>
   return promisify('price', data)
 }
 
-export const dealOrder = async (data: DealApiParams): Promise<DealApiResult> => {
+export const dealOrder = async (data: DealOrder): Promise<DealApiResult> => {
   return promisify('deal', data)
 }

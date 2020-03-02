@@ -1,6 +1,7 @@
 import * as httpClient from './http'
 import * as zerorpcClient from './zerorpc'
-import { IndicativePriceApiParams, IndicativePriceApiResult, PriceApiParams, PriceApiResult, DealApiParams, DealApiResult } from './interface'
+import { DealOrder } from '../../types'
+import { IndicativePriceApiParams, IndicativePriceApiResult, PriceApiParams, PriceApiResult, DealApiResult } from './interface'
 import { config } from '../../config'
 import { removeQuoteIdPrefix } from '../../utils/quoteId'
 
@@ -16,7 +17,7 @@ export const getPrice = (data: PriceApiParams): Promise<PriceApiResult> => {
   return config.USE_ZERORPC ? zerorpcClient.getPrice(data) : httpClient.getPrice(data)
 }
 
-export const dealOrder = (params: DealApiParams): Promise<DealApiResult> => {
+export const dealOrder = (params: DealOrder): Promise<DealApiResult> => {
   const { quoteId } = params
   const data = {
     ...params,

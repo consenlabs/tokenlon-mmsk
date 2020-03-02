@@ -3,8 +3,7 @@ import * as Sentry from '@sentry/node'
 import * as Koa from 'koa'
 import * as Router from 'koa-router'
 import * as Bodyparser from 'koa-bodyparser'
-import { getRate, newOrder, getSupportedTokenList, getBalances, getBalance, getOrderState, getOrdersHistory, reconnect, version } from './router'
-import StompForExchange from './utils/stomp'
+import { getRate, newOrder, getSupportedTokenList, getBalances, getBalance, getOrderState, getOrdersHistory, dealOrder, version } from './router'
 import { setConfig } from './config'
 import { ConfigForStart } from './types'
 import { startUpdater } from './utils/intervalUpdater'
@@ -16,7 +15,7 @@ import tracker from './utils/tracker'
 const app = new Koa()
 const router = new Router()
 
-const beforeStartAndGetStompClient = async (config: ConfigForStart, triedTimes?: number) => {
+const beforeStart = async (config: ConfigForStart, triedTimes?: number) => {
   const wallet = getWallet()
   triedTimes = triedTimes || 0
   try {
@@ -25,18 +24,6 @@ const beforeStartAndGetStompClient = async (config: ConfigForStart, triedTimes?:
     }
 
     await startUpdater(wallet)
-    const stompForExchange = new StompForExchange()
-    stompForExchange.connectStomp()
-    await new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (stompForExchange.connected) {
-          resolve()
-        } else {
-          reject()
-        }
-      }, 5000)
-    })
-    return stompForExchange
 
   } catch (e) {
     triedTimes += 1
@@ -61,7 +48,7 @@ const beforeStartAndGetStompClient = async (config: ConfigForStart, triedTimes?:
       throw e
     }
 
-    return beforeStartAndGetStompClient(config, triedTimes)
+    beforeStart(config, triedTimes)
   }
 }
 
@@ -80,16 +67,14 @@ export const startMMSK = async (config: ConfigForStart) => {
     // init sentry
     tracker.init({ SENTRY_DSN: config.SENTRY_DSN, NODE_ENV: config.NODE_ENV })
 
-    const stompForExchange = await beforeStartAndGetStompClient(config)
+    await beforeStart(config)
 
     // for imToken server
     router.get('/getRate', getRate)
     router.get('/newOrder', newOrder)
     router.get('/version', version)
     router.get('/getSupportedTokenList', getSupportedTokenList)
-    router.post('/reconnect', (ctx) => {
-      reconnect(ctx, stompForExchange)
-    })
+    router.post('/dealOrder', dealOrder)
 
     // for market maker
     router.get('/getOrderState', getOrderState)

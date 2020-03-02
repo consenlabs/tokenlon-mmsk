@@ -1,6 +1,6 @@
 {
   "name": "tokenlon-mmsk",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "",
   "main": "lib/index.js",
   "types": "src/globals.d.ts",
@@ -42,8 +42,6 @@
     "koa-router": "7.4.0",
     "lodash": "4.17.14",
     "readline-sync": "1.4.9",
-    "sockjs-client": "1.3.0",
-    "stompjs": "2.3.3",
     "web3": "1.0.0-beta.37",
     "zerorpc": "0.9.8"
   }
