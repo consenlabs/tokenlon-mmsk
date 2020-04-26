@@ -24,6 +24,6 @@ export interface PriceApiResult extends IndicativePriceApiResult {
   quoteId: string
 }
 
-export interface DealApiResult {
+export interface NotifyOrderResult {
   result: boolean
 }

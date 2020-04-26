@@ -46,6 +46,10 @@ export interface DealOrder {
   timestamp: number
 }
 
+export interface ExceptionOrder extends DealOrder {
+  status: 'FAILED' | 'TIMEOUT' | 'DELAY'
+}
+
 export interface Token {
   symbol: string
   logo: string
