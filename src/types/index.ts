@@ -47,7 +47,7 @@ export interface DealOrder {
 }
 
 export interface ExceptionOrder extends DealOrder {
-  status: 'FAILED' | 'TIMEOUT' | 'DELAY'
+  type: 'FAILED' | 'TIMEOUT' | 'DELAY'
 }
 
 export interface Token {
