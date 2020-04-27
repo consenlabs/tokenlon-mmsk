@@ -17,8 +17,8 @@ const handleNotifiedOrder = (order) => {
 }
 
 export const exceptionOrder = async (ctx) => {
-  const { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp } = ctx.request.body as ExceptionOrder
-  const order = { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp }
+  const { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp, type } = ctx.request.body as ExceptionOrder
+  const order = { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp, type }
 
   tracker.captureEvent({
     message: 'exception order trigger by HTTP',
