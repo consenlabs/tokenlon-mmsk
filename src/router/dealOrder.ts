@@ -19,6 +19,7 @@ const handleNotifiedOrder = (order) => {
 export const dealOrder = async (ctx) => {
   const { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp } = ctx.request.body as DealOrder
   const order = { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp }
+  let reqToMMErrMsg = null
 
   tracker.captureEvent({
     message: 'userDeal trigger by HTTP',
@@ -27,14 +28,23 @@ export const dealOrder = async (ctx) => {
   })
 
   if (!isNotifiedOrder(order)) {
-    dealOrderToMM(order)
+    try {
+      const res = await dealOrderToMM(order)
+      if (!res.result) {
+        reqToMMErrMsg = 'MM deal API not response result true'
+      }
+    } catch (e) {
+      reqToMMErrMsg = e.message
+    }
+
     handleNotifiedOrder(order)
 
   } else {
-    tracker.captureMessage('order alread notified', Sentry.Severity.Info)
+    tracker.captureMessage('deal order alread notified', Sentry.Severity.Info)
   }
 
   ctx.body = {
-    result: true,
+    result: reqToMMErrMsg ? false : true,
+    message: reqToMMErrMsg,
   }
 }

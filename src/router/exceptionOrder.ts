@@ -20,6 +20,8 @@ export const exceptionOrder = async (ctx) => {
   const { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp, type } = ctx.request.body as ExceptionOrder
   const order = { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp, type }
 
+  let reqToMMErrMsg = null
+
   tracker.captureEvent({
     message: 'exception order trigger by HTTP',
     level: Sentry.Severity.Log,
@@ -27,14 +29,23 @@ export const exceptionOrder = async (ctx) => {
   })
 
   if (!isNotifiedOrder(order)) {
-    exceptionOrderToMM(order)
+    try {
+      const res = await exceptionOrderToMM(order)
+      if (!res.result) {
+        reqToMMErrMsg = 'MM exception API not response result true'
+      }
+    } catch (e) {
+      reqToMMErrMsg = e.message
+    }
+
     handleNotifiedOrder(order)
 
   } else {
-    tracker.captureMessage('order alread notified', Sentry.Severity.Info)
+    tracker.captureMessage('exception order alread notified', Sentry.Severity.Info)
   }
 
   ctx.body = {
-    result: true,
+    result: reqToMMErrMsg ? false : true,
+    message: reqToMMErrMsg,
   }
 }
