@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/node'
 import * as Koa from 'koa'
 import * as Router from 'koa-router'
 import * as Bodyparser from 'koa-bodyparser'
-import { getRate, newOrder, getSupportedTokenList, getBalances, getBalance, getOrderState, getOrdersHistory, dealOrder, version } from './router'
+import { getRate, newOrder, getSupportedTokenList, getBalances, getBalance, getOrderState, getOrdersHistory, dealOrder, exceptionOrder, version } from './router'
 import { setConfig } from './config'
 import { ConfigForStart } from './types'
 import { startUpdater } from './utils/intervalUpdater'
@@ -75,6 +75,7 @@ export const startMMSK = async (config: ConfigForStart) => {
     router.get('/version', version)
     router.get('/getSupportedTokenList', getSupportedTokenList)
     router.post('/dealOrder', dealOrder)
+    router.post('/exceptionOrder', exceptionOrder)
 
     // for market maker
     router.get('/getOrderState', getOrderState)
