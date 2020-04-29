@@ -1,6 +1,7 @@
-import { IndicativePriceApiParams, IndicativePriceApiResult, PriceApiParams, PriceApiResult, DealApiParams, DealApiResult } from './interface'
+import { IndicativePriceApiParams, IndicativePriceApiResult, PriceApiParams, PriceApiResult, NotifyOrderResult } from './interface'
 import { sendRequest } from '../_request'
 import { config } from '../../config'
+import { DealOrder, ExceptionOrder } from '../../types'
 
 export const getPairs = async (): Promise<string[]> => {
   return sendRequest({
@@ -27,10 +28,21 @@ export const getPrice = async (data: PriceApiParams): Promise<PriceApiResult> =>
   })
 }
 
-export const dealOrder = async (data: DealApiParams): Promise<DealApiResult> => {
+export const dealOrder = async (data: DealOrder): Promise<NotifyOrderResult> => {
   return sendRequest({
     method: 'post',
     url: `${config.HTTP_SERVER_ENDPOINT}/deal`,
+    data,
+    header: {
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export const exceptionOrder = async (data: ExceptionOrder): Promise<NotifyOrderResult> => {
+  return sendRequest({
+    method: 'post',
+    url: `${config.HTTP_SERVER_ENDPOINT}/exception`,
     data,
     header: {
       'Content-Type': 'application/json',
