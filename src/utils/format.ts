@@ -34,5 +34,5 @@ export const fromUnitToDecimal = (balance, decimal, base) => {
 }
 
 export const roundAmount = (amount, precision) => {
-  toBN(Math.round(amount * Math.pow(10, precision))).dividedBy(Math.pow(10, precision)).toNumber()
+  return toBN(Math.round(amount * Math.pow(10, precision))).dividedBy(Math.pow(10, precision)).toNumber()
 }
