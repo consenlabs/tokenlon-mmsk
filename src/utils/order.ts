@@ -43,7 +43,7 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
     foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
   )
 
-  const useAmount = side === 'BUY' ? toBN((amount / (1 - feeFactor / 10000)).toFixed(Math.min(baseToken.decimal, 14))).toNumber() : amount
+  const useAmount = side === 'BUY' ? toBN((amount / (1 - feeFactor / 10000)).toFixed(4)).toNumber() : amount
   const amountBN = toBN(useAmount)
 
   // 针对用户买，对于做市商是提供卖单
