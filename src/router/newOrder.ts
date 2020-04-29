@@ -6,7 +6,6 @@ import { getSupportedTokens, translateBaseQuote } from '../utils/token'
 import { updaterStack } from '../utils/intervalUpdater'
 import { checkParams } from '../validations'
 import { transferPriceResultToRateBody } from '../utils/rate'
-import { toBN } from '../utils/math'
 
 export const newOrder = async (ctx) => {
   const { query } = ctx
@@ -21,11 +20,7 @@ export const newOrder = async (ctx) => {
   }
 
   try {
-    const { side, amount, feefactor } = query
-    const useAmount = side === 'BUY' ? toBN((amount / (1 - feefactor / 10000)).toFixed(8)).toNumber() : amount
-    Object.assign(simpleOrder, {
-      amount: useAmount,
-    })
+    const { side } = query
     const priceResult = await getPrice(simpleOrder)
     rateBody = transferPriceResultToRateBody(priceResult as PriceApiResult, side) as any
 

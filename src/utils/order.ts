@@ -30,10 +30,16 @@ interface GetFormatedSignedOrderParams extends GetOrderAndFeeFactorParams {
 
 const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
   const {simpleOrder, rate, tokenList, tokenConfigs, config, queryFeeFactor } = params
-  const { side, amount } = simpleOrder
+  const foundTokenConfig = tokenConfigs.find(t => t.symbol === takerToken.symbol)
+  const feeFactor = !_.isUndefined(queryFeeFactor) && !_.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0 ? +queryFeeFactor : (
+    foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
+  )
   const baseToken = getTokenBySymbol(tokenList, simpleOrder.base)
   const quoteToken = getTokenBySymbol(tokenList, simpleOrder.quote)
-  const amountBN = toBN(amount)
+
+  const { side, amount } = simpleOrder
+  const useAmount = side === 'BUY' ? toBN((amount / (1 - feeFactor / 10000)).toFixed(Math.min(baseToken.decimal, 14))).toNumber() : amount
+  const amountBN = toBN(useAmount)
   let makerToken = null
   let takerToken = null
   let makerAssetAmount = null
@@ -88,11 +94,6 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
     expirationTimeSeconds: toBN(getTimestamp() + (+config.orderExpirationSeconds)),
     exchangeAddress: config.exchangeContractAddress,
   }
-
-  const foundTokenConfig = tokenConfigs.find(t => t.symbol === takerToken.symbol)
-  const feeFactor = !_.isUndefined(queryFeeFactor) && !_.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0 ? +queryFeeFactor : (
-    foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
-  )
 
   return {
     order,
