@@ -32,3 +32,7 @@ export const fromDecimalToUnit = (balance, decimal) => {
 export const fromUnitToDecimal = (balance, decimal, base) => {
   return fromUnitToDecimalBN(balance, decimal).toString(base)
 }
+
+export const roundAmount = (amount, precision) => {
+  toBN(Math.round(amount * Math.pow(10, precision))).dividedBy(Math.pow(10, precision)).toNumber()
+}
