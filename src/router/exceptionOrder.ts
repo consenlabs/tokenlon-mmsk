@@ -3,6 +3,7 @@ import tracker from '../utils/tracker'
 import { exceptionOrder as exceptionOrderToMM } from '../request/marketMaker'
 import { ExceptionOrder } from '../types'
 import { getTimestamp } from '../utils/timestamp'
+import { removeQuoteIdPrefix } from '../utils/quoteId'
 
 let notifiedOrders = []
 
@@ -18,7 +19,7 @@ const handleNotifiedOrder = (order) => {
 
 export const exceptionOrder = async (ctx) => {
   const { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp, type } = ctx.request.body as ExceptionOrder
-  const order = { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp, type }
+  const order = { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId: removeQuoteIdPrefix(quoteId), timestamp, type }
 
   let reqToMMErrMsg = null
 

@@ -3,6 +3,7 @@ import tracker from '../utils/tracker'
 import { dealOrder as dealOrderToMM } from '../request/marketMaker'
 import { DealOrder } from '../types'
 import { getTimestamp } from '../utils/timestamp'
+import { removeQuoteIdPrefix } from '../utils/quoteId'
 
 let notifiedOrders = []
 
@@ -18,7 +19,7 @@ const handleNotifiedOrder = (order) => {
 
 export const dealOrder = async (ctx) => {
   const { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp } = ctx.request.body as DealOrder
-  const order = { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp }
+  const order = { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId: removeQuoteIdPrefix(quoteId), timestamp }
   let reqToMMErrMsg = null
 
   tracker.captureEvent({
