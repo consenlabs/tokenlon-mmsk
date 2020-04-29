@@ -12,7 +12,7 @@ import { getWethAddrIfIsEth } from './address'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
 
 const getFixPrecision = (decimal) => {
-  return decimal < 8 ? decimal : 9
+  return decimal < 8 ? decimal : 8
 }
 
 interface GetOrderAndFeeFactorParams {
