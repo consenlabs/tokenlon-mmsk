@@ -33,6 +33,7 @@ export const fromUnitToDecimal = (balance, decimal, base) => {
   return fromUnitToDecimalBN(balance, decimal).toString(base)
 }
 
+// precision + 1 的位置，进行四舍五入
 export const roundAmount = (amount, precision) => {
   return toBN(Math.round(amount * Math.pow(10, precision))).dividedBy(Math.pow(10, precision)).toNumber()
 }
