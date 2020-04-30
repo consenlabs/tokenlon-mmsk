@@ -12,7 +12,6 @@ export const newOrder = async (ctx) => {
   translateBaseQuote(query)
   const checkResult = checkParams(query, true)
   let rateBody = {} as any
-  const simpleOrder = query
 
   if (!checkResult.result) {
     ctx.body = checkResult
@@ -21,7 +20,7 @@ export const newOrder = async (ctx) => {
 
   try {
     const { side } = query
-    const priceResult = await getPrice(simpleOrder)
+    const priceResult = await getPrice(query)
     rateBody = transferPriceResultToRateBody(priceResult as PriceApiResult, side) as any
 
   } catch (e) {
@@ -38,13 +37,13 @@ export const newOrder = async (ctx) => {
 
   } else {
     const { rate, minAmount, maxAmount, quoteId } = rateBody
-    const { userAddr, feefactor } = simpleOrder
+    const { userAddr, feefactor } = query
     const config = updaterStack.markerMakerConfigUpdater.cacheResult
     const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
     const tokenList = getSupportedTokens()
     try {
       const orderFormated = getFormatedSignedOrder({
-        simpleOrder,
+        simpleOrder: query,
         rate,
         userAddr: userAddr.toLowerCase(),
         tokenList,
