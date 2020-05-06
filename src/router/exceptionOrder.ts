@@ -2,20 +2,7 @@ import * as Sentry from '@sentry/node'
 import tracker from '../utils/tracker'
 import { exceptionOrder as exceptionOrderToMM } from '../request/marketMaker'
 import { ExceptionOrder } from '../types'
-import { getTimestamp } from '../utils/timestamp'
 import { removeQuoteIdPrefix } from '../utils/quoteId'
-
-let notifiedOrders = []
-
-const isNotifiedOrder = (order) => {
-  return !!notifiedOrders.find(o => o.quoteId === order.quoteId)
-}
-
-const handleNotifiedOrder = (order) => {
-  // 只保留一天的成交已通知订单
-  notifiedOrders = notifiedOrders.filter(o => o.timestamp >= getTimestamp() - 24 * 60 * 60)
-  notifiedOrders.push(order)
-}
 
 export const exceptionOrder = async (ctx) => {
   const { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp, type } = ctx.request.body as ExceptionOrder
@@ -29,20 +16,13 @@ export const exceptionOrder = async (ctx) => {
     extra: order,
   })
 
-  if (!isNotifiedOrder(order)) {
-    try {
-      const res = await exceptionOrderToMM(order)
-      if (!res.result) {
-        reqToMMErrMsg = 'MM exception API not response result true'
-      }
-    } catch (e) {
-      reqToMMErrMsg = e.message
+  try {
+    const res = await exceptionOrderToMM(order)
+    if (!res.result) {
+      reqToMMErrMsg = 'MM exception API not response result true'
     }
-
-    handleNotifiedOrder(order)
-
-  } else {
-    tracker.captureMessage('exception order alread notified', Sentry.Severity.Info)
+  } catch (e) {
+    reqToMMErrMsg = e.message
   }
 
   ctx.body = {
