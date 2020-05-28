@@ -43,7 +43,7 @@ export const newOrder = async (ctx) => {
     const tokenList = getSupportedTokens()
     try {
       const orderFormated = getFormatedSignedOrder({
-        simpleOrder: ctx.query,
+        simpleOrder: query,
         rate,
         userAddr: userAddr.toLowerCase(),
         tokenList,

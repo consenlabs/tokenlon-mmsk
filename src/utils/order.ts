@@ -5,14 +5,14 @@ import * as ethUtils from 'ethereumjs-util'
 import { toBN } from './math'
 import { getTokenBySymbol } from './token'
 import { getTimestamp } from './timestamp'
-import { fromUnitToDecimalBN, orderBNToString } from './format'
+import { fromUnitToDecimalBN, orderBNToString, roundAmount } from './format'
 import { getWallet } from './wallet'
 import { ecSignOrderHash } from './sign'
 import { getWethAddrIfIsEth } from './address'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
 
 const getFixPrecision = (decimal) => {
-  return decimal < 8 ? decimal : 9
+  return decimal < 8 ? decimal : 8
 }
 
 interface GetOrderAndFeeFactorParams {
@@ -33,11 +33,18 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
   const { side, amount } = simpleOrder
   const baseToken = getTokenBySymbol(tokenList, simpleOrder.base)
   const quoteToken = getTokenBySymbol(tokenList, simpleOrder.quote)
-  const amountBN = toBN(amount)
-  let makerToken = null
-  let takerToken = null
+  const makerToken = side === 'BUY' ? baseToken : quoteToken
+  const takerToken = side === 'BUY' ? quoteToken : baseToken
   let makerAssetAmount = null
   let takerAssetAmount = null
+
+  const foundTokenConfig = tokenConfigs.find(t => t.symbol === takerToken.symbol)
+  const feeFactor = !_.isUndefined(queryFeeFactor) && !_.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0 ? +queryFeeFactor : (
+    foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
+  )
+
+  const useAmount = side === 'BUY' ? roundAmount(amount / (1 - feeFactor / 10000), 4) : amount
+  const amountBN = toBN(useAmount)
 
   // 针对用户买，对于做市商是提供卖单
   // 用户用quote 买base，做市商要构建卖base 换quote的order
@@ -51,9 +58,7 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
   // order makerAssetAmount is amount(DAI / base amount)
   // order takerAssetAmount is amount of WETH (amount / rate)
   if (side === 'BUY') {
-    makerToken = baseToken
-    takerToken = quoteToken
-    const makerTokenPrecision = getFixPrecision(makerToken.decimal)
+    const makerTokenPrecision = 4
     const takerTokenPrecision = getFixPrecision(takerToken.decimal)
     makerAssetAmount = fromUnitToDecimalBN(
       amountBN.toFixed(makerTokenPrecision), makerToken.decimal)
@@ -62,10 +67,8 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
 
   // user side SELL
   } else {
-    makerToken = quoteToken
-    takerToken = baseToken
     const makerTokenPrecision = getFixPrecision(makerToken.decimal)
-    const takerTokenPrecision = getFixPrecision(takerToken.decimal)
+    const takerTokenPrecision = 4
     makerAssetAmount = fromUnitToDecimalBN(
       (amountBN.times(rate)).toFixed(makerTokenPrecision), makerToken.decimal)
     takerAssetAmount = fromUnitToDecimalBN(
@@ -88,11 +91,6 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
     expirationTimeSeconds: toBN(getTimestamp() + (+config.orderExpirationSeconds)),
     exchangeAddress: config.exchangeContractAddress,
   }
-
-  const foundTokenConfig = tokenConfigs.find(t => t.symbol === takerToken.symbol)
-  const feeFactor = !_.isUndefined(queryFeeFactor) && !_.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0 ? +queryFeeFactor : (
-    foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
-  )
 
   return {
     order,
