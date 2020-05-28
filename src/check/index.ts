@@ -7,6 +7,7 @@ import checkPairs from './pairs'
 import checkIndicativePrice from './indicativePrice'
 import checkPrice from './price'
 import checkDeal from './deal'
+import checkException from './exception'
 import { connectClient } from '../request/marketMaker/zerorpc'
 
 export const checkMMSK = async (config: ConfigForStart) => {
@@ -26,6 +27,10 @@ export const checkMMSK = async (config: ConfigForStart) => {
     {
       title: 'checking deal API',
       check: checkDeal,
+    },
+    {
+      title: 'checking exception API',
+      check: checkException,
     },
   ]
 

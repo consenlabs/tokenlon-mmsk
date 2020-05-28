@@ -24,15 +24,6 @@ export interface PriceApiResult extends IndicativePriceApiResult {
   quoteId: string
 }
 
-export interface DealApiParams {
-  makerToken: string
-  takerToken: string
-  makerTokenAmount: number
-  takerTokenAmount: number
-  quoteId: string
-  timestamp: number
-}
-
-export interface DealApiResult {
+export interface NotifyOrderResult {
   result: boolean
 }
