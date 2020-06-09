@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/node'
 import * as Koa from 'koa'
 import * as Router from 'koa-router'
 import * as Bodyparser from 'koa-bodyparser'
+import * as logger from 'koa-logger'
 import { getRate, newOrder, getSupportedTokenList, getBalances, getBalance, getOrderState, getOrdersHistory, dealOrder, exceptionOrder, version } from './router'
 import { setConfig } from './config'
 import { ConfigForStart } from './types'
@@ -92,6 +93,7 @@ export const startMMSK = async (config: ConfigForStart) => {
         await next()
       })
       .use(Bodyparser())
+      .use(logger())
       .use(router.routes())
       .use(router.allowedMethods())
 
