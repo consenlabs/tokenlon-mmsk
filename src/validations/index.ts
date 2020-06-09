@@ -2,7 +2,7 @@ import * as _ from 'lodash'
 import * as Web3Export from 'web3'
 import { Wallet } from '../types'
 import * as ethUtils from 'ethereumjs-util'
-import { BigNumber } from '0x.js'
+import { BigNumber } from '@0xproject/utils'
 import { isSupportedBaseQuote, getSupportedTokens } from '../utils/token'
 
 const Web3 = Web3Export.default ? Web3Export.default : Web3Export

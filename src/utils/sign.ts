@@ -1,5 +1,5 @@
 import * as ethUtil from 'ethereumjs-util'
-import { ECSignature, signatureUtils, SignerType } from '0x.js'
+import { ECSignature, signatureUtils, SignerType } from '@0xproject/order-utils'
 import { leftPadWith0 } from './helper'
 import * as _ from 'lodash'
 
