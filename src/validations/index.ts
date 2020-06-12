@@ -7,7 +7,7 @@ import { isSupportedBaseQuote, getSupportedTokens } from '../utils/token'
 
 const Web3 = Web3Export.default ? Web3Export.default : Web3Export
 
-export const isValidWallet = (wallet: Wallet) => {
+export const isValidWallet = (wallet: Wallet): boolean => {
   if (!wallet) return false
   const { address, privateKey } = wallet
   if (!Web3.utils.isAddress(address)) return false

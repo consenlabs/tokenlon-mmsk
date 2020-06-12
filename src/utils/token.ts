@@ -1,4 +1,4 @@
-import * as _ from 'lodash'
+import { fromPairs } from 'lodash'
 import { updaterStack } from '../utils/intervalUpdater'
 import { SupportedToken } from '../types'
 
@@ -33,7 +33,7 @@ export const getSupportedTokens = (): SupportedToken[] => {
   const tokenStack = transferPairStrArrToTokenStack(pairsFromMMUpdater.cacheResult)
   const tokenList = tokenListFromImtokenUpdater.cacheResult
   const result = []
-  tokenList.forEach(token => {
+  for (const token of tokenList) {
     const { symbol } = token
     const opposites = tokenStack[symbol]
     if (opposites && opposites.length) {
@@ -42,7 +42,7 @@ export const getSupportedTokens = (): SupportedToken[] => {
         opposites: opposites.filter(symbol => !!tokenList.find(t => t.symbol === symbol)),
       })
     }
-  })
+  }
   return result
 }
 
@@ -57,15 +57,30 @@ export const getTokenBySymbol = (tokens, symbol) => {
 }
 
 // 处理接口大小写情况，转换为系统设定格式
-export const translateBaseQuote = (baseQuote) => {
+export const translateBaseQuote = (pair) => {
+  const tokens = fromPairs(getSupportedTokens().map(t => [t.symbol.toUpperCase(), t.symbol]))
+
+  if (typeof pair.base === 'string') {
+    const upperBase = pair.base.toUpperCase()
+    const sym = tokens[upperBase]
+    if (sym) pair.base = sym
+  }
+  if (typeof pair.quote === 'string') {
+    const upperQuote = pair.quote.toUpperCase()
+    const sym = tokens[upperQuote]
+    if (sym) pair.quote = sym
+  }
+}
+
+export const translateBaseQuote__ = (baseQuote) => {
   const tokens = getSupportedTokens()
-  if (_.isString(baseQuote.base)) {
+  if (typeof baseQuote.base === 'string') {
     const found = tokens.find(t => t.symbol.toUpperCase() === baseQuote.base.toUpperCase())
     if (found) {
       baseQuote.base = found.symbol
     }
   }
-  if (_.isString(baseQuote.quote)) {
+  if (typeof baseQuote.quote === 'string') {
     const found = tokens.find(t => t.symbol.toUpperCase() === baseQuote.quote.toUpperCase())
     if (found) {
       baseQuote.quote = found.symbol
