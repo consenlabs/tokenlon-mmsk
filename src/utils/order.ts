@@ -38,7 +38,7 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
   let makerAssetAmount = null
   let takerAssetAmount = null
 
-  const foundTokenConfig = tokenConfigs.find(t => t.symbol === takerToken.symbol)
+  const foundTokenConfig = tokenConfigs.find(t => t.symbol === makerToken.symbol)
   const feeFactor = !_.isUndefined(queryFeeFactor) && !_.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0 ? +queryFeeFactor : (
     foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
   )
