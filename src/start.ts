@@ -93,7 +93,14 @@ export const startMMSK = async (config: ConfigForStart) => {
         await next()
       })
       .use(Bodyparser())
-      .use(logger())
+      .use(logger((_str, args) => {
+        if (args.length > 3) { // dont log inbound request
+          args.shift(0)
+          args.unshift("INFO")
+          args.unshift((new Date()).toISOString())
+          console.log(args.join(" "))
+        }
+      }))
       .use(router.routes())
       .use(router.allowedMethods())
 
