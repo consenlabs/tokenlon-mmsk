@@ -2,11 +2,11 @@ import * as _ from 'lodash'
 import { getIndicativePrice } from '../request/marketMaker'
 import { checkParams } from '../validations'
 import { transferIndicativePriceResultToRateBody } from '../utils/rate'
-import { translateBaseQuote } from '../utils/token'
+import { translateQueryData } from '../utils/token'
 
 export const getRate = async (ctx) => {
   const { query } = ctx
-  translateBaseQuote(query)
+  const updatedQueryData = translateQueryData(query)
   const checkResult = checkParams(query, false)
   if (!checkResult.result) {
     ctx.body = checkResult
@@ -14,8 +14,8 @@ export const getRate = async (ctx) => {
   }
 
   try {
-    const { side } = query
-    const priceResult = await getIndicativePrice(query)
+    const { side } = updatedQueryData
+    const priceResult = await getIndicativePrice(updatedQueryData)
     ctx.body = transferIndicativePriceResultToRateBody(priceResult, side)
 
   } catch (e) {

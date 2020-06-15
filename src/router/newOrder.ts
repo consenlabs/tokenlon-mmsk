@@ -2,15 +2,15 @@ import * as _ from 'lodash'
 import { getPrice } from '../request/marketMaker'
 import { PriceApiResult } from '../request/marketMaker/interface'
 import { getFormatedSignedOrder } from '../utils/order'
-import { getSupportedTokens, translateBaseQuote } from '../utils/token'
+import { getSupportedTokens, translateQueryData } from '../utils/token'
 import { updaterStack } from '../utils/intervalUpdater'
 import { checkParams } from '../validations'
 import { transferPriceResultToRateBody } from '../utils/rate'
 
 export const newOrder = async (ctx) => {
   const { query } = ctx
-  translateBaseQuote(query)
-  const checkResult = checkParams(query, true)
+  const updatedQueryData = translateQueryData(query)
+  const checkResult = checkParams(updatedQueryData, true)
   let rateBody = {} as any
 
   if (!checkResult.result) {
@@ -19,8 +19,8 @@ export const newOrder = async (ctx) => {
   }
 
   try {
-    const { side } = query
-    const priceResult = await getPrice(query)
+    const { side } = updatedQueryData
+    const priceResult = await getPrice(updatedQueryData)
     rateBody = transferPriceResultToRateBody(priceResult as PriceApiResult, side) as any
 
   } catch (e) {
@@ -37,13 +37,13 @@ export const newOrder = async (ctx) => {
 
   } else {
     const { rate, minAmount, maxAmount, quoteId } = rateBody
-    const { userAddr, feefactor } = query
+    const { userAddr, feefactor } = updatedQueryData
     const config = updaterStack.markerMakerConfigUpdater.cacheResult
     const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
     const tokenList = getSupportedTokens()
     try {
       const orderFormated = getFormatedSignedOrder({
-        simpleOrder: query,
+        simpleOrder: updatedQueryData,
         rate,
         userAddr: userAddr.toLowerCase(),
         tokenList,
