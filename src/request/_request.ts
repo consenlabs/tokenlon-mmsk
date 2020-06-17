@@ -1,11 +1,11 @@
 import axios from 'axios'
-import * as AxiosLogger from 'axios-logger'
+import { requestLogger, responseLogger } from 'axios-logger'
 import * as _ from 'lodash'
 import { REQUEST_TIMEOUT } from '../constants'
 
 const client = axios.create()
-client.interceptors.request.use(AxiosLogger.requestLogger)
-client.interceptors.response.use(AxiosLogger.responseLogger)
+client.interceptors.request.use(requestLogger)
+client.interceptors.response.use(responseLogger)
 
 // `validateStatus` defines whether to resolve or reject the promise for a given
 // HTTP response status code. If `validateStatus` returns `true` (or is set to `null`
