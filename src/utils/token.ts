@@ -80,7 +80,7 @@ export const translateQueryData = (query: QueryInterface): QueryInterface => {
       // 但是，Token Config 返回的配置是 feeFactor
       const queryFeeFactor = query.feefactor
       // 用户 BUY base, 手续费就是 base 的 Token，即 order的 makerToken —— 对应做市商转出的币，用户收到的币
-      const foundTokenConfig = tokenConfigs.find(t => t.symbol === query.base)
+      const foundTokenConfig = tokenConfigs.find(t => t.symbol.toUpperCase() === query.base.toUpperCase())
       const feeFactor = !_.isUndefined(queryFeeFactor) && !_.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0 ? +queryFeeFactor : (
         foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
       )
