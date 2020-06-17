@@ -57,8 +57,11 @@ export const getTokenBySymbol = (tokens, symbol) => {
 }
 
 // 处理接口大小写情况，转换为系统设定格式
-export const translateBaseQuote = (pair) => {
-  const tokens = fromPairs(getSupportedTokens().map(t => [t.symbol.toUpperCase(), t.symbol]))
+export const translateBaseQuote = (pair, stdTokens = null) => {
+  if (stdTokens == null) {
+    stdTokens = getSupportedTokens()
+  }
+  const tokens = fromPairs(stdTokens.map(t => [t.symbol.toUpperCase(), t.symbol]))
 
   if (typeof pair.base === 'string') {
     const upperBase = pair.base.toUpperCase()
@@ -70,6 +73,8 @@ export const translateBaseQuote = (pair) => {
     const sym = tokens[upperQuote]
     if (sym) pair.quote = sym
   }
+
+  return pair
 }
 
 export const translateBaseQuote__ = (baseQuote) => {
