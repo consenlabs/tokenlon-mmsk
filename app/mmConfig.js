@@ -1,6 +1,5 @@
 module.exports = {
   EXCHANGE_URL: process.env.EXCHANGE_URL,
-  WEBSOCKET_URL: process.env.WEBSOCKET_URL,
   PROVIDER_URL: process.env.PROVIDER_URL,
 
   WALLET_ADDRESS: process.env.WALLET_ADDRESS,

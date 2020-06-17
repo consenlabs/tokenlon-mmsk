@@ -1,8 +1,6 @@
 import { Token, MarketMakerConfig, TokenConfig } from '../../types'
 import { config } from '../../config'
 import { jsonrpc } from '../_request'
-import { personalSign } from '../../utils/sign'
-import { getTimestamp } from '../../utils/timestamp'
 import { OrderForMM, GetOrdersHistoryForMMParams } from './interface'
 
 export const getMarketMakerConfig = async (signerAddr): Promise<MarketMakerConfig> => {
@@ -14,24 +12,6 @@ export const getMarketMakerConfig = async (signerAddr): Promise<MarketMakerConfi
       signerAddr,
     },
   )
-}
-
-const getTokenFromServer = async ({ timestamp, signature }): Promise<string> => {
-  return jsonrpc.get(
-    config.WEBSOCKET_URL,
-    {},
-    'auth.getMMJwtToken',
-    {
-      timestamp,
-      signature,
-    },
-  )
-}
-
-export const getMMJwtToken = async (privateKey: string) => {
-  const timestamp = getTimestamp()
-  const signature = personalSign(privateKey, timestamp.toString())
-  return getTokenFromServer({ timestamp, signature })
 }
 
 export const getTokenList = async (): Promise<Token[]> => {
