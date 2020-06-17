@@ -3,12 +3,13 @@ const mmsk = require('../lib')
 
 const cluster = require('cluster')
 const numCPUs = require('os').cpus().length
+const parallels = numCPUs > 8 ? 8 : numCPUs
 
 if (cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
 
   // Fork workers.
-  for (let i = 0; i < numCPUs; i++) {
+  for (let i = 0; i < parallels; i++) {
     cluster.fork()
   }
 
