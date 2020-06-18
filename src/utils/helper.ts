@@ -54,8 +54,10 @@ function ensureCorrectSymbolCase(query: QueryInterface): QueryInterface {
 function processBuyAmount(query: QueryInterface): QueryInterface {
   const result = { ...query }
   if (typeof query.base === 'string' && query.side === 'BUY') {
-    // 注意：query 上，后端传递的是 feeFactor，而不是 feeFactor
-    result.amount = applyFeeToAmount(calculateFeeFactor(query.base.toUpperCase(), query.feefactor), query.amount)
+    // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
+    // Token Config 返回的配置是 feeFactor
+    const feefactor = calculateFeeFactor(query.base.toUpperCase(), query.feefactor)
+    result.amount = applyFeeToAmount(query.amount, feefactor)
   }
   return result
 }
