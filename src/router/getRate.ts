@@ -7,7 +7,7 @@ import { translateQueryData } from '../utils/helper'
 export const getRate = async (ctx) => {
   const { query } = ctx
   const updatedQueryData = translateQueryData(query)
-  const checkResult = checkParams(query, false)
+  const checkResult = checkParams(updatedQueryData, false)
   if (!checkResult.result) {
     ctx.body = checkResult
     return
