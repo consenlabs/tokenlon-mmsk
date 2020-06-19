@@ -2,15 +2,17 @@ import * as _ from 'lodash'
 import { getPrice } from '../request/marketMaker'
 import { PriceApiResult } from '../request/marketMaker/interface'
 import { getFormatedSignedOrder } from '../utils/order'
-import { getSupportedTokens, translateBaseQuote } from '../utils/token'
+import { getSupportedTokens } from '../utils/token'
+import { translateQueryData } from '../utils/helper'
 import { updaterStack } from '../utils/intervalUpdater'
+import { QueryInterface } from './interface'
 import { checkParams } from '../validations'
 import { transferPriceResultToRateBody } from '../utils/rate'
 
 export const newOrder = async (ctx) => {
-  const { query } = ctx
-  translateBaseQuote(query)
-  const checkResult = checkParams(query, true)
+  const query: QueryInterface = ctx.query
+  const updatedQueryData = translateQueryData(query)
+  const checkResult = checkParams(updatedQueryData, true)
   let rateBody = {} as any
 
   if (!checkResult.result) {
@@ -19,8 +21,8 @@ export const newOrder = async (ctx) => {
   }
 
   try {
-    const { side } = query
-    const priceResult = await getPrice(query)
+    const { side } = updatedQueryData
+    const priceResult = await getPrice(updatedQueryData as any)
     rateBody = transferPriceResultToRateBody(priceResult as PriceApiResult, side) as any
 
   } catch (e) {
@@ -37,13 +39,15 @@ export const newOrder = async (ctx) => {
 
   } else {
     const { rate, minAmount, maxAmount, quoteId } = rateBody
-    const { userAddr, feefactor } = query
+    // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
+    // 但是，Token Config 返回的配置是 feeFactor
+    const { userAddr, feefactor } = updatedQueryData
     const config = updaterStack.markerMakerConfigUpdater.cacheResult
     const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
     const tokenList = getSupportedTokens()
     try {
       const orderFormated = getFormatedSignedOrder({
-        simpleOrder: query,
+        simpleOrder: updatedQueryData,
         rate,
         userAddr: userAddr.toLowerCase(),
         tokenList,

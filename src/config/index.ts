@@ -4,7 +4,6 @@ import { ConfigForStart } from '../types'
 
 const config = {
   EXCHANGE_URL: null,
-  WEBSOCKET_URL: null,
   PROVIDER_URL: null,
 
   WALLET_ADDRESS: null,

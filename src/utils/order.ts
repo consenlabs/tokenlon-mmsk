@@ -5,7 +5,7 @@ import * as ethUtils from 'ethereumjs-util'
 import { toBN } from './math'
 import { getTokenBySymbol } from './token'
 import { getTimestamp } from './timestamp'
-import { fromUnitToDecimalBN, orderBNToString, roundAmount } from './format'
+import { fromUnitToDecimalBN, orderBNToString } from './format'
 import { getWallet } from './wallet'
 import { ecSignOrderHash } from './sign'
 import { getWethAddrIfIsEth } from './address'
@@ -38,13 +38,11 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
   let makerAssetAmount = null
   let takerAssetAmount = null
 
-  const foundTokenConfig = tokenConfigs.find(t => t.symbol === takerToken.symbol)
+  const foundTokenConfig = tokenConfigs.find(t => t.symbol === makerToken.symbol)
   const feeFactor = !_.isUndefined(queryFeeFactor) && !_.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0 ? +queryFeeFactor : (
     foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
   )
-
-  const useAmount = side === 'BUY' ? roundAmount(amount / (1 - feeFactor / 10000), 4) : amount
-  const amountBN = toBN(useAmount)
+  const amountBN = toBN(amount)
 
   // 针对用户买，对于做市商是提供卖单
   // 用户用quote 买base，做市商要构建卖base 换quote的order
