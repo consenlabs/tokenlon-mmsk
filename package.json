@@ -1,6 +1,6 @@
 {
   "name": "tokenlon-mmsk",
-  "version": "0.6.1-alpha.1",
+  "version": "0.6.2",
   "description": "",
   "main": "lib/index.js",
   "types": "src/globals.d.ts",

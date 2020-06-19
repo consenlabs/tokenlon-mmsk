@@ -1,5 +1,4 @@
-import { fromPairs } from 'lodash'
-import { updaterStack } from '../utils/intervalUpdater'
+import { updaterStack } from './intervalUpdater'
 import { SupportedToken } from '../types'
 
 const helper = (stack, token1, token2) => {
@@ -54,41 +53,4 @@ export const isSupportedBaseQuote = (tokens: SupportedToken[], baseQuote): boole
 
 export const getTokenBySymbol = (tokens, symbol) => {
   return tokens.find(t => t.symbol === symbol)
-}
-
-// 处理接口大小写情况，转换为系统设定格式
-export const translateBaseQuote = (pair, stdTokens = null) => {
-  if (stdTokens == null) {
-    stdTokens = getSupportedTokens()
-  }
-  const tokens = fromPairs(stdTokens.map(t => [t.symbol.toUpperCase(), t.symbol]))
-
-  if (typeof pair.base === 'string') {
-    const upperBase = pair.base.toUpperCase()
-    const sym = tokens[upperBase]
-    if (sym) pair.base = sym
-  }
-  if (typeof pair.quote === 'string') {
-    const upperQuote = pair.quote.toUpperCase()
-    const sym = tokens[upperQuote]
-    if (sym) pair.quote = sym
-  }
-
-  return pair
-}
-
-export const translateBaseQuote__ = (baseQuote) => {
-  const tokens = getSupportedTokens()
-  if (typeof baseQuote.base === 'string') {
-    const found = tokens.find(t => t.symbol.toUpperCase() === baseQuote.base.toUpperCase())
-    if (found) {
-      baseQuote.base = found.symbol
-    }
-  }
-  if (typeof baseQuote.quote === 'string') {
-    const found = tokens.find(t => t.symbol.toUpperCase() === baseQuote.quote.toUpperCase())
-    if (found) {
-      baseQuote.quote = found.symbol
-    }
-  }
 }
