@@ -16,7 +16,7 @@
     "check": "node ./app/check.js",
     "clean": "rm -rf ./lib",
     "start": "node ./app/start.js",
-    "test": "mocha -r ts-node/register test/**/*.spec.ts",
+    "test": "mocha --exit -r ts-node/register test/**/*.spec.ts",
     "watch": "tsc -w"
   },
   "bugs": {
