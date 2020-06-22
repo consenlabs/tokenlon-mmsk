@@ -1,15 +1,23 @@
 {
   "name": "tokenlon-mmsk",
   "version": "0.6.2",
-  "description": "",
+  "description": "tokenlon market maker server kit",
+  "author": "imToken PTE. LTD.",
+  "license": "MIT",
   "main": "lib/index.js",
   "types": "src/globals.d.ts",
+  "homepage": "https://github.com/consenlabs/tokenlon-mmsk#readme",
+  "bugs": {
+    "url": "https://github.com/consenlabs/tokenlon-mmsk/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/consenlabs/tokenlon-mmsk.git"
   },
-  "author": "imToken PTE. LTD.",
-  "license": "MIT",
+  "files": [
+    "app/**/*",
+    "lib/**/*"
+  ],
   "scripts": {
     "build": "run-s clean build:commonjs",
     "build:commonjs": "tsc",
@@ -17,12 +25,9 @@
     "clean": "rm -rf ./lib",
     "start": "node ./app/start.js",
     "test": "mocha --exit -r ts-node/register test/**/*.spec.ts",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "release": "rm -f *.tgz{,.sha1sum.txt} && npm pack && sha1sum *.tgz > \"$(ls *.tgz | head -n 1).sha1sum.txt\""
   },
-  "bugs": {
-    "url": "https://github.com/consenlabs/tokenlon-mmsk/issues"
-  },
-  "homepage": "https://github.com/consenlabs/tokenlon-mmsk#readme",
   "devDependencies": {
     "@types/chai": "^4.2.11",
     "@types/mocha": "^7.0.2",
