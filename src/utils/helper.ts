@@ -2,6 +2,7 @@ import { updaterStack } from './intervalUpdater'
 import { roundAmount } from './format'
 import { QueryInterface } from '../router/interface'
 import { getSupportedTokens } from './token'
+import { SupportedToken } from '../types'
 
 export const leftPadWith0 = (str, len) => {
   str = str + ''
@@ -32,8 +33,8 @@ function calculateFeeFactor(baseSymbol: string, factor: number | null): number {
   return result
 }
 
-function ensureCorrectSymbolCase(query: QueryInterface): QueryInterface {
-  const tokens = getSupportedTokens()
+export function ensureCorrectSymbolCase(query: QueryInterface, supportedTokens: SupportedToken[] = null): QueryInterface {
+  const tokens = supportedTokens || getSupportedTokens()
   const result = { ...query }
 
   if (typeof query.base === 'string') {

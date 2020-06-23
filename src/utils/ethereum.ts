@@ -1,4 +1,4 @@
-import { BigNumber } from '0x.js'
+import { BigNumber } from '@0xproject/utils'
 import { toBN } from './math'
 import { web3RequestWrap } from './web3'
 import { addressWithout0x } from './address'

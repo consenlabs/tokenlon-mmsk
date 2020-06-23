@@ -1,5 +1,5 @@
 import { MarketMakerConfig, Token, TokenConfig } from '../types'
-import { assetDataUtils, generatePseudoRandomSalt, orderHashUtils, signatureUtils, SignerType, SignatureType } from '0x.js'
+import { assetDataUtils, generatePseudoRandomSalt, orderHashUtils, signatureUtils, SignerType, SignatureType } from '@0xproject/order-utils'
 import * as _ from 'lodash'
 import * as ethUtils from 'ethereumjs-util'
 import { toBN } from './math'

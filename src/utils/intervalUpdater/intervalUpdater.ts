@@ -24,7 +24,10 @@ export default class IntervalUpdater {
   intervalUpdater = () => {
     setTimeout(async () => {
       try {
-        this.cacheResult = await this.updater()
+        const result = await this.updater()
+        if (result != null) {
+          this.cacheResult = result
+        }
       } catch (error) {
         tracker.captureException(error)
         tracker.captureEvent({
@@ -41,7 +44,10 @@ export default class IntervalUpdater {
   }
 
   start = async () => {
-    this.cacheResult = await this.updater()
+    const result = await this.updater()
+    if (result != null) {
+      this.cacheResult = result
+    }
     this.intervalUpdater()
     return this.cacheResult
   }

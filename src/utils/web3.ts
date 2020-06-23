@@ -1,6 +1,6 @@
 import * as Web3Export from 'web3'
 import * as _ from 'lodash'
-import { BigNumber } from '0x.js'
+import { BigNumber } from '@0xproject/utils'
 import { config } from '../config'
 
 const Web3 = Web3Export.default ? Web3Export.default : Web3Export

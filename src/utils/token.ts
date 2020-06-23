@@ -1,5 +1,4 @@
-import * as _ from 'lodash'
-import { updaterStack } from '../utils/intervalUpdater'
+import { updaterStack } from './intervalUpdater'
 import { SupportedToken } from '../types'
 
 const helper = (stack, token1, token2) => {
@@ -33,7 +32,7 @@ export const getSupportedTokens = (): SupportedToken[] => {
   const tokenStack = transferPairStrArrToTokenStack(pairsFromMMUpdater.cacheResult)
   const tokenList = tokenListFromImtokenUpdater.cacheResult
   const result = []
-  tokenList.forEach(token => {
+  for (const token of tokenList) {
     const { symbol } = token
     const opposites = tokenStack[symbol]
     if (opposites && opposites.length) {
@@ -42,7 +41,7 @@ export const getSupportedTokens = (): SupportedToken[] => {
         opposites: opposites.filter(symbol => !!tokenList.find(t => t.symbol === symbol)),
       })
     }
-  })
+  }
   return result
 }
 

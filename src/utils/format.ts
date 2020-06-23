@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
 import { toBN } from './math'
 import { isBigNumber } from '../validations'
-import { BigNumber } from '0x.js'
+import { BigNumber } from '@0xproject/utils'
 
 const translateValueHelper = (obj: object, check: (v) => boolean, operate: (v) => any): any => {
   let result = {}

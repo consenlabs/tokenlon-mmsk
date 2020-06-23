@@ -1,4 +1,4 @@
-import { BigNumber } from '0x.js'
+import { BigNumber } from '@0xproject/utils'
 
 export const toBN = obj => new BigNumber(obj)
 

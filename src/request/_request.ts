@@ -1,6 +1,11 @@
 import axios from 'axios'
+import { requestLogger, responseLogger } from 'axios-logger'
 import * as _ from 'lodash'
 import { REQUEST_TIMEOUT } from '../constants'
+
+const client = axios.create()
+client.interceptors.request.use(requestLogger)
+client.interceptors.response.use(responseLogger)
 
 // `validateStatus` defines whether to resolve or reject the promise for a given
 // HTTP response status code. If `validateStatus` returns `true` (or is set to `null`
@@ -42,7 +47,7 @@ export const sendRequest = (config): Promise<any> => {
     ...config,
   }
   return new Promise((resolve, reject) => {
-    axios(rConfig).then(res => {
+    client(rConfig).then(res => {
       if (res.data) {
         resolve(res.data)
       } else {
