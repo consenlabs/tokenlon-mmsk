@@ -1,30 +1,30 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "sourceMap": true,
+    "baseUrl": ".",
     "outDir": "lib",
-    "rootDir": "src",
+    "moduleResolution": "node",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "pretty": true,
     "noImplicitThis": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationDir": "lib",
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "baseUrl": "./",
-    "pretty": true,
-    "lib": [
-      "es2017",
-      "dom"
+    "typeRoots": [
+      "node_modules/@types",
     ]
   },
   "include": [
-    "./src/**/*"
+    "./src/**/*",
+    "./test/**/*"
   ],
   "exclude": [
-    "node_modules"
+    "./node_modules",
+    "./generated_docs"
   ]
 }

@@ -5,7 +5,6 @@
   "author": "imToken PTE. LTD.",
   "license": "MIT",
   "main": "lib/index.js",
-  "types": "src/globals.d.ts",
   "homepage": "https://github.com/consenlabs/tokenlon-mmsk#readme",
   "bugs": {
     "url": "https://github.com/consenlabs/tokenlon-mmsk/issues"
@@ -31,7 +30,7 @@
   "devDependencies": {
     "@types/chai": "^4.2.11",
     "@types/mocha": "^7.0.2",
-    "@types/node": "10.17.25",
+    "@types/node": "^10.17.25",
     "@typescript-eslint/eslint-plugin": "^3.2.0",
     "@typescript-eslint/parser": "^3.2.0",
     "chai": "^4.2.0",
@@ -41,12 +40,15 @@
     "mocha": "^8.0.1",
     "npm-run-all": "4.1.5",
     "prettier": "^2.0.5",
-    "ts-node": "7.0.1",
-    "typescript": "^3.8.3"
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.6"
   },
   "dependencies": {
-    "@0xproject/order-utils": "^1.0.1",
-    "@0xproject/utils": "^2.0.0",
+    "@0x/subproviders": "6.0.8",
+    "0x-v3-order-utils": "npm:@0x/order-utils@10.2.5",
+    "0x-v3-utils": "npm:@0x/utils@5.4.1",
+    "0x-v2-order-utils": "npm:@0xproject/order-utils@^1.0.1",
+    "0x-v2-utils": "npm:@0xproject/utils@^2.0.0",
     "@babel/runtime": "7.3.1",
     "@koalex/koa-json-rpc": "^1.0.3",
     "@sentry/node": "4.5.3",
@@ -55,6 +57,7 @@
     "babel-polyfill": "6.26.0",
     "binance-api-node": "0.8.18",
     "dotenv": "^8.2.0",
+    "ethers": "^5.0.5",
     "keythereum": "1.0.4",
     "koa": "2.5.3",
     "koa-bodyparser": "4.2.1",

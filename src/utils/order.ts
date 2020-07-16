@@ -1,5 +1,12 @@
 import { MarketMakerConfig, Token, TokenConfig } from '../types'
-import { assetDataUtils, generatePseudoRandomSalt, orderHashUtils, signatureUtils, SignerType, SignatureType } from '@0xproject/order-utils'
+import {
+  assetDataUtils,
+  generatePseudoRandomSalt,
+  orderHashUtils,
+  SignatureType,
+  signatureUtils,
+  SignerType,
+} from '0x-v2-order-utils'
 import * as _ from 'lodash'
 import * as ethUtils from 'ethereumjs-util'
 import { toBN } from './math'
@@ -10,13 +17,21 @@ import { getWallet } from './wallet'
 import { ecSignOrderHash } from './sign'
 import { getWethAddrIfIsEth } from './address'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
+import { BigNumber } from '@0xproject/utils'
 
 const getFixPrecision = (decimal) => {
   return decimal < 8 ? decimal : 8
 }
 
+interface SimpleOrder {
+  side: string,
+  base: string,
+  quote: string,
+  amount?: number,
+}
+
 interface GetOrderAndFeeFactorParams {
-  simpleOrder: any
+  simpleOrder: SimpleOrder
   rate: number | string
   tokenList: Token[]
   tokenConfigs: TokenConfig[]
@@ -28,29 +43,8 @@ interface GetFormatedSignedOrderParams extends GetOrderAndFeeFactorParams {
   userAddr: string
 }
 
-const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
-  const {simpleOrder, rate, tokenList, tokenConfigs, config, queryFeeFactor } = params
-  const { side, amount } = simpleOrder
-  const baseToken = getTokenBySymbol(tokenList, simpleOrder.base)
-  const quoteToken = getTokenBySymbol(tokenList, simpleOrder.quote)
-  const makerToken = side === 'BUY' ? baseToken : quoteToken
-  const takerToken = side === 'BUY' ? quoteToken : baseToken
-  let makerAssetAmount = null
-  let takerAssetAmount = null
-
-  const foundTokenConfig = tokenConfigs.find(t => t.symbol === makerToken.symbol)
-  const feeFactor = !_.isUndefined(queryFeeFactor) && !_.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0 ? +queryFeeFactor : (
-    foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
-  )
-  const amountBN = toBN(amount)
-
-  // 针对用户买，对于做市商是提供卖单
-  // 用户用quote 买base，做市商要构建卖base 换quote的order
-  // 因此 order makerToken 是 base，takerToken 是 quote
-  // 例如：用户 ETH -> DAI
-  // rate 200
-  // side BUY
-
+export function extractAssetAmounts(makerToken, takerToken, side, rate: number | string, amountBN: BigNumber) {
+  let makerAssetAmount, takerAssetAmount
   // order makerToken is DAI
   // order takerToken is WETH
   // order makerAssetAmount is amount(DAI / base amount)
@@ -63,7 +57,7 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
     takerAssetAmount = fromUnitToDecimalBN(
       (amountBN.dividedBy(rate)).toFixed(takerTokenPrecision), takerToken.decimal)
 
-  // user side SELL
+    // user side SELL
   } else {
     const makerTokenPrecision = getFixPrecision(makerToken.decimal)
     const takerTokenPrecision = 4
@@ -72,6 +66,28 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
     takerAssetAmount = fromUnitToDecimalBN(
       amountBN.toFixed(takerTokenPrecision), takerToken.decimal)
   }
+  return { makerAssetAmount, takerAssetAmount }
+}
+
+const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
+  const {simpleOrder, rate, tokenList, tokenConfigs, config, queryFeeFactor } = params
+  const { side, amount } = simpleOrder
+  const baseToken = getTokenBySymbol(tokenList, simpleOrder.base)
+  const quoteToken = getTokenBySymbol(tokenList, simpleOrder.quote)
+  const makerToken = side === 'BUY' ? baseToken : quoteToken
+  const takerToken = side === 'BUY' ? quoteToken : baseToken
+
+  const foundTokenConfig = tokenConfigs.find(t => t.symbol === makerToken.symbol)
+  const feeFactor = !_.isUndefined(queryFeeFactor) && !_.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0 ? +queryFeeFactor : (
+    foundTokenConfig && foundTokenConfig.feeFactor ? foundTokenConfig.feeFactor : (config.feeFactor ? config.feeFactor : 0)
+  )
+  // 针对用户买，对于做市商是提供卖单
+  // 用户用quote 买base，做市商要构建卖base 换quote的order
+  // 因此 order makerToken 是 base，takerToken 是 quote
+  // 例如：用户 ETH -> DAI
+  // rate 200
+  // side BUY
+  const { makerAssetAmount, takerAssetAmount } = extractAssetAmounts(makerToken, takerToken, side, rate, toBN(amount))
 
   const order = {
     makerAddress: config.mmProxyContractAddress.toLowerCase(),
