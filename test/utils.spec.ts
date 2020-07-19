@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha'
-import { ensureCorrectSymbolCase } from '../src/utils/helper'
 import { QueryInterface } from '../src/types'
+import { ensureCorrectSymbolCase } from '../src/quoting'
 
 const supportTokens = [
   {

@@ -88,6 +88,6 @@ export enum Protocol {
 }
 
 export enum TradeMode {
-  RFQStram = 'RFQStram',
+  RFQStream = 'RFQStream',
   RFQTaker = 'RFQTaker',
 }

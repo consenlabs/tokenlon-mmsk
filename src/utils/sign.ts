@@ -1,7 +1,7 @@
 import * as ethUtil from 'ethereumjs-util'
 import { ECSignature, signatureUtils, SignerType } from '0x-v2-order-utils'
-import { leftPadWith0 } from './helper'
 import * as _ from 'lodash'
+import { utils } from 'ethers'
 
 type ECSignatureBuffer = {
   v: number
@@ -15,8 +15,8 @@ export const concatSig = (ecSignatureBuffer: ECSignatureBuffer): Buffer => {
   const vSig = ethUtil.bufferToInt(v)
   const rSig = ethUtil.fromSigned(r)
   const sSig = ethUtil.fromSigned(s)
-  const rStr = leftPadWith0(ethUtil.toUnsigned(rSig).toString('hex'), 64)
-  const sStr = leftPadWith0(ethUtil.toUnsigned(sSig).toString('hex'), 64)
+  const rStr = utils.hexZeroPad(ethUtil.toUnsigned(rSig).toString('hex'), 64)
+  const sStr = utils.hexZeroPad(ethUtil.toUnsigned(sSig).toString('hex'), 64)
   const vStr = ethUtil.stripHexPrefix(ethUtil.intToHex(vSig))
   return ethUtil.addHexPrefix(rStr.concat(sStr, vStr)).toString('hex')
 }

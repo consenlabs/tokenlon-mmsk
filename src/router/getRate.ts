@@ -1,22 +1,23 @@
-import * as _ from 'lodash'
 import { getIndicativePrice } from '../request/marketMaker'
 import { validateRequest } from '../validations'
-import { transferIndicativePriceResultToRateBody } from '../utils/rate'
-import { translateQueryData } from '../utils/helper'
+import { ValidationError } from './errors'
+import { constructQuoteResponse, translateQueryData } from '../quoting'
 
 export const getRate = async (ctx) => {
   const { query } = ctx
-  const updatedQueryData = translateQueryData(query)
-  const errMsg = validateRequest(updatedQueryData)
-  if (errMsg != null) {
-    ctx.body = { result: false, message: errMsg }
-    return
-  }
-
   try {
+    const updatedQueryData = translateQueryData(query)
+    const errMsg = validateRequest(updatedQueryData)
+    if (errMsg) throw new ValidationError(errMsg)
+
     const { side } = updatedQueryData
-    const priceResult = await getIndicativePrice(updatedQueryData)
-    ctx.body = transferIndicativePriceResultToRateBody(priceResult, side)
+    const quoteResult = await getIndicativePrice(updatedQueryData)
+    const quoteResponse = constructQuoteResponse(quoteResult, side)
+    ctx.body = {
+      result: true,
+      exchangeable: true,
+      ...quoteResponse
+    }
   } catch (e) {
     ctx.body = {
       result: false,

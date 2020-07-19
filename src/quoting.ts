@@ -1,13 +1,32 @@
-import { updaterStack } from './intervalUpdater'
-import { roundAmount } from './format'
-import { getSupportedTokens } from './token'
-import { SupportedToken, QueryInterface } from '../types'
+import { Protocol, QueryInterface, SIDE, SupportedToken } from './types'
+import { IndicativePriceApiResult, PriceApiResult } from './request/marketMaker/interface'
+import { BackendError } from './router/errors'
+import { toBN } from './utils/math'
+import { addQuoteIdPrefix } from './utils/quoteId'
+import { roundAmount } from './utils/format'
+import { updaterStack } from './utils/intervalUpdater'
+import { getSupportedTokens } from './utils/token'
 
-export const leftPadWith0 = (str, len) => {
-  str = str + ''
-  len = len - str.length
-  if (len <= 0) return str
-  return '0'.repeat(len) + str
+export const constructQuoteResponse = (priceResult: IndicativePriceApiResult, side: SIDE) => {
+  const { minAmount, maxAmount, message } = priceResult
+  if (priceResult.exchangeable === false || !priceResult.price) {
+    throw new BackendError(message || 'Can\'t support this trade')
+  }
+
+  const rate = side === 'BUY' ? 1 / priceResult.price : priceResult.price
+  return {
+    minAmount,
+    maxAmount,
+    rate: toBN((+rate).toFixed(8)).toNumber(),
+  }
+}
+
+export const appendQuoteIdToQuoteReponse = (priceResult: PriceApiResult, side: SIDE) => {
+  const rateBody = constructQuoteResponse(priceResult, side)
+  return {
+    ...rateBody,
+    quoteId: addQuoteIdPrefix(priceResult.quoteId),
+  }
 }
 
 function applyFeeToAmount(amount: number, feeFactor: number) {
@@ -32,6 +51,22 @@ function calculateFeeFactor(baseSymbol: string, factor: number | null): number {
   return result
 }
 
+function processBuyAmount(query: QueryInterface): QueryInterface {
+  const result = { ...query }
+  // TODO: process fee on v3 later
+  if (query.protocol == Protocol.ZeroXV3) {
+    return result
+  }
+
+  if (typeof query.base === 'string' && query.side === 'BUY') {
+    // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
+    // Token Config 返回的配置是 feeFactor
+    const feefactor = calculateFeeFactor(query.base.toUpperCase(), query.feefactor)
+    result.amount = applyFeeToAmount(query.amount, feefactor)
+  }
+  return result
+}
+
 export function ensureCorrectSymbolCase(query: QueryInterface, supportedTokens: SupportedToken[] = null): QueryInterface {
   const tokens = supportedTokens || getSupportedTokens()
   const result = { ...query }
@@ -47,17 +82,6 @@ export function ensureCorrectSymbolCase(query: QueryInterface, supportedTokens: 
     if (found) {
       result.quote = found.symbol
     }
-  }
-  return result
-}
-
-function processBuyAmount(query: QueryInterface): QueryInterface {
-  const result = { ...query }
-  if (typeof query.base === 'string' && query.side === 'BUY') {
-    // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
-    // Token Config 返回的配置是 feeFactor
-    const feefactor = calculateFeeFactor(query.base.toUpperCase(), query.feefactor)
-    result.amount = applyFeeToAmount(query.amount, feefactor)
   }
   return result
 }
