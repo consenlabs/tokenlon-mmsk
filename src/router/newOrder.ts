@@ -5,25 +5,29 @@ import { getSupportedTokens } from '../utils/token'
 import { translateQueryData } from '../utils/helper'
 import { updaterStack } from '../utils/intervalUpdater'
 import { QueryInterface } from '../types'
-import { checkParams } from '../validations'
+import { validateNewOrderRequest, validateRequest } from '../validations'
 import { transferPriceResultToRateBody } from '../utils/rate'
 
 export const newOrder = async (ctx) => {
   const query: QueryInterface = ctx.query
   const updatedQueryData = translateQueryData(query)
-  const checkResult = checkParams(updatedQueryData, true)
-  let rateBody = {} as any
+  let errMsg = validateRequest(updatedQueryData)
+  if (errMsg == null) {
+    const { amount, uniqId, userAddr } = query
+    errMsg = validateNewOrderRequest(amount, uniqId, userAddr)
+  }
 
-  if (!checkResult.result) {
-    ctx.body = checkResult
+  if (errMsg != null) {
+    ctx.body = { result: false, message: errMsg }
     return
   }
 
+  // request to market maker backend
+  let rateBody = {} as any
   try {
     const { side } = updatedQueryData
     const priceResult = await getPrice(updatedQueryData as any)
     rateBody = transferPriceResultToRateBody(priceResult as PriceApiResult, side) as any
-
   } catch (e) {
     ctx.body = {
       result: false,
@@ -35,7 +39,6 @@ export const newOrder = async (ctx) => {
 
   if (!rateBody.result) {
     ctx.body = rateBody
-
   } else {
     const { rate, minAmount, maxAmount, quoteId } = rateBody
     // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor

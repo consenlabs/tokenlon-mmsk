@@ -23,7 +23,7 @@
     "check": "node ./app/check.js",
     "clean": "rm -rf ./lib",
     "start": "node ./app/start.js",
-    "test": "mocha --exit -r ts-node/register test/**/*.spec.ts",
+    "test": "mocha --exit -r ts-node/register -r dotenv/config test/**/*.spec.ts",
     "watch": "tsc -w",
     "release": "rm -f *.tgz{,.sha1sum.txt} && npm pack && sha1sum *.tgz > \"$(ls *.tgz | head -n 1).sha1sum.txt\""
   },

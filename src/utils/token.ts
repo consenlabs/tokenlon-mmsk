@@ -45,9 +45,9 @@ export const getSupportedTokens = (): SupportedToken[] => {
   return result
 }
 
-export const isSupportedBaseQuote = (tokens: SupportedToken[], baseQuote): boolean => {
+export const isSupportedBaseQuote = (tokens: SupportedToken[], base: string, quote: string): boolean => {
   return tokens.some(t => {
-    return t.symbol === baseQuote.base && t.opposites.indexOf(baseQuote.quote) !== -1
+    return t.symbol === base && t.opposites.indexOf(quote) !== -1
   })
 }
 
