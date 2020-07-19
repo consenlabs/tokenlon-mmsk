@@ -69,3 +69,25 @@ export interface TokenConfig {
 }
 
 export type SIDE = 'BUY' | 'SELL'
+
+export interface QueryInterface {
+  base: string
+  quote: string
+  side: 'BUY' | 'SELL'
+  amount?: number
+  feefactor?: number
+  uniqId?: number | string
+  userAddr?: string
+  protocol?: Protocol
+  mode?: TradeMode
+}
+
+export enum Protocol {
+  ZeroXV2 = '0xProtocolV2',
+  ZeroXV3 = '0xProtocolV3',
+}
+
+export enum TradeMode {
+  RFQStram = 'RFQStram',
+  RFQTaker = 'RFQTaker',
+}

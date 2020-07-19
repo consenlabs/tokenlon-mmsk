@@ -1,11 +1,10 @@
-import * as _ from 'lodash'
 import { getPrice } from '../request/marketMaker'
 import { PriceApiResult } from '../request/marketMaker/interface'
 import { getFormatedSignedOrder } from '../utils/order'
 import { getSupportedTokens } from '../utils/token'
 import { translateQueryData } from '../utils/helper'
 import { updaterStack } from '../utils/intervalUpdater'
-import { QueryInterface } from './interface'
+import { QueryInterface } from '../types'
 import { checkParams } from '../validations'
 import { transferPriceResultToRateBody } from '../utils/rate'
 

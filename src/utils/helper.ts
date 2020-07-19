@@ -1,8 +1,7 @@
 import { updaterStack } from './intervalUpdater'
 import { roundAmount } from './format'
-import { QueryInterface } from '../router/interface'
 import { getSupportedTokens } from './token'
-import { SupportedToken } from '../types'
+import { SupportedToken, QueryInterface } from '../types'
 
 export const leftPadWith0 = (str, len) => {
   str = str + ''
