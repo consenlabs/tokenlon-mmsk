@@ -1,5 +1,5 @@
 import { generatePseudoRandomSalt, signatureUtils, SignedOrder, Order, assetDataUtils } from '0x-v3-order-utils'
-import { BigNumber } from '0x-v3-utils';
+import { BigNumber, providerUtils } from '0x-v3-utils'
 import { getTokenBySymbol } from '../../utils/token'
 import { toBN } from '../../utils/math'
 import { extractAssetAmounts } from '../../utils/order'
@@ -30,6 +30,7 @@ export const getRandomFutureDateInSeconds = (): BigNumber => {
 /**
  * Sign 0x v3 order by maker wallet
  * @param params
+ * @param makerWallet wallet provider for signing
  */
 export async function signOrderByMaker(params, makerWallet: BaseWalletSubprovider): Promise<SignedOrder> {
   const { userAddr, rate, simpleOrder, tokenList } = params
@@ -56,8 +57,8 @@ export async function signOrderByMaker(params, makerWallet: BaseWalletSubprovide
     salt: generatePseudoRandomSalt(),
     makerAssetAmount,
     takerAssetAmount,
-    makerAssetData: assetDataUtils.encodeERC20AssetData(makerToken.address),
-    takerAssetData: assetDataUtils.encodeERC20AssetData(takerToken.address),
+    makerAssetData: assetDataUtils.encodeERC20AssetData(makerToken.contractAddress),
+    takerAssetData: assetDataUtils.encodeERC20AssetData(takerToken.contractAddress),
     // TODO: add fee
     makerFeeAssetData: NULL_BYTES,
     takerFeeAssetData: NULL_BYTES,
@@ -67,7 +68,11 @@ export async function signOrderByMaker(params, makerWallet: BaseWalletSubprovide
 
   const pe = new Web3ProviderEngine()
   pe.addProvider(makerWallet)
-  const result = await signatureUtils.ecSignOrderAsync(pe, order, makerAddress)
-  pe.stop()
-  return result
+  try {
+    providerUtils.startProviderEngine(pe);
+    return await signatureUtils.ecSignOrderAsync(pe, order, makerAddress)
+  } finally {
+    pe.stop()
+  }
+
 }

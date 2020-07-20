@@ -1,6 +1,5 @@
 import * as ethUtil from 'ethereumjs-util'
 import { ECSignature, signatureUtils, SignerType } from '0x-v2-order-utils'
-import * as _ from 'lodash'
 import { utils } from 'ethers'
 
 type ECSignatureBuffer = {
@@ -9,17 +8,6 @@ type ECSignatureBuffer = {
   s: Buffer;
 }
 
-// sig is buffer
-export const concatSig = (ecSignatureBuffer: ECSignatureBuffer): Buffer => {
-  const { v, r, s } = ecSignatureBuffer
-  const vSig = ethUtil.bufferToInt(v)
-  const rSig = ethUtil.fromSigned(r)
-  const sSig = ethUtil.fromSigned(s)
-  const rStr = utils.hexZeroPad(ethUtil.toUnsigned(rSig).toString('hex'), 64)
-  const sStr = utils.hexZeroPad(ethUtil.toUnsigned(sSig).toString('hex'), 64)
-  const vStr = ethUtil.stripHexPrefix(ethUtil.intToHex(vSig))
-  return ethUtil.addHexPrefix(rStr.concat(sStr, vStr)).toString('hex')
-}
 export const personalECSign = (privateKey: string, msg: string): ECSignatureBuffer => {
   const message = ethUtil.toBuffer(msg)
   const msgHash = ethUtil.hashPersonalMessage(message)
@@ -28,17 +16,11 @@ export const personalECSign = (privateKey: string, msg: string): ECSignatureBuff
 
 export const personalSign = (privateKey: string, msg: string): string => {
   const sig = personalECSign(privateKey, msg)
-  return ethUtil.bufferToHex(concatSig(sig))
-}
-
-export const personalECSignHex = (privateKey: string, msg: string): ECSignature => {
-  const { r, s, v } = personalECSign(privateKey, msg)
-  const ecSignature = {
-    v,
-    r: ethUtil.bufferToHex(r),
-    s: ethUtil.bufferToHex(s),
-  }
-  return ecSignature
+  return utils.joinSignature({
+    v: sig.v,
+    r: ethUtil.bufferToHex(sig.r),
+    s: ethUtil.bufferToHex(sig.s),
+  })
 }
 
 // cp from https://github.com/0xProject/0x.js/blob/4d61d56639ad70b13245ca25047c6f299e746393/packages/0x.js/src/utils/signature_utils.ts
@@ -110,7 +92,7 @@ export const ecSignOrderHash = (
   // tslint:disable-next-line:custom-no-magic-numbers
   const validVParamValues = [27, 28]
   const ecSignatureRSV = parseSignatureHexAsRSV(signature)
-  if (_.includes(validVParamValues, ecSignatureRSV.v)) {
+  if (validVParamValues.includes(ecSignatureRSV.v)) {
     const isValidRSVSignature = signatureUtils.isValidECSignature(
       prefixedMsgHashHex,
       ecSignatureRSV,
@@ -125,7 +107,7 @@ export const ecSignOrderHash = (
     }
   }
   const ecSignatureVRS = parseSignatureHexAsVRS(signature)
-  if (_.includes(validVParamValues, ecSignatureVRS.v)) {
+  if (validVParamValues.includes(ecSignatureVRS.v)) {
     const isValidVRSSignature = signatureUtils.isValidECSignature(
       prefixedMsgHashHex,
       ecSignatureVRS,

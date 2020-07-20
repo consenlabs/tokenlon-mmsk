@@ -5,10 +5,10 @@ import { PrivateKeyWalletSubprovider } from '@0x/subproviders'
 import { Wallet } from 'ethers'
 
 describe('0x/v3/sign_order', function() {
-  it('signOrderByMaker', function() {
+  it('signOrderByMaker', async function() {
     const randomWallet  = Wallet.createRandom()
     const pkw = new PrivateKeyWalletSubprovider(process.env.WALLET_PRIVATE_KEY)
-    signOrderByMaker({
+    const signedOrder = await signOrderByMaker({
       userAddr: randomWallet.address,
       rate: 200,
       simpleOrder: {
@@ -19,15 +19,14 @@ describe('0x/v3/sign_order', function() {
       },
       tokenList: [
         {
-          symbol: 'ETH', decimal: 18, address: '0xd0a1e359811322d97991e03f863a0c30c2cf029c'
+          symbol: 'ETH', decimal: 18, contractAddress: '0xd0a1e359811322d97991e03f863a0c30c2cf029c'
         },
         {
-          symbol: 'DAI', decimal: 18, address: '0xc7cc3413f169a027dccfeffe5208ca4f38ef0c40'
+          symbol: 'DAI', decimal: 18, contractAddress: '0xc7cc3413f169a027dccfeffe5208ca4f38ef0c40'
         }
       ],
-    }, pkw).then(function(order) {
-      expect(order.signature.length).to.greaterThan(0)
-    })
+    }, pkw)
+    expect(signedOrder.signature.length).to.greaterThan(0)
   })
 
 })

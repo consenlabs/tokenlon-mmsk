@@ -1,7 +1,6 @@
 import { BigNumber } from '@0xproject/utils'
 import { toBN } from './math'
 import { web3RequestWrap } from './web3'
-import { addressWithout0x } from './address'
 import { utils } from 'ethers'
 
 export const getTokenBalance = ({ address, contractAddress }): Promise<BigNumber> => {
@@ -9,7 +8,7 @@ export const getTokenBalance = ({ address, contractAddress }): Promise<BigNumber
     return new Promise((resolve, reject) => {
       web3.eth.call({
         to: contractAddress,
-        data: `0x70a08231${utils.hexZeroPad(addressWithout0x(address), 64)}`,
+        data: `0x70a08231${utils.hexZeroPad(address, 64)}`,
       }, (err, res) => {
         if (err) {
           return reject(err)

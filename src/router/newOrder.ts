@@ -21,7 +21,20 @@ async function requestMarketMaker(query: QueryInterface) {
   return { simpleOrder, rateBody }
 }
 
-function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface) {
+type NumberOrString = number | string
+
+interface Response {
+  rate: NumberOrString
+  minAmount: NumberOrString
+  maxAmount: NumberOrString
+  order?: {
+    quoteId: any
+  }
+  quoteId?: any
+  signedOrder?: SignedOrder
+}
+
+function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Response {
   const { rate, minAmount, maxAmount, quoteId } = rateBody
   // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
   // 但是，Token Config 返回的配置是 feeFactor
@@ -29,7 +42,7 @@ function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface) {
   const config = updaterStack.markerMakerConfigUpdater.cacheResult
   const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
   const tokenList = getSupportedTokens()
-  const orderFormated = getFormatedSignedOrder({
+  const formattedOrder = getFormatedSignedOrder({
     simpleOrder,
     rate,
     userAddr: userAddr.toLowerCase(),
@@ -43,16 +56,22 @@ function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface) {
     minAmount,
     maxAmount,
     order: {
-      ...orderFormated,
+      ...formattedOrder,
       quoteId,
     },
   }
 }
 
-function assembleProtocolV3Response(makerReturnsRate) {
+async function assembleProtocolV3Response(makerReturnsRate, simpleOrder): Promise<Response> {
   const { rate, minAmount, maxAmount, quoteId } = makerReturnsRate
   const pkw = new PrivateKeyWalletSubprovider(getWallet().privateKey)
-  const signedOrder = signOrderByMaker(makerReturnsRate, pkw)
+  const tokenList = getSupportedTokens()
+  const signedOrder = await signOrderByMaker({
+    userAddr: simpleOrder.userAddr,
+    simpleOrder,
+    tokenList,
+    ...makerReturnsRate
+  }, pkw)
   return {
     rate,
     minAmount,
@@ -78,29 +97,22 @@ export const newOrder = async (ctx) => {
 
     const { simpleOrder, rateBody } = await requestMarketMaker(query)
 
-    if (!rateBody.result) {
-      ctx.body = rateBody
-    } else {
-      let resp: {
-        rate: any;
-        minAmount: any;
-        maxAmount: any; order?: { quoteId: any }; quoteId?: any; signedOrder?: Promise<SignedOrder> }
-      switch (query.protocol) {
-        case Protocol.ZeroXV2:
-          resp = assembleProtocolV2Response(rateBody, simpleOrder)
-          break;
-        case Protocol.ZeroXV3:
-          resp = assembleProtocolV3Response(rateBody)
-          break;
-        default:
-          throw new Error('Unknown protocol')
-      }
+    let resp: Response
+    switch (query.protocol) {
+      case Protocol.ZeroXV2:
+        resp = assembleProtocolV2Response(rateBody, simpleOrder)
+        break
+      case Protocol.ZeroXV3:
+        resp = await assembleProtocolV3Response(rateBody, simpleOrder)
+        break
+      default:
+        throw new Error('Unknown protocol')
+    }
 
-      ctx.body = {
-        result: true,
-        exchangeable: true,
-        ...resp
-      }
+    ctx.body = {
+      result: true,
+      exchangeable: true,
+      ...resp,
     }
   } catch (e) {
     ctx.body = {
