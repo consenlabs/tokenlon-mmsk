@@ -28,6 +28,7 @@ export interface ConfigForStart {
   WALLET_KEYSTORE?: object
   MMSK_SERVER_PORT?: string | number
 
+  CHAIN_ID?: number
   NODE_ENV?: 'DEVELOPMENT' | 'STAGING' | 'PRODUCTION'
   SENTRY_DSN?: string
 

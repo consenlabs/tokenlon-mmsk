@@ -1,31 +1,19 @@
 import { generatePseudoRandomSalt, signatureUtils, SignedOrder, Order, assetDataUtils } from '0x-v3-order-utils'
-import { BigNumber, providerUtils } from '0x-v3-utils'
+import { BigNumber, NULL_ADDRESS, NULL_BYTES, providerUtils } from '0x-v3-utils'
+import { BaseWalletSubprovider } from '@0x/subproviders/lib/src/subproviders/base_wallet_subprovider'
+import { Web3ProviderEngine } from '@0x/subproviders'
+import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses'
 import { getTokenBySymbol } from '../../utils/token'
 import { toBN } from '../../utils/math'
 import { extractAssetAmounts } from '../../utils/order'
-import { BaseWalletSubprovider } from '@0x/subproviders/lib/src/subproviders/base_wallet_subprovider'
-import { Web3ProviderEngine } from '@0x/subproviders'
-
-// tslint:disable-next-line:custom-no-magic-numbers
-export const ONE_SECOND_MS = 1000;
-// tslint:disable-next-line:custom-no-magic-numbers
-export const ONE_MINUTE_MS = ONE_SECOND_MS * 60;
-// tslint:disable-next-line:custom-no-magic-numbers
-export const TEN_MINUTES_MS = ONE_MINUTE_MS * 10;
-export const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
-export const NULL_BYTES = '0x';
-export const ZERO = new BigNumber(0);
-
-const NETWORK_CONFIGS = {
-  chainId: 42, // Kovan
-}
+import { FEE_RECIPIENT_ADDRESS, ONE_SECOND_MS, TEN_MINUTES_MS, ZERO } from '../../constants'
 
 /**
  * Returns an amount of seconds that is greater than the amount of seconds since epoch.
  */
 export const getRandomFutureDateInSeconds = (): BigNumber => {
-  return new BigNumber(Date.now() + TEN_MINUTES_MS).div(ONE_SECOND_MS).integerValue(BigNumber.ROUND_CEIL);
-};
+  return new BigNumber(Date.now() + TEN_MINUTES_MS).div(ONE_SECOND_MS).integerValue(BigNumber.ROUND_CEIL)
+}
 
 /**
  * Sign 0x v3 order by maker wallet
@@ -33,7 +21,7 @@ export const getRandomFutureDateInSeconds = (): BigNumber => {
  * @param makerWallet wallet provider for signing
  */
 export async function signOrderByMaker(params, makerWallet: BaseWalletSubprovider): Promise<SignedOrder> {
-  const { userAddr, rate, simpleOrder, tokenList } = params
+  const { userAddr, rate, simpleOrder, tokenList, chainID } = params
   const { side, amount } = simpleOrder
   const baseToken = getTokenBySymbol(tokenList, simpleOrder.base)
   const quoteToken = getTokenBySymbol(tokenList, simpleOrder.quote)
@@ -43,16 +31,17 @@ export async function signOrderByMaker(params, makerWallet: BaseWalletSubprovide
   const makerAddress = (await makerWallet.getAccountsAsync())[0]
 
   // Set up the Order and fill it
-  const randomExpiration = getRandomFutureDateInSeconds();
+  const randomExpiration = getRandomFutureDateInSeconds()
+  const contractAddresses = getContractAddressesForChainOrThrow(chainID)
 
   // Create the order
   const order: Order = {
-    chainId: NETWORK_CONFIGS.chainId,
-    exchangeAddress: NULL_ADDRESS, // TODO: add exchange contract address
+    chainId: chainID,
+    exchangeAddress: contractAddresses.exchange,
     makerAddress: makerAddress,
     takerAddress: userAddr,
     senderAddress: NULL_ADDRESS, // TODO: set sender as userAddress
-    feeRecipientAddress: NULL_ADDRESS, // TODO: fill recipient address as tokenlon
+    feeRecipientAddress: FEE_RECIPIENT_ADDRESS,
     expirationTimeSeconds: randomExpiration,
     salt: generatePseudoRandomSalt(),
     makerAssetAmount,
@@ -69,7 +58,7 @@ export async function signOrderByMaker(params, makerWallet: BaseWalletSubprovide
   const pe = new Web3ProviderEngine()
   pe.addProvider(makerWallet)
   try {
-    providerUtils.startProviderEngine(pe);
+    providerUtils.startProviderEngine(pe)
     return await signatureUtils.ecSignOrderAsync(pe, order, makerAddress)
   } finally {
     pe.stop()

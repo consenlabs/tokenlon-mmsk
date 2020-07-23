@@ -62,15 +62,16 @@ function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Resp
   }
 }
 
-async function assembleProtocolV3Response(makerReturnsRate, simpleOrder): Promise<Response> {
+async function assembleProtocolV3Response(makerReturnsRate, simpleOrder, chainID: number): Promise<Response> {
   const { rate, minAmount, maxAmount, quoteId } = makerReturnsRate
   const pkw = new PrivateKeyWalletSubprovider(getWallet().privateKey)
   const tokenList = getSupportedTokens()
   const signedOrder = await signOrderByMaker({
+    chainID,
     userAddr: simpleOrder.userAddr,
     simpleOrder,
     tokenList,
-    ...makerReturnsRate
+    ...makerReturnsRate,
   }, pkw)
   return {
     rate,
@@ -103,7 +104,7 @@ export const newOrder = async (ctx) => {
         resp = assembleProtocolV2Response(rateBody, simpleOrder)
         break
       case Protocol.ZeroXV3:
-        resp = await assembleProtocolV3Response(rateBody, simpleOrder)
+        resp = await assembleProtocolV3Response(rateBody, simpleOrder, ctx.CHAIN_ID)
         break
       default:
         throw new Error('Unknown protocol')

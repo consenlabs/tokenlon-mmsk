@@ -4,7 +4,18 @@ import * as Koa from 'koa'
 import * as Router from 'koa-router'
 import * as Bodyparser from 'koa-bodyparser'
 import * as logger from 'koa-logger'
-import { getRate, newOrder, getSupportedTokenList, getBalances, getBalance, getOrderState, getOrdersHistory, dealOrder, exceptionOrder, version } from './router'
+import {
+  getRate,
+  newOrder,
+  getSupportedTokenList,
+  getBalances,
+  getBalance,
+  getOrderState,
+  getOrdersHistory,
+  dealOrder,
+  exceptionOrder,
+  version,
+} from './router'
 import { setConfig } from './config'
 import { ConfigForStart } from './types'
 import { startUpdater } from './utils/intervalUpdater'
@@ -84,6 +95,8 @@ export const startMMSK = async (config: ConfigForStart) => {
     router.get('/getBalance', getBalance)
     router.get('/getBalances', getBalances)
 
+    app.context.chainID = config.CHAIN_ID || 42
+
     app
       .use(async (ctx, next) => {
         ctx.set('Strict-Transport-Security', 'max-age=2592000; includeSubDomains; preload')
@@ -96,9 +109,9 @@ export const startMMSK = async (config: ConfigForStart) => {
       .use(logger((_str, args) => {
         if (args.length > 3) { // dont log inbound request
           args.shift(0)
-          args.unshift("INFO")
+          args.unshift('INFO')
           args.unshift((new Date()).toISOString())
-          console.log(args.join(" "))
+          console.log(args.join(' '))
         }
       }))
       .use(router.routes())

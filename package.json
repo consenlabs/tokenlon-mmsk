@@ -1,6 +1,6 @@
 {
   "name": "tokenlon-mmsk",
-  "version": "0.6.2",
+  "version": "0.7.0-alpha.0",
   "description": "tokenlon market maker server kit",
   "author": "imToken PTE. LTD.",
   "license": "MIT",
@@ -44,11 +44,12 @@
     "typescript": "^3.9.6"
   },
   "dependencies": {
-    "@0x/subproviders": "6.0.8",
-    "0x-v3-order-utils": "npm:@0x/order-utils@10.2.5",
-    "0x-v3-utils": "npm:@0x/utils@5.4.1",
     "0x-v2-order-utils": "npm:@0xproject/order-utils@^1.0.1",
     "0x-v2-utils": "npm:@0xproject/utils@^2.0.0",
+    "0x-v3-order-utils": "npm:@0x/order-utils@10.2.5",
+    "0x-v3-utils": "npm:@0x/utils@5.4.1",
+    "@0x/contract-addresses": "^4.11.0",
+    "@0x/subproviders": "6.0.8",
     "@babel/runtime": "7.3.1",
     "@koalex/koa-json-rpc": "^1.0.3",
     "@sentry/node": "4.5.3",
