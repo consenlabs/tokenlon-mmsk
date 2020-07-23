@@ -104,7 +104,7 @@ export const newOrder = async (ctx) => {
         resp = assembleProtocolV2Response(rateBody, simpleOrder)
         break
       case Protocol.ZeroXV3:
-        resp = await assembleProtocolV3Response(rateBody, simpleOrder, ctx.CHAIN_ID)
+        resp = await assembleProtocolV3Response(rateBody, simpleOrder, ctx.chainID)
         break
       default:
         throw new Error('Unknown protocol')

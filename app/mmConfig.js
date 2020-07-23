@@ -19,7 +19,7 @@ module.exports = {
 
   //
   // Server config
-  CHAINID: process.env.CHAINID || 42,
+  CHAIN_ID: process.env.CHAIN_ID || 42,
   MMSK_SERVER_PORT: process.env.MMSK_SERVER_PORT || 80,
   SENTRY_DSN: '',
   NODE_ENV: 'PRODUCTION',

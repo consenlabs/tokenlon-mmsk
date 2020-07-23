@@ -14,6 +14,7 @@ async function main() {
     USE_ZERORPC: false,
     HTTP_SERVER_ENDPOINT: process.env.HTTP_SERVER_ENDPOINT,
     NODE_ENV: 'DEVELOPMENT',
+    CHAIN_ID: 42,
   })
 }
 
