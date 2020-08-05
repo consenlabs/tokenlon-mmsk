@@ -32,10 +32,15 @@ const beforeStart = async (config: ConfigForStart, triedTimes?: number) => {
   const wallet = getWallet()
   triedTimes = triedTimes || 0
   try {
-    const quoter: Quoter = new QuoteDispatcher(
-      config.ZERORPC_SERVER_ENDPOINT || config.HTTP_SERVER_ENDPOINT,
-      config.USE_ZERORPC ? QuoterProtocol.ZERORPC : QuoterProtocol.HTTP
-    )
+    let quoter: Quoter
+    if (config.EXTERNAL_QUOTER) {
+      quoter = config.EXTERNAL_QUOTER
+    } else {
+      quoter = new QuoteDispatcher(
+        config.ZERORPC_SERVER_ENDPOINT || config.HTTP_SERVER_ENDPOINT,
+        config.USE_ZERORPC ? QuoterProtocol.ZERORPC : QuoterProtocol.HTTP
+      )
+    }
     await startUpdater(quoter, wallet)
     return quoter
   } catch (e) {
@@ -50,7 +55,6 @@ const beforeStart = async (config: ConfigForStart, triedTimes?: number) => {
     })
 
     if (triedTimes > 10) {
-      delete config.WALLET_ADDRESS
       delete config.WALLET_KEYSTORE
       delete config.WALLET_PRIVATE_KEY
       tracker.captureEvent({

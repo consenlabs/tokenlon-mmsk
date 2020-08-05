@@ -1,3 +1,5 @@
+import { Quoter } from '../request/marketMaker'
+
 export interface MarketMakerConfig {
   mmId: number
   networkId: number
@@ -35,6 +37,7 @@ export interface ConfigForStart {
   USE_ZERORPC?: boolean
   HTTP_SERVER_ENDPOINT?: string
   ZERORPC_SERVER_ENDPOINT?: string
+  EXTERNAL_QUOTER?: Quoter
 }
 
 export interface DealOrder {

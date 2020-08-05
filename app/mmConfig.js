@@ -23,4 +23,5 @@ module.exports = {
   MMSK_SERVER_PORT: process.env.MMSK_SERVER_PORT || 80,
   SENTRY_DSN: '',
   NODE_ENV: 'PRODUCTION',
+  QUOTER: null,
 }

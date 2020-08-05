@@ -35,11 +35,15 @@ export const checkMMSK = async (config: ConfigForStart) => {
   ]
 
   setConfig(config)
-
-  const quoter: Quoter = new QuoteDispatcher(
-    config.ZERORPC_SERVER_ENDPOINT || config.HTTP_SERVER_ENDPOINT,
-    config.USE_ZERORPC ? QuoterProtocol.ZERORPC : QuoterProtocol.HTTP
-  )
+  let quoter: Quoter
+  if (config.EXTERNAL_QUOTER) {
+    quoter = config.EXTERNAL_QUOTER
+  } else {
+    quoter = new QuoteDispatcher(
+      config.ZERORPC_SERVER_ENDPOINT || config.HTTP_SERVER_ENDPOINT,
+      config.USE_ZERORPC ? QuoterProtocol.ZERORPC : QuoterProtocol.HTTP
+    )
+  }
   const wallet = getWallet()
   await startUpdater(quoter, wallet)
 

@@ -18,11 +18,11 @@ const config = {
 
   NODE_ENV: 'DEVELOPMENT',
   SENTRY_DSN: null,
-} as ConfigForStart
+}
 
 const setConfig = (conf: ConfigForStart) => {
   if (conf.USE_KEYSTORE) {
-    const KEYSTORE_PASSWORD = readlineSync.question('Please input your keystore\'s password: ', {
+    const KEYSTORE_PASSWORD = readlineSync.question("Please input your keystore's password: ", {
       hideEchoBack: true,
     })
     const privateKeyBuf = keythereum.recover(KEYSTORE_PASSWORD, conf.WALLET_KEYSTORE)
@@ -32,7 +32,4 @@ const setConfig = (conf: ConfigForStart) => {
   return Object.assign(config, conf)
 }
 
-export {
-  config,
-  setConfig,
-}
+export { config, setConfig }

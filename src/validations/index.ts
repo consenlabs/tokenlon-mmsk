@@ -6,9 +6,15 @@ import { BigNumber } from '@0xproject/utils'
 import { isSupportedBaseQuote, getSupportedTokens } from '../utils/token'
 
 export const isValidWallet = (wallet: Wallet): boolean => {
-  if (!wallet) return false
+  if (!wallet) {
+    console.error('wallet not found')
+    return false
+  }
   const { address, privateKey } = wallet
-  if (!utils.isAddress(address)) return false
+  if (!utils.isAddress(address)) {
+    console.error(`address(${address}) is not valid`)
+    return false
+  }
   const addr = ethUtils.privateToAddress(new Buffer(privateKey, 'hex'))
   return `0x${addr.toString('hex')}`.toLowerCase() === address.toLowerCase()
 }
