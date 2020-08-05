@@ -1,14 +1,15 @@
 import * as zerorpc from 'zerorpc'
-import { IndicativePriceApiParams, IndicativePriceApiResult, PriceApiParams, PriceApiResult, NotifyOrderResult } from './interface'
+import {
+  IndicativePriceApiParams,
+  IndicativePriceApiResult,
+  PriceApiParams,
+  PriceApiResult,
+  NotifyOrderResult,
+  Quoter,
+} from './types'
 import { DealOrder, ExceptionOrder } from '../../types'
 
-const client = new zerorpc.Client()
-
-export const connectClient = (endpoint) => {
-  client.connect(endpoint)
-}
-
-const promisify = (apiName, req?: object): Promise<any> => {
+const promisify = (client, apiName, req?: object): Promise<any> => {
   return new Promise((resolve, reject) => {
     client.invoke(apiName, req, (err, res) => {
       if (err) {
@@ -20,23 +21,32 @@ const promisify = (apiName, req?: object): Promise<any> => {
   })
 }
 
-export const getPairs = async (): Promise<string[]> => {
-  const res = await promisify('pairs')
-  return res.pairs
-}
+export class ZeroRPCQuoter implements Quoter {
+  client: zerorpc.Client
 
-export const getIndicativePrice = async (data: IndicativePriceApiParams): Promise<IndicativePriceApiResult> => {
-  return promisify('indicativePrice', data)
-}
+  constructor(endpoint: string) {
+    this.client = new zerorpc.Client()
+    this.client.connect(endpoint)
+  }
 
-export const getPrice = async (data: PriceApiParams): Promise<PriceApiResult> => {
-  return promisify('price', data)
-}
+  async getPairs (): Promise<string[]>  {
+    const res = await promisify(this.client, 'pairs')
+    return res.pairs
+  }
 
-export const dealOrder = async (data: DealOrder): Promise<NotifyOrderResult> => {
-  return promisify('deal', data)
-}
+  async getIndicativePrice(data: IndicativePriceApiParams): Promise<IndicativePriceApiResult>  {
+    return promisify(this.client, 'indicativePrice', data)
+  }
 
-export const exceptionOrder = async (data: ExceptionOrder): Promise<NotifyOrderResult> => {
-  return promisify('exception', data)
+  async getPrice(data: PriceApiParams): Promise<PriceApiResult>  {
+    return promisify(this.client, 'price', data)
+  }
+
+  async dealOrder(data: DealOrder): Promise<NotifyOrderResult>  {
+    return promisify(this.client, 'deal', data)
+  }
+
+  async exceptionOrder(data: ExceptionOrder): Promise<NotifyOrderResult>  {
+    return promisify(this.client, 'exception', data)
+  }
 }

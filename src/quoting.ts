@@ -1,16 +1,16 @@
 import { Protocol, QueryInterface, SIDE, SupportedToken } from './types'
-import { IndicativePriceApiResult, PriceApiResult } from './request/marketMaker/interface'
-import { BackendError } from './router/errors'
+import { IndicativePriceApiResult, PriceApiResult } from './request/marketMaker/types'
+import { BackendError } from './handler/errors'
 import { toBN } from './utils/math'
 import { addQuoteIdPrefix } from './utils/quoteId'
 import { roundAmount } from './utils/format'
-import { updaterStack } from './utils/intervalUpdater'
+import { updaterStack } from './worker'
 import { getSupportedTokens } from './utils/token'
 
 export const constructQuoteResponse = (priceResult: IndicativePriceApiResult, side: SIDE) => {
   const { minAmount, maxAmount, message } = priceResult
   if (priceResult.exchangeable === false || !priceResult.price) {
-    throw new BackendError(message || 'Can\'t support this trade')
+    throw new BackendError(message || "Can't support this trade")
   }
 
   const rate = side === 'BUY' ? 1 / priceResult.price : priceResult.price
@@ -37,7 +37,7 @@ function calculateFeeFactor(baseSymbol: string, factor: number | null): number {
   const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
   // 用户 BUY base, 手续费就是 base 的 Token，即 order的 makerToken —— 对应做市商转出的币，用户收到的币
   // 但是，Token Config 返回的配置是 feeFactor
-  const foundTokenConfig = tokenConfigs.find(t => t.symbol.toUpperCase() === baseSymbol)
+  const foundTokenConfig = tokenConfigs.find((t) => t.symbol.toUpperCase() === baseSymbol)
 
   const config = updaterStack.markerMakerConfigUpdater.cacheResult
   let result = config.feeFactor ? config.feeFactor : 0
@@ -67,18 +67,21 @@ function processBuyAmount(query: QueryInterface): QueryInterface {
   return result
 }
 
-export function ensureCorrectSymbolCase(query: QueryInterface, supportedTokens: SupportedToken[] = null): QueryInterface {
+export function ensureCorrectSymbolCase(
+  query: QueryInterface,
+  supportedTokens: SupportedToken[] = null
+): QueryInterface {
   const tokens = supportedTokens || getSupportedTokens()
   const result = { ...query }
 
   if (typeof query.base === 'string') {
-    const found = tokens.find(t => t.symbol.toUpperCase() === query.base.toUpperCase())
+    const found = tokens.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
     if (found) {
       result.base = found.symbol
     }
   }
   if (typeof query.quote === 'string') {
-    const found = tokens.find(t => t.symbol.toUpperCase() === query.quote.toUpperCase())
+    const found = tokens.find((t) => t.symbol.toUpperCase() === query.quote.toUpperCase())
     if (found) {
       result.quote = found.symbol
     }

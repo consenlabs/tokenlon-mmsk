@@ -1,8 +1,8 @@
-import { updaterStack } from './intervalUpdater'
+import { updaterStack } from '../worker'
 
 const getPrefix = () => `${updaterStack.markerMakerConfigUpdater.cacheResult.mmId}--`
 
-export const addQuoteIdPrefix = quoteId => `${getPrefix()}${quoteId}`
+export const addQuoteIdPrefix = (quoteId) => `${getPrefix()}${quoteId}`
 
 export const removeQuoteIdPrefix = (quoteId) => {
   const prefix = getPrefix()

@@ -1,4 +1,4 @@
-import { updaterStack } from './intervalUpdater'
+import { updaterStack } from '../worker'
 import { SupportedToken } from '../types'
 
 const helper = (stack, token1, token2) => {
@@ -19,7 +19,7 @@ const helper = (stack, token1, token2) => {
  */
 const transferPairStrArrToTokenStack = (pairStrArr) => {
   const stack = {}
-  pairStrArr.forEach(pairStr => {
+  pairStrArr.forEach((pairStr) => {
     const [tokenA, tokenB] = pairStr.split('/')
     helper(stack, tokenA, tokenB)
     helper(stack, tokenB, tokenA)
@@ -38,19 +38,23 @@ export const getSupportedTokens = (): SupportedToken[] => {
     if (opposites && opposites.length) {
       result.push({
         ...token,
-        opposites: opposites.filter(symbol => !!tokenList.find(t => t.symbol === symbol)),
+        opposites: opposites.filter((symbol) => !!tokenList.find((t) => t.symbol === symbol)),
       })
     }
   }
   return result
 }
 
-export const isSupportedBaseQuote = (tokens: SupportedToken[], base: string, quote: string): boolean => {
-  return tokens.some(t => {
+export const isSupportedBaseQuote = (
+  tokens: SupportedToken[],
+  base: string,
+  quote: string
+): boolean => {
+  return tokens.some((t) => {
     return t.symbol === base && t.opposites.indexOf(quote) !== -1
   })
 }
 
 export const getTokenBySymbol = (tokens, symbol) => {
-  return tokens.find(t => t.symbol === symbol)
+  return tokens.find((t) => t.symbol === symbol)
 }

@@ -1,8 +1,6 @@
-import * as _ from 'lodash'
-import { dealOrder } from '../request/marketMaker'
 import { getSupportedTokens } from '../utils/token'
 
-const check = async () => {
+const check = async (quoter) => {
   try {
     const tokenA = getSupportedTokens()[0]
     const mockOrder = {
@@ -13,7 +11,7 @@ const check = async () => {
       timestamp: 1551855180,
       quoteId: 'assdcjfsdhfdfoesfhafh',
     }
-    const resp = await dealOrder(mockOrder)
+    const resp = await quoter.dealOrder(mockOrder)
     if (resp.result !== false) {
       return `deal an non-exist order ${JSON.stringify(mockOrder)} but got result not false`
     }

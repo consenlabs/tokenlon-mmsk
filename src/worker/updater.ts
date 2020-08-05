@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/node'
-import { INTERVAL_UPDAER_TIME } from '../../constants'
-import tracker from '../tracker'
+import { INTERVAL_UPDAER_TIME } from '../constants'
+import tracker from '../utils/tracker'
 
 interface Props {
   INTERVAL_UPDAER_TIME?: number
@@ -8,7 +8,7 @@ interface Props {
   updater: () => {}
 }
 
-export default class IntervalUpdater {
+export default class Updater {
   INTERVAL_UPDAER_TIME: number
 
   constructor(props: Props) {

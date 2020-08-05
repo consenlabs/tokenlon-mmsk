@@ -1,7 +1,7 @@
 import { priceCheckHelper } from './priceCheckHelper'
-import { getPrice } from '../request/marketMaker'
+import { Quoter } from '../request/marketMaker'
 
-export default async () => {
+export default async (quoter: Quoter) => {
   const isIndicative = false
-  return priceCheckHelper(getPrice, isIndicative)
+  return priceCheckHelper(quoter.getPrice, isIndicative)
 }

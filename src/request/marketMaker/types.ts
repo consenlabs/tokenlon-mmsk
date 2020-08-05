@@ -1,4 +1,16 @@
-import { SIDE } from '../../types'
+import { DealOrder, ExceptionOrder, SIDE } from '../../types'
+
+export interface Quoter {
+  getPairs(): Promise<string[]>
+
+  getIndicativePrice(data: IndicativePriceApiParams): Promise<IndicativePriceApiResult>
+
+  getPrice(data: PriceApiParams): Promise<PriceApiResult>
+
+  dealOrder(params: DealOrder): Promise<NotifyOrderResult>
+
+  exceptionOrder(params: ExceptionOrder): Promise<NotifyOrderResult>
+}
 
 export interface IndicativePriceApiParams {
   base: string

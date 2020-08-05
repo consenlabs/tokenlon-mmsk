@@ -1,51 +1,65 @@
-import { IndicativePriceApiParams, IndicativePriceApiResult, PriceApiParams, PriceApiResult, NotifyOrderResult } from './interface'
+import {
+  IndicativePriceApiParams,
+  IndicativePriceApiResult,
+  PriceApiParams,
+  PriceApiResult,
+  NotifyOrderResult,
+  Quoter,
+} from './types'
 import { sendRequest } from '../_request'
-import { config } from '../../config'
 import { DealOrder, ExceptionOrder } from '../../types'
 
-export const getPairs = async (): Promise<string[]> => {
-  return sendRequest({
-    method: 'get',
-    url: `${config.HTTP_SERVER_ENDPOINT}/pairs`,
-  }).then((res: any) => {
-    return res.pairs
-  })
-}
+export class HTTPQuoter implements Quoter {
+  endpoint: string
 
-export const getIndicativePrice = async (data: IndicativePriceApiParams): Promise<IndicativePriceApiResult> => {
-  return sendRequest({
-    method: 'get',
-    url: `${config.HTTP_SERVER_ENDPOINT}/indicativePrice`,
-    params: data,
-  })
-}
+  constructor(endpoint: string) {
+    this.endpoint = endpoint
+  }
 
-export const getPrice = async (data: PriceApiParams): Promise<PriceApiResult> => {
-  return sendRequest({
-    method: 'get',
-    url: `${config.HTTP_SERVER_ENDPOINT}/price`,
-    params: data,
-  })
-}
+  async getPairs(): Promise<string[]> {
+    return sendRequest({
+      method: 'get',
+      url: `${this.endpoint}/pairs`,
+    }).then((res: any) => {
+      return res.pairs
+    })
+  }
 
-export const dealOrder = async (data: DealOrder): Promise<NotifyOrderResult> => {
-  return sendRequest({
-    method: 'post',
-    url: `${config.HTTP_SERVER_ENDPOINT}/deal`,
-    data,
-    header: {
-      'Content-Type': 'application/json',
-    },
-  })
-}
+  async getIndicativePrice(data: IndicativePriceApiParams): Promise<IndicativePriceApiResult> {
+    return sendRequest({
+      method: 'get',
+      url: `${this.endpoint}/indicativePrice`,
+      params: data,
+    })
+  }
 
-export const exceptionOrder = async (data: ExceptionOrder): Promise<NotifyOrderResult> => {
-  return sendRequest({
-    method: 'post',
-    url: `${config.HTTP_SERVER_ENDPOINT}/exception`,
-    data,
-    header: {
-      'Content-Type': 'application/json',
-    },
-  })
+  async getPrice(data: PriceApiParams): Promise<PriceApiResult> {
+    return sendRequest({
+      method: 'get',
+      url: `${this.endpoint}/price`,
+      params: data,
+    })
+  }
+
+  async dealOrder(data: DealOrder): Promise<NotifyOrderResult> {
+    return sendRequest({
+      method: 'post',
+      url: `${this.endpoint}/deal`,
+      data,
+      header: {
+        'Content-Type': 'application/json',
+      },
+    })
+  }
+
+  async exceptionOrder(data: ExceptionOrder): Promise<NotifyOrderResult> {
+    return sendRequest({
+      method: 'post',
+      url: `${this.endpoint}/exception`,
+      data,
+      header: {
+        'Content-Type': 'application/json',
+      },
+    })
+  }
 }

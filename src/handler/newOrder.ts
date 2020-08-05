@@ -1,8 +1,7 @@
-import { getPrice } from '../request/marketMaker'
-import { PriceApiResult } from '../request/marketMaker/interface'
+import { PriceApiResult, Quoter } from '../request/marketMaker'
 import { getFormatedSignedOrder } from '../utils/order'
 import { getSupportedTokens } from '../utils/token'
-import { updaterStack } from '../utils/intervalUpdater'
+import { updaterStack } from '../worker'
 import { Protocol, QueryInterface, TradeMode } from '../types'
 import { validateNewOrderRequest, validateRequest } from '../validations'
 import { signOrderByMaker } from '../0x/v3/sign_order'
@@ -12,11 +11,11 @@ import { SignedOrder } from '0x-v3-order-utils'
 import { ValidationError } from './errors'
 import { appendQuoteIdToQuoteReponse, translateQueryData } from '../quoting'
 
-async function requestMarketMaker(query: QueryInterface) {
+async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
   const simpleOrder = translateQueryData(query)
   // request to market maker backend
   const { side } = simpleOrder
-  const priceResult = await getPrice(simpleOrder as any)
+  const priceResult = await quoter.getPrice(simpleOrder as any)
   const rateBody = appendQuoteIdToQuoteReponse(priceResult as PriceApiResult, side) as any
   return { simpleOrder, rateBody }
 }
@@ -62,17 +61,24 @@ function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Resp
   }
 }
 
-async function assembleProtocolV3Response(makerReturnsRate, simpleOrder, chainID: number): Promise<Response> {
+async function assembleProtocolV3Response(
+  makerReturnsRate,
+  simpleOrder,
+  chainID: number
+): Promise<Response> {
   const { rate, minAmount, maxAmount, quoteId } = makerReturnsRate
   const pkw = new PrivateKeyWalletSubprovider(getWallet().privateKey)
   const tokenList = getSupportedTokens()
-  const signedOrder = await signOrderByMaker({
-    chainID,
-    userAddr: simpleOrder.userAddr,
-    simpleOrder,
-    tokenList,
-    ...makerReturnsRate,
-  }, pkw)
+  const signedOrder = await signOrderByMaker(
+    {
+      chainID,
+      userAddr: simpleOrder.userAddr,
+      simpleOrder,
+      tokenList,
+      ...makerReturnsRate,
+    },
+    pkw
+  )
   return {
     rate,
     minAmount,
@@ -89,6 +95,8 @@ export const newOrder = async (ctx) => {
     ...ctx.query,
   }
 
+  const quoter = ctx.quoter
+
   try {
     let errMsg = validateRequest(query)
     if (errMsg) throw new ValidationError(errMsg)
@@ -96,7 +104,7 @@ export const newOrder = async (ctx) => {
     errMsg = validateNewOrderRequest(amount, uniqId, userAddr)
     if (errMsg) throw new ValidationError(errMsg)
 
-    const { simpleOrder, rateBody } = await requestMarketMaker(query)
+    const { simpleOrder, rateBody } = await requestMarketMaker(quoter, query)
 
     let resp: Response
     switch (query.protocol) {
