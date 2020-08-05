@@ -1,4 +1,4 @@
-import { expect } from 'chai';
+import { expect } from 'chai'
 import 'mocha'
 import { QueryInterface } from '../src/types'
 import { ensureCorrectSymbolCase } from '../src/quoting'
@@ -36,25 +36,31 @@ const supportTokens = [
   },
 ]
 
-describe('translateBaseQuote()', function() {
-  it('does not change correct symbol', function() {
+describe('translateBaseQuote()', function () {
+  it('does not change correct symbol', function () {
     let pair: QueryInterface = { base: 'DAI', quote: 'ETH', side: 'BUY' }
     expect(ensureCorrectSymbolCase(pair, supportTokens)).to.eql({
-      base: 'DAI', quote: 'ETH', side: 'BUY'
+      base: 'DAI',
+      quote: 'ETH',
+      side: 'BUY',
     })
   })
 
-  it('correct symbol in pair', function() {
+  it('correct symbol in pair', function () {
     let pair: QueryInterface = { base: 'DAI', quote: 'Eth', side: 'BUY' }
     expect(ensureCorrectSymbolCase(pair, supportTokens)).to.eql({
-      base: 'DAI', quote: 'ETH', side: 'BUY'
+      base: 'DAI',
+      quote: 'ETH',
+      side: 'BUY',
     })
   })
 
-  it('correct symbol case in pair', function() {
+  it('correct symbol case in pair', function () {
     let pair: QueryInterface = { base: 'IMBTC', quote: 'ETH', side: 'BUY' }
     expect(ensureCorrectSymbolCase(pair, supportTokens)).to.eql({
-      base: 'imBTC', quote: 'ETH', side: 'BUY'
+      base: 'imBTC',
+      quote: 'ETH',
+      side: 'BUY',
     })
   })
 })
