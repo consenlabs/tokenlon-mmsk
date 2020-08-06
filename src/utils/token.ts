@@ -38,7 +38,7 @@ export const getSupportedTokens = (): SupportedToken[] => {
     if (opposites && opposites.length) {
       result.push({
         ...token,
-        opposites: opposites.filter((symbol) => !!tokenList.find((t) => t.symbol === symbol)),
+        opposites: opposites.filter((symbol) => !!getTokenBySymbol(tokenList, symbol)),
       })
     }
   }
@@ -51,10 +51,11 @@ export const isSupportedBaseQuote = (
   quote: string
 ): boolean => {
   return tokens.some((t) => {
-    return t.symbol === base && t.opposites.indexOf(quote) !== -1
+    const ops = t.opposites.map(o => o.toUpperCase())
+    return t.symbol.toUpperCase() === base.toUpperCase() && ops.indexOf(quote.toUpperCase()) !== -1
   })
 }
 
 export const getTokenBySymbol = (tokens, symbol) => {
-  return tokens.find((t) => t.symbol === symbol)
+  return tokens.find((t) => t.symbol.toUpperCase() === symbol.toUpperCase())
 }
