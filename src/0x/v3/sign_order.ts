@@ -1,4 +1,10 @@
-import { generatePseudoRandomSalt, signatureUtils, SignedOrder, Order, assetDataUtils } from '0x-v3-order-utils'
+import {
+  generatePseudoRandomSalt,
+  signatureUtils,
+  SignedOrder,
+  Order,
+  assetDataUtils,
+} from '0x-v3-order-utils'
 import { BigNumber, NULL_ADDRESS, NULL_BYTES, providerUtils } from '0x-v3-utils'
 import { BaseWalletSubprovider } from '@0x/subproviders/lib/src/subproviders/base_wallet_subprovider'
 import { Web3ProviderEngine } from '@0x/subproviders'
@@ -12,7 +18,9 @@ import { FEE_RECIPIENT_ADDRESS, ONE_SECOND_MS, TEN_MINUTES_MS, ZERO } from '../.
  * Returns an amount of seconds that is greater than the amount of seconds since epoch.
  */
 export const getRandomFutureDateInSeconds = (): BigNumber => {
-  return new BigNumber(Date.now() + TEN_MINUTES_MS).div(ONE_SECOND_MS).integerValue(BigNumber.ROUND_CEIL)
+  return new BigNumber(Date.now() + TEN_MINUTES_MS)
+    .div(ONE_SECOND_MS)
+    .integerValue(BigNumber.ROUND_CEIL)
 }
 
 /**
@@ -20,14 +28,23 @@ export const getRandomFutureDateInSeconds = (): BigNumber => {
  * @param params
  * @param makerWallet wallet provider for signing
  */
-export async function signOrderByMaker(params, makerWallet: BaseWalletSubprovider): Promise<SignedOrder> {
+export async function signOrderByMaker(
+  params,
+  makerWallet: BaseWalletSubprovider
+): Promise<SignedOrder> {
   const { userAddr, rate, simpleOrder, tokenList, chainID } = params
   const { side, amount } = simpleOrder
   const baseToken = getTokenBySymbol(tokenList, simpleOrder.base)
   const quoteToken = getTokenBySymbol(tokenList, simpleOrder.quote)
   const makerToken = side === 'BUY' ? baseToken : quoteToken
   const takerToken = side === 'BUY' ? quoteToken : baseToken
-  const { makerAssetAmount, takerAssetAmount } = extractAssetAmounts(makerToken, takerToken, side, rate, toBN(amount))
+  const { makerAssetAmount, takerAssetAmount } = extractAssetAmounts(
+    makerToken,
+    takerToken,
+    side,
+    rate,
+    toBN(amount)
+  )
   const makerAddress = (await makerWallet.getAccountsAsync())[0]
 
   // Set up the Order and fill it
@@ -63,5 +80,4 @@ export async function signOrderByMaker(params, makerWallet: BaseWalletSubprovide
   } finally {
     pe.stop()
   }
-
 }

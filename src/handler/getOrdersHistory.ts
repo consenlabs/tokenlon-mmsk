@@ -1,5 +1,5 @@
 import { getOrdersHistoryForMM } from '../request/imToken'
-import { getWallet } from '../utils/wallet'
+import { getWallet } from '../config'
 import { removeQuoteIdPrefix } from '../utils/quoteId'
 
 export const getOrdersHistory = async (ctx) => {
@@ -9,7 +9,7 @@ export const getOrdersHistory = async (ctx) => {
       ...ctx.query,
       signerAddr: wallet.address,
     })
-    orders.forEach(order => {
+    orders.forEach((order) => {
       if (order.quoteId) {
         order.quoteId = removeQuoteIdPrefix(order.quoteId)
       }

@@ -16,14 +16,14 @@ import {
   exceptionOrder,
   version,
 } from './handler'
-import { setConfig } from './config'
+import { setConfig, getWallet } from './config'
 import { ConfigForStart } from './types'
 import { startUpdater } from './worker'
-import { getWallet } from './utils/wallet'
 import { QuoteDispatcher, QuoterProtocol } from './request/marketMaker'
 import { isValidWallet } from './validations'
 import tracker from './utils/tracker'
 import { Quoter } from './request/marketMaker/types'
+import { determineProvider } from './utils/provider_engine'
 
 const app = new Koa()
 const router = new Router()
@@ -101,6 +101,7 @@ export const startMMSK = async (config: ConfigForStart) => {
     router.get('/getBalances', getBalances)
 
     app.context.chainID = config.CHAIN_ID || 42
+    app.context.provider = determineProvider(config.PROVIDER_URL)
     app.context.quoter = quoter
 
     app
@@ -135,7 +136,6 @@ export const startMMSK = async (config: ConfigForStart) => {
     })
 
     app.listen(MMSK_SERVER_PORT)
-
     console.log(`app listen on ${MMSK_SERVER_PORT}`)
   } catch (e) {
     console.log(e)

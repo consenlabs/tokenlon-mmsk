@@ -1,11 +1,9 @@
-import * as Web3Export from 'web3'
+import * as Web3 from 'web3'
 import * as _ from 'lodash'
 import { BigNumber } from '@0xproject/utils'
 import { config } from '../config'
 
-const Web3 = Web3Export.default ? Web3Export.default : Web3Export
-
-let web3 = null
+let provider = null
 
 type Handler = (web3: any) => Promise<BigNumber>
 
@@ -13,12 +11,12 @@ export const web3RequestWrap = async (handler: Handler) => {
   const urls = _.isArray(config.PROVIDER_URL) ? config.PROVIDER_URL : [config.PROVIDER_URL]
   let error = null
 
-  for (let url of urls) {
+  for (const url of urls) {
     try {
-      if (!web3 || error) {
-        web3 = new Web3(new Web3.providers.HttpProvider(url))
+      if (!provider || error) {
+        provider = new Web3(new Web3.providers.HttpProvider(url))
       }
-      return await handler(web3)
+      return await handler(provider)
     } catch (e) {
       error = e
     }

@@ -9,6 +9,7 @@ const config = {
   WALLET_ADDRESS: null,
   WALLET_PRIVATE_KEY: null,
   USE_KEYSTORE: true,
+
   WALLET_KEYSTORE: null,
   MMSK_SERVER_PORT: null,
 
@@ -26,10 +27,16 @@ const setConfig = (conf: ConfigForStart) => {
       hideEchoBack: true,
     })
     const privateKeyBuf = keythereum.recover(KEYSTORE_PASSWORD, conf.WALLET_KEYSTORE)
-    const privateKey = privateKeyBuf.toString('hex')
-    conf.WALLET_PRIVATE_KEY = privateKey
+    conf.WALLET_PRIVATE_KEY = privateKeyBuf.toString('hex')
   }
   return Object.assign(config, conf)
 }
 
-export { config, setConfig }
+const getWallet = () => {
+  return {
+    address: config.WALLET_ADDRESS,
+    privateKey: config.WALLET_PRIVATE_KEY,
+  }
+}
+
+export { config, setConfig, getWallet }

@@ -22,7 +22,7 @@ export interface Wallet {
 
 export interface ConfigForStart {
   EXCHANGE_URL: string
-  PROVIDER_URL: string | string[]
+  PROVIDER_URL: string
 
   WALLET_ADDRESS: string
   USE_KEYSTORE?: boolean
