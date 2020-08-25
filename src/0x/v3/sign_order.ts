@@ -12,13 +12,13 @@ import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses'
 import { getTokenBySymbol } from '../../utils/token'
 import { toBN } from '../../utils/math'
 import { extractAssetAmounts } from '../../utils/order'
-import { FEE_RECIPIENT_ADDRESS, ONE_SECOND_MS, TEN_MINUTES_MS, ZERO } from '../../constants'
+import { FEE_RECIPIENT_ADDRESS, ONE_SECOND_MS, ZERO } from '../../constants'
 
 /**
  * Returns an amount of seconds that is greater than the amount of seconds since epoch.
  */
 export const getRandomFutureDateInSeconds = (): BigNumber => {
-  return new BigNumber(Date.now() + TEN_MINUTES_MS)
+  return new BigNumber(Date.now() + ONE_SECOND_MS * 90) // expired 90s By default
     .div(ONE_SECOND_MS)
     .integerValue(BigNumber.ROUND_CEIL)
 }

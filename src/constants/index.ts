@@ -6,10 +6,10 @@ export const REQUEST_TIMEOUT = 10000
 export const INTERVAL_UPDAER_TIME = 5 * 60 * 1000
 
 // tslint:disable-next-line:custom-no-magic-numbers
-export const ONE_SECOND_MS = 1000;
+export const ONE_SECOND_MS = 1000
 // tslint:disable-next-line:custom-no-magic-numbers
-export const ONE_MINUTE_MS = ONE_SECOND_MS * 60;
+export const ONE_MINUTE_MS = ONE_SECOND_MS * 60
 // tslint:disable-next-line:custom-no-magic-numbers
-export const TEN_MINUTES_MS = ONE_MINUTE_MS * 10;
+export const TEN_MINUTES_MS = ONE_MINUTE_MS * 10
 export const NULL_ADDRESS = `0x${'0'.repeat(40)}`
-export const ZERO = new BigNumber(0);
+export const ZERO = new BigNumber(0)
