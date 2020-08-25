@@ -72,13 +72,13 @@ async function assembleProtocolV3Response(
 ): Promise<Response> {
   const { rate, minAmount, maxAmount, quoteId } = makerReturnsRate
   const pkw = new PrivateKeyWalletSubprovider(getWallet().privateKey)
-  const tokenList = getSupportedTokens()
+  const { tokenListFromImtokenUpdater: tokenList } = updaterStack
   const signedOrder = await signOrderByMaker(
     {
       chainID,
       userAddr: simpleOrder.userAddr,
       simpleOrder,
-      tokenList,
+      tokenList: tokenList.cacheResult,
       ...makerReturnsRate,
     },
     pkw

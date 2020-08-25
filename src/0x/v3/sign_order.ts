@@ -33,9 +33,9 @@ export async function signOrderByMaker(
   makerWallet: BaseWalletSubprovider
 ): Promise<SignedOrder> {
   const { userAddr, rate, simpleOrder, tokenList, chainID } = params
-  const { side, amount } = simpleOrder
-  const baseToken = getTokenBySymbol(tokenList, simpleOrder.base)
-  const quoteToken = getTokenBySymbol(tokenList, simpleOrder.quote)
+  const { side, amount, base, quote } = simpleOrder
+  const baseToken = getTokenBySymbol(tokenList, base == 'ETH' ? 'WETH' : base)
+  const quoteToken = getTokenBySymbol(tokenList, quote == 'ETH' ? 'WETH' : quote)
   const makerToken = side === 'BUY' ? baseToken : quoteToken
   const takerToken = side === 'BUY' ? quoteToken : baseToken
   const { makerAssetAmount, takerAssetAmount } = extractAssetAmounts(
