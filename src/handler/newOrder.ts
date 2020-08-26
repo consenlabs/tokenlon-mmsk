@@ -9,9 +9,8 @@ import { getWallet } from '../config'
 import { ValidationError } from './errors'
 import { appendQuoteIdToQuoteReponse, translateQueryData } from '../quoting'
 
-import { PrivateKeyWalletSubprovider, Web3ProviderEngine } from '@0x/subproviders'
-import { ContractWrappers } from '@0x/contract-wrappers'
-import { SignedOrder } from '0x-v3-order-utils'
+import { PrivateKeyWalletSubprovider } from '@0x/subproviders'
+import { SignedOrder, orderHashUtils } from '0x-v3-order-utils'
 
 async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
   const simpleOrder = translateQueryData(query)
@@ -67,7 +66,6 @@ function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Resp
 async function assembleProtocolV3Response(
   makerReturnsRate,
   simpleOrder,
-  provider: Web3ProviderEngine,
   chainID: number
 ): Promise<Response> {
   const { rate, minAmount, maxAmount, quoteId } = makerReturnsRate
@@ -83,10 +81,7 @@ async function assembleProtocolV3Response(
     },
     pkw
   )
-  const contractWrappers = new ContractWrappers(provider, { chainId: chainID })
-  const [{ orderHash }] = await contractWrappers.devUtils
-    .getOrderRelevantState(signedOrder, signedOrder.signature)
-    .callAsync()
+  const orderHash = orderHashUtils.getOrderHash(signedOrder)
   return {
     rate,
     minAmount,
@@ -121,7 +116,7 @@ export const newOrder = async (ctx) => {
         resp = assembleProtocolV2Response(rateBody, simpleOrder)
         break
       case Protocol.ZeroXV3:
-        resp = await assembleProtocolV3Response(rateBody, simpleOrder, ctx.provider, ctx.chainID)
+        resp = await assembleProtocolV3Response(rateBody, simpleOrder, ctx.chainID)
         break
       default:
         throw new Error('Unknown protocol')
