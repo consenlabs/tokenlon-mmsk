@@ -34,9 +34,7 @@ export interface ConfigForStart {
   NODE_ENV?: 'DEVELOPMENT' | 'STAGING' | 'PRODUCTION'
   SENTRY_DSN?: string
 
-  USE_ZERORPC?: boolean
   HTTP_SERVER_ENDPOINT?: string
-  ZERORPC_SERVER_ENDPOINT?: string
   EXTERNAL_QUOTER?: Quoter
 }
 
