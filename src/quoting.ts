@@ -51,6 +51,7 @@ function calculateFeeFactor(baseSymbol: string, factor: number | null): number {
   return result
 }
 
+// Process buy amount for WYSIWYG
 function processBuyAmount(query: QueryInterface): QueryInterface {
   const result = { ...query }
   // TODO: process fee on v3 later

@@ -1,4 +1,3 @@
-import { MarketMakerConfig, Token, TokenConfig } from '../types'
 import {
   assetDataUtils,
   generatePseudoRandomSalt,
@@ -7,17 +6,19 @@ import {
   signatureUtils,
   SignerType,
 } from '0x-v2-order-utils'
+import { BigNumber } from '@0xproject/utils'
 import * as _ from 'lodash'
 import * as ethUtils from 'ethereumjs-util'
-import { toBN } from './math'
-import { getTokenBySymbol } from './token'
-import { getTimestamp } from './timestamp'
-import { fromUnitToDecimalBN, orderBNToString } from './format'
+
+import { MarketMakerConfig, Token, TokenConfig } from '../types'
+import { toBN } from '../utils/math'
+import { getTokenBySymbol } from '../utils/token'
+import { getTimestamp } from '../utils/timestamp'
+import { fromUnitToDecimalBN, orderBNToString } from '../utils/format'
+import { ecSignOrderHash } from '../utils/sign'
+import { getWethAddrIfIsEth } from '../utils/address'
 import { getWallet } from '../config'
-import { ecSignOrderHash } from './sign'
-import { getWethAddrIfIsEth } from './address'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
-import { BigNumber } from '@0xproject/utils'
 
 const getFixPrecision = (decimal) => {
   return decimal < 8 ? decimal : 8

@@ -1,16 +1,16 @@
 import { PriceApiResult, Quoter } from '../request/marketMaker'
-import { getFormatedSignedOrder } from '../utils/order'
+import { getFormatedSignedOrder } from '../0x/v2'
 import { getSupportedTokens } from '../utils/token'
 import { updaterStack } from '../worker'
 import { Protocol, QueryInterface, TradeMode } from '../types'
 import { validateNewOrderRequest, validateRequest } from '../validations'
-import { signOrderByMaker } from '../0x/v3/sign_order'
+import { signOrderByMaker } from '../0x/v3'
 import { getWallet } from '../config'
 import { ValidationError } from './errors'
 import { appendQuoteIdToQuoteReponse, translateQueryData } from '../quoting'
 
 import { PrivateKeyWalletSubprovider } from '@0x/subproviders'
-import { SignedOrder, orderHashUtils } from '0x-v3-order-utils'
+import { orderHashUtils, SignedOrder } from '0x-v3-order-utils'
 
 async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
   const simpleOrder = translateQueryData(query)
@@ -68,6 +68,7 @@ async function assembleProtocolV3Response(
   simpleOrder,
   chainID: number
 ): Promise<Response> {
+  const { mmProxyContractAddress } = updaterStack.markerMakerConfigUpdater.cacheResult
   const { rate, minAmount, maxAmount, quoteId } = makerReturnsRate
   const pkw = new PrivateKeyWalletSubprovider(getWallet().privateKey)
   const { tokenListFromImtokenUpdater: tokenList } = updaterStack
@@ -75,6 +76,7 @@ async function assembleProtocolV3Response(
     {
       chainID,
       userAddr: simpleOrder.userAddr,
+      makerAddr: mmProxyContractAddress,
       simpleOrder,
       tokenList: tokenList.cacheResult,
       ...makerReturnsRate,
@@ -100,6 +102,10 @@ export const newOrder = async (ctx) => {
   }
 
   const quoter = ctx.quoter
+  // NOTICE: only v3 support RFQT mode
+  if (query.protocol == Protocol.ZeroXV3) {
+    query['mode'] = TradeMode.RFQTaker
+  }
 
   try {
     let errMsg = validateRequest(query)
