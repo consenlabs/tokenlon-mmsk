@@ -18,8 +18,8 @@
     "lib/**/*"
   ],
   "scripts": {
-    "build": "run-s clean build:commonjs",
-    "build:commonjs": "tsc",
+    "eslint": "eslint  src/**/*.ts benchmark/**/*.ts test/**/*.ts --fix --quiet --format unix ",
+    "build": "tsc",
     "check": "node ./app/check.js",
     "clean": "rm -rf ./lib",
     "start": "node ./app/start.js",
