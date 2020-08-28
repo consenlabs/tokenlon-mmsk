@@ -67,7 +67,7 @@
     "koa-bodyparser": "4.2.1",
     "koa-logger": "^3.2.1",
     "koa-router": "7.4.0",
-    "lodash": "4.17.14",
+    "lodash": ">=4.17.19",
     "readline-sync": "1.4.9",
     "web3": "1.0.0-beta.37",
     "zerorpc": "0.9.8"
