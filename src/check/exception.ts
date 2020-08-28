@@ -1,4 +1,4 @@
-import { Quoter } from '../request/marketMaker/types'
+import { Quoter } from '../request/marketMaker'
 import { getSupportedTokens } from '../utils/token'
 
 const check = async (quoter: Quoter) => {

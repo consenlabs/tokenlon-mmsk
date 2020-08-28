@@ -1,5 +1,5 @@
-const startMMSK = require('../lib').startMMSK
-const loadEnvConfig = require('dotenv').config
+const startMMSK = require("../lib").startMMSK
+const loadEnvConfig = require("dotenv").config
 
 async function main() {
   loadEnvConfig()
@@ -11,6 +11,7 @@ async function main() {
     WALLET_ADDRESS: process.env.WALLET_ADDRESS,
     WALLET_PRIVATE_KEY: process.env.WALLET_PRIVATE_KEY,
     MMSK_SERVER_PORT: 8080,
+    USE_ZERORPC: false,
     HTTP_SERVER_ENDPOINT: process.env.HTTP_SERVER_ENDPOINT,
     NODE_ENV: 'DEVELOPMENT',
     CHAIN_ID: 42,
@@ -22,7 +23,7 @@ const numCPUs = require('os').cpus().length
 const parallels = numCPUs > 8 ? 8 : numCPUs
 
 if (cluster.isMaster) {
-  console.log(`Master ${process.pid} is running`)
+  console.log(`Master ${process.pid} is running`);
 
   // Fork workers.
   for (let i = 0; i < parallels; i++) {
