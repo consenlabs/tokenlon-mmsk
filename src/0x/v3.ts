@@ -11,6 +11,8 @@ import { BigNumber, NULL_ADDRESS, NULL_BYTES, providerUtils } from '0x-v3-utils'
 import { BaseWalletSubprovider } from '@0x/subproviders/lib/src/subproviders/base_wallet_subprovider'
 import { Web3ProviderEngine } from '@0x/subproviders'
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses'
+import * as ethUtil from 'ethereumjs-util'
+import { constants } from 'ethers'
 
 import { getTokenBySymbol } from '../utils/token'
 import { toBN } from '../utils/math'
@@ -80,10 +82,24 @@ export async function signOrderByMaker(
   try {
     providerUtils.startProviderEngine(pe)
     const orderHash = orderHashUtils.getOrderHash(order)
-    const signatureHex = await signatureUtils.ecSignHashAsync(pe, orderHash, signerAddress)
+    const hash = ethUtil.bufferToHex(
+      Buffer.concat([
+        ethUtil.toBuffer(orderHash),
+        ethUtil.toBuffer(constants.AddressZero),
+        Buffer.from([0, 30]),
+      ])
+    )
+    const signatureHex = await signatureUtils.ecSignHashAsync(pe, hash, signerAddress)
+    const walletSign = ethUtil.bufferToHex(
+      Buffer.concat([
+        ethUtil.toBuffer(signatureHex).slice(0, 65),
+        ethUtil.toBuffer(constants.AddressZero),
+        ethUtil.toBuffer([0, 30]),
+      ])
+    )
     return {
       ...order,
-      signature: signatureUtils.convertToSignatureWithType(signatureHex, SignatureType.Wallet),
+      signature: signatureUtils.convertToSignatureWithType(walletSign, SignatureType.Wallet),
     }
   } finally {
     pe.stop()
