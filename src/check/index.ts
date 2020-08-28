@@ -7,7 +7,7 @@ import checkIndicativePrice from './indicativePrice'
 import checkPrice from './price'
 import checkDeal from './deal'
 import checkException from './exception'
-import { Quoter, HTTPQuoter } from '../request/marketMaker'
+import { QuoteDispatcher, Quoter, QuoterProtocol } from '../request/marketMaker'
 
 export const checkMMSK = async (config: ConfigForStart) => {
   const arr = [
@@ -38,7 +38,10 @@ export const checkMMSK = async (config: ConfigForStart) => {
   if (config.EXTERNAL_QUOTER) {
     quoter = config.EXTERNAL_QUOTER
   } else {
-    quoter = new HTTPQuoter(config.HTTP_SERVER_ENDPOINT)
+    quoter = new QuoteDispatcher(
+      config.ZERORPC_SERVER_ENDPOINT || config.HTTP_SERVER_ENDPOINT,
+      config.USE_ZERORPC ? QuoterProtocol.ZERORPC : QuoterProtocol.HTTP
+    )
   }
   const wallet = getWallet()
   await startUpdater(quoter, wallet)
