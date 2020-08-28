@@ -18,8 +18,8 @@
     "lib/**/*"
   ],
   "scripts": {
-    "build": "run-s clean build:commonjs",
-    "build:commonjs": "tsc",
+    "eslint": "eslint  src/**/*.ts benchmark/**/*.ts test/**/*.ts --fix --quiet --format unix ",
+    "build": "tsc",
     "check": "node ./app/check.js",
     "clean": "rm -rf ./lib",
     "start": "node ./app/start.js",
@@ -47,8 +47,8 @@
   "dependencies": {
     "0x-v2-order-utils": "npm:@0xproject/order-utils@^1.0.1",
     "0x-v2-utils": "npm:@0xproject/utils@^2.0.0",
-    "0x-v3-order-utils": "npm:@0x/order-utils@10.2.5",
-    "0x-v3-utils": "npm:@0x/utils@5.4.1",
+    "0x-v3-order-utils": "npm:@0x/order-utils@10.3.0",
+    "0x-v3-utils": "npm:@0x/utils@5.5.1",
     "@0x/contract-addresses": "^4.11.0",
     "@0x/contract-wrappers": "^13.8.0",
     "@0x/subproviders": "6.0.8",
@@ -60,15 +60,16 @@
     "babel-polyfill": "6.26.0",
     "binance-api-node": "0.8.18",
     "dotenv": "^8.2.0",
+    "ethereum-types": "^3.2.0",
     "ethers": "^5.0.5",
-    "keythereum": "1.0.4",
     "koa": "2.5.3",
     "koa-bodyparser": "4.2.1",
     "koa-logger": "^3.2.1",
     "koa-router": "7.4.0",
     "lodash": "4.17.14",
     "readline-sync": "1.4.9",
-    "web3": "1.0.0-beta.37",
-    "zerorpc": "0.9.8"
+    "web3": "^1.2.11",
+    "web3-eth": "^1.2.11",
+    "web3-eth-abi": "^1.2.11"
   }
 }

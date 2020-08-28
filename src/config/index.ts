@@ -1,6 +1,7 @@
 import * as readlineSync from 'readline-sync'
-import * as keythereum from 'keythereum'
 import { ConfigForStart } from '../types'
+import { Wallet } from 'ethers'
+import fs from 'fs'
 
 const config = {
   EXCHANGE_URL: null,
@@ -13,9 +14,7 @@ const config = {
   WALLET_KEYSTORE: null,
   MMSK_SERVER_PORT: null,
 
-  USE_ZERORPC: null,
   HTTP_SERVER_ENDPOINT: null,
-  ZERORPC_SERVER_ENDPOINT: null,
 
   NODE_ENV: 'DEVELOPMENT',
   SENTRY_DSN: null,
@@ -23,11 +22,16 @@ const config = {
 
 const setConfig = (conf: ConfigForStart) => {
   if (conf.USE_KEYSTORE) {
-    const KEYSTORE_PASSWORD = readlineSync.question("Please input your keystore's password: ", {
+    const password = readlineSync.question("Please input your keystore's password: ", {
       hideEchoBack: true,
     })
-    const privateKeyBuf = keythereum.recover(KEYSTORE_PASSWORD, conf.WALLET_KEYSTORE)
-    conf.WALLET_PRIVATE_KEY = privateKeyBuf.toString('hex')
+
+    let content = fs.readFileSync(conf.WALLET_KEYSTORE.toString()).toString()
+    Promise.resolve(
+      Wallet.fromEncryptedJson(content, password).then((wallet) => {
+        conf.WALLET_PRIVATE_KEY = wallet.privateKey
+      })
+    )
   }
   return Object.assign(config, conf)
 }

@@ -19,10 +19,9 @@ import {
 import { setConfig, getWallet } from './config'
 import { ConfigForStart } from './types'
 import { startUpdater } from './worker'
-import { QuoteDispatcher, QuoterProtocol } from './request/marketMaker'
 import { isValidWallet } from './validations'
 import tracker from './utils/tracker'
-import { Quoter } from './request/marketMaker/types'
+import { Quoter, HTTPQuoter } from './request/marketMaker/'
 import { determineProvider } from './utils/provider_engine'
 
 const app = new Koa()
@@ -36,10 +35,7 @@ const beforeStart = async (config: ConfigForStart, triedTimes?: number) => {
     if (config.EXTERNAL_QUOTER) {
       quoter = config.EXTERNAL_QUOTER
     } else {
-      quoter = new QuoteDispatcher(
-        config.ZERORPC_SERVER_ENDPOINT || config.HTTP_SERVER_ENDPOINT,
-        config.USE_ZERORPC ? QuoterProtocol.ZERORPC : QuoterProtocol.HTTP
-      )
+      quoter = new HTTPQuoter(config.HTTP_SERVER_ENDPOINT)
     }
     await startUpdater(quoter, wallet)
     return quoter

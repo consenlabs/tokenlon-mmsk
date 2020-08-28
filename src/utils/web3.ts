@@ -1,4 +1,4 @@
-import * as Web3 from 'web3'
+import Web3 from 'web3'
 import * as _ from 'lodash'
 import { BigNumber } from '@0xproject/utils'
 import { config } from '../config'

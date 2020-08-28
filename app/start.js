@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const mmConf = require('./mmConfig')
 const mmsk = require('../lib')
 
@@ -6,7 +8,7 @@ const numCPUs = require('os').cpus().length
 const parallels = numCPUs > 8 ? 8 : numCPUs
 
 if (cluster.isMaster) {
-  console.log(`Master ${process.pid} is running`);
+  console.log(`Master ${process.pid} is running`)
 
   // Fork workers.
   for (let i = 0; i < parallels; i++) {
