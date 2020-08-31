@@ -21,6 +21,7 @@ describe('0x/v3/sign_order', function () {
           side: 'BUY',
           amount: 1,
         },
+        tokenConfigs: [],
         tokenList: [
           {
             symbol: 'WETH',

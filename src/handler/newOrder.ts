@@ -39,7 +39,7 @@ function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Resp
   const { rate, minAmount, maxAmount, quoteId } = rateBody
   // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
   // 但是，Token Config 返回的配置是 feeFactor
-  const { userAddr, feefactor } = simpleOrder
+  const { userAddr } = simpleOrder
   const config = updaterStack.markerMakerConfigUpdater.cacheResult
   const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
   const tokenList = getSupportedTokens()
@@ -50,7 +50,7 @@ function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Resp
     tokenList,
     tokenConfigs,
     config,
-    queryFeeFactor: feefactor,
+    queryFeeFactor: simpleOrder.feefactor,
   })
   return {
     rate,
@@ -68,7 +68,9 @@ async function assembleProtocolV3Response(
   simpleOrder,
   chainID: number
 ): Promise<Response> {
-  const { mmProxyContractAddress } = updaterStack.markerMakerConfigUpdater.cacheResult
+  const { mmProxyContractAddress, feeFactor } = updaterStack.markerMakerConfigUpdater.cacheResult
+  const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
+
   const { rate, minAmount, maxAmount, quoteId } = makerReturnsRate
   const pkw = new PrivateKeyWalletSubprovider(getWallet().privateKey)
   const { tokenListFromImtokenUpdater: tokenList } = updaterStack
@@ -79,6 +81,8 @@ async function assembleProtocolV3Response(
       makerAddr: mmProxyContractAddress,
       simpleOrder,
       tokenList: tokenList.cacheResult,
+      tokenConfigs,
+      cfgFeeFactor: feeFactor,
       ...makerReturnsRate,
     },
     pkw

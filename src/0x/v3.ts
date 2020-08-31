@@ -13,6 +13,7 @@ import { Web3ProviderEngine } from '@0x/subproviders'
 import { getContractAddressesForChainOrThrow } from '@0x/contract-addresses'
 import * as ethUtil from 'ethereumjs-util'
 import { constants } from 'ethers'
+import { BigNumber as XBN } from '@0xproject/utils'
 
 import { getTokenBySymbol } from '../utils/token'
 import { toBN } from '../utils/math'
@@ -37,8 +38,19 @@ export async function signOrderByMaker(
   params,
   signerWallet: BaseWalletSubprovider
 ): Promise<SignedOrder> {
-  const { userAddr, makerAddr, rate, simpleOrder, tokenList, chainID } = params
-  const { side, amount, base, quote } = simpleOrder
+  const {
+    userAddr,
+    makerAddr,
+    rate,
+    simpleOrder,
+    tokenList,
+    chainID,
+    tokenConfigs,
+    cfgFeeFactor,
+  } = params
+  const { side, amount, base, quote, feefactor: simpleOrderFee } = simpleOrder
+  console.log('simpleorder', simpleOrder)
+
   const baseToken = getTokenBySymbol(tokenList, base == 'ETH' ? 'WETH' : base)
   const quoteToken = getTokenBySymbol(tokenList, quote == 'ETH' ? 'WETH' : quote)
   const makerToken = side === 'BUY' ? baseToken : quoteToken
@@ -51,6 +63,18 @@ export async function signOrderByMaker(
     toBN(amount)
   )
   const signerAddress = (await signerWallet.getAccountsAsync())[0]
+
+  const foundTokenConfig = tokenConfigs.find((t) => t.symbol === makerToken.symbol)
+
+  let fFactor = cfgFeeFactor || 0
+  if (foundTokenConfig?.feeFactor) {
+    fFactor = foundTokenConfig.feeFactor
+  }
+  const queryFeeFactor = simpleOrderFee && simpleOrderFee[1]
+  if (queryFeeFactor && !Number.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0) {
+    fFactor = +queryFeeFactor
+  }
+  const takerFee = takerAssetAmount.mul(new XBN(fFactor)).dividedBy(new XBN(10000))
 
   // Set up the Order and fill it
   const randomExpiration = getRandomFutureDateInSeconds()
@@ -70,11 +94,10 @@ export async function signOrderByMaker(
     takerAssetAmount,
     makerAssetData: assetDataUtils.encodeERC20AssetData(makerToken.contractAddress),
     takerAssetData: assetDataUtils.encodeERC20AssetData(takerToken.contractAddress),
-    // TODO: add fee
     makerFeeAssetData: NULL_BYTES,
-    takerFeeAssetData: NULL_BYTES,
+    takerFeeAssetData: assetDataUtils.encodeERC20AssetData(takerToken.contractAddress),
     makerFee: ZERO,
-    takerFee: ZERO,
+    takerFee: takerFee,
   }
 
   const pe = new Web3ProviderEngine()

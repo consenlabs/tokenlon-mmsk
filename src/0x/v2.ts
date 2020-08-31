@@ -93,14 +93,16 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
   const takerToken = side === 'BUY' ? quoteToken : baseToken
 
   const foundTokenConfig = tokenConfigs.find((t) => t.symbol === makerToken.symbol)
-  const feeFactor =
-    !_.isUndefined(queryFeeFactor) && !_.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0
-      ? +queryFeeFactor
-      : foundTokenConfig && foundTokenConfig.feeFactor
-      ? foundTokenConfig.feeFactor
-      : config.feeFactor
-      ? config.feeFactor
-      : 0
+
+  let fFactor = config.feeFactor || 0
+  if (foundTokenConfig?.feeFactor) {
+    fFactor = foundTokenConfig.feeFactor
+  }
+  if (queryFeeFactor && Number.isNaN(+queryFeeFactor) && +queryFeeFactor > 0) {
+    fFactor = +queryFeeFactor
+  }
+  const feeFactor = fFactor
+
   // 针对用户买，对于做市商是提供卖单
   // 用户用quote 买base，做市商要构建卖base 换quote的order
   // 因此 order makerToken 是 base，takerToken 是 quote
