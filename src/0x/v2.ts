@@ -96,9 +96,11 @@ const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
 
   let fFactor = config.feeFactor || 0
   if (foundTokenConfig?.feeFactor) {
+    // console.log('set fee factor from token config', { factor: foundTokenConfig.feeFactor })
     fFactor = foundTokenConfig.feeFactor
   }
-  if (queryFeeFactor && Number.isNaN(+queryFeeFactor) && +queryFeeFactor > 0) {
+  if (queryFeeFactor && !Number.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0) {
+    // console.log('set fee factor from query string', { queryFeeFactor })
     fFactor = +queryFeeFactor
   }
   const feeFactor = fFactor
