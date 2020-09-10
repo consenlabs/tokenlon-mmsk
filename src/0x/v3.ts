@@ -82,7 +82,7 @@ export async function signOrderByMaker(
 
   // Create the order
   const order: Order = {
-    chainId: chainID,
+    chainId: +chainID,
     exchangeAddress: contractAddresses.exchange,
     makerAddress: makerAddr,
     takerAddress: userAddr,
