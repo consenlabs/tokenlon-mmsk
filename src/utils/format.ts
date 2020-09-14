@@ -22,7 +22,7 @@ export const fromUnitToDecimalBN = (balance, decimal): BigNumber => {
   const amountBN = toBN(balance || 0)
   const decimalBN = toBN(10).toPower(decimal)
   // 避免出现小数点的情况
-  return toBN(Math.round(amountBN.times(decimalBN).toNumber()))
+  return toBN(Math.trunc(amountBN.times(decimalBN).toNumber()))
 }
 
 export const fromDecimalToUnit = (balance, decimal) => {
@@ -35,5 +35,8 @@ export const fromUnitToDecimal = (balance, decimal, base) => {
 
 // precision + 1 的位置，进行四舍五入
 export const roundAmount = (amount, precision) => {
-  return toBN(Math.round(amount * Math.pow(10, precision))).dividedBy(Math.pow(10, precision)).toNumber()
+  const exact = Math.pow(10, precision)
+  return toBN(Math.trunc(amount * exact))
+    .dividedBy(exact)
+    .toNumber()
 }
