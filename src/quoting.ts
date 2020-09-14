@@ -30,7 +30,7 @@ export const appendQuoteIdToQuoteReponse = (priceResult: PriceApiResult, side: S
 }
 
 function applyFeeToAmount(amount: number, feeFactor: number) {
-  return amount ? roundAmount(+amount / (1 - feeFactor / 10000), 4) : amount
+  return amount ? roundAmount(+amount / (1 - feeFactor / 10000), 6) : amount
 }
 
 function calculateFeeFactor(baseSymbol: string, factor: number | null): number {
