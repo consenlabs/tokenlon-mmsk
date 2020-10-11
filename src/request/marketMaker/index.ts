@@ -1,45 +1,87 @@
-import * as httpClient from './http'
-import * as zerorpcClient from './zerorpc'
 import { DealOrder, ExceptionOrder } from '../../types'
-import { IndicativePriceApiParams, IndicativePriceApiResult, PriceApiParams, PriceApiResult, NotifyOrderResult } from './interface'
-import { config } from '../../config'
+import {
+  IndicativePriceApiParams,
+  IndicativePriceApiResult,
+  PriceApiParams,
+  PriceApiResult,
+  NotifyOrderResult,
+  Quoter,
+} from './types'
+import { ZeroRPCQuoter } from './zerorpc'
+import { HTTPQuoter } from './http'
 import { removeQuoteIdPrefix } from '../../utils/quoteId'
 
-export const getPairs = (): Promise<string[]> => {
-  return config.USE_ZERORPC ? zerorpcClient.getPairs() : httpClient.getPairs()
+export enum QuoterProtocol {
+  HTTP,
+  ZERORPC,
 }
 
-export const getIndicativePrice = (data: IndicativePriceApiParams): Promise<IndicativePriceApiResult> => {
-  return config.USE_ZERORPC ? zerorpcClient.getIndicativePrice(data) : httpClient.getIndicativePrice(data)
-}
+class QuoteDispatcher implements Quoter {
+  protocol: QuoterProtocol
+  httpQuoter: HTTPQuoter
+  zeroRPCQuoter: ZeroRPCQuoter
 
-export const getPrice = (data: PriceApiParams): Promise<PriceApiResult> => {
-  return config.USE_ZERORPC ? zerorpcClient.getPrice(data) : httpClient.getPrice(data)
-}
-
-export const dealOrder = (params: DealOrder): Promise<NotifyOrderResult> => {
-  const { quoteId } = params
-  const data = {
-    ...params,
-    quoteId: removeQuoteIdPrefix(quoteId),
+  constructor(endpoint: string, proto: QuoterProtocol = QuoterProtocol.HTTP) {
+    this.protocol = proto
+    switch (this.protocol) {
+      case QuoterProtocol.HTTP:
+        this.httpQuoter = new HTTPQuoter(endpoint)
+        break
+      case QuoterProtocol.ZERORPC:
+        this.zeroRPCQuoter = new ZeroRPCQuoter(endpoint)
+        break
+    }
   }
-  return config.USE_ZERORPC ? zerorpcClient.dealOrder(data) : httpClient.dealOrder(data)
-}
 
-export const exceptionOrder = (params: ExceptionOrder): Promise<NotifyOrderResult> => {
-  const { quoteId } = params
-  const data = {
-    ...params,
-    quoteId: removeQuoteIdPrefix(quoteId),
+  async getPairs(): Promise<string[]> {
+    return this.protocol == QuoterProtocol.ZERORPC
+      ? this.zeroRPCQuoter.getPairs()
+      : this.httpQuoter.getPairs()
   }
-  return config.USE_ZERORPC ? zerorpcClient.exceptionOrder(data) : httpClient.exceptionOrder(data)
+
+  async getIndicativePrice(data: IndicativePriceApiParams): Promise<IndicativePriceApiResult> {
+    return this.protocol == QuoterProtocol.ZERORPC
+      ? this.zeroRPCQuoter.getIndicativePrice(data)
+      : this.httpQuoter.getIndicativePrice(data)
+  }
+
+  async getPrice(data: PriceApiParams): Promise<PriceApiResult> {
+    return this.protocol == QuoterProtocol.ZERORPC
+      ? this.zeroRPCQuoter.getPrice(data)
+      : this.httpQuoter.getPrice(data)
+  }
+
+  async dealOrder(params: DealOrder): Promise<NotifyOrderResult> {
+    const { quoteId } = params
+    const data = {
+      ...params,
+      quoteId: removeQuoteIdPrefix(quoteId),
+    }
+    return this.protocol == QuoterProtocol.ZERORPC
+      ? this.zeroRPCQuoter.dealOrder(data)
+      : this.httpQuoter.dealOrder(data)
+  }
+
+  async exceptionOrder(params: ExceptionOrder): Promise<NotifyOrderResult> {
+    const { quoteId } = params
+    const data = {
+      ...params,
+      quoteId: removeQuoteIdPrefix(quoteId),
+    }
+    return this.protocol == QuoterProtocol.ZERORPC
+      ? this.zeroRPCQuoter.exceptionOrder(data)
+      : this.httpQuoter.exceptionOrder(data)
+  }
 }
 
-// for binance mock
-// export { getPairs, getPrice, getIndicativePrice } from '../mockBinance'
-
-// export const dealOrder = (_data: any): Promise<any> => {
-//   return Promise.resolve({
-//     result: true,
-//   })
-// }
+export {
+  ZeroRPCQuoter,
+  HTTPQuoter,
+  QuoteDispatcher,
+  IndicativePriceApiParams,
+  IndicativePriceApiResult,
+  PriceApiParams,
+  PriceApiResult,
+  NotifyOrderResult,
+  Quoter,
+}

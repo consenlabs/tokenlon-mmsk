@@ -1,6 +1,5 @@
 import * as Sentry from '@sentry/node'
 import tracker from '../utils/tracker'
-import { dealOrder as dealOrderToMM } from '../request/marketMaker'
 import { DealOrder } from '../types'
 import { removeQuoteIdPrefix } from '../utils/quoteId'
 
@@ -16,7 +15,7 @@ export const dealOrder = async (ctx) => {
   })
 
   try {
-    const res = await dealOrderToMM(order)
+    const res = await ctx.quoter.dealOrder(order)
     if (!res.result) {
       reqToMMErrMsg = 'MM deal API not response result true'
     }

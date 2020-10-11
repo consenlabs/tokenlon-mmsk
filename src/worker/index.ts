@@ -1,41 +1,41 @@
-import { getMarketMakerConfig, getTokenList, getTokenConfigsForMM } from '../../request/imToken'
-import { getPairs } from '../../request/marketMaker'
-import IntervalUpdater from './intervalUpdater'
-import { Wallet } from '../../types'
+import { getMarketMakerConfig, getTokenList, getTokenConfigsForMM } from '../request/imToken'
+import { Quoter } from '../request/marketMaker'
+import Updater from './updater'
+import { Wallet } from '../types'
 
 const updaterStack = {
-  markerMakerConfigUpdater: null as IntervalUpdater,
-  tokenListFromImtokenUpdater: null as IntervalUpdater,
-  tokenConfigsFromImtokenUpdater: null as IntervalUpdater,
-  pairsFromMMUpdater: null as IntervalUpdater,
+  markerMakerConfigUpdater: null as Updater,
+  tokenListFromImtokenUpdater: null as Updater,
+  tokenConfigsFromImtokenUpdater: null as Updater,
+  pairsFromMMUpdater: null as Updater,
 }
 
-const startUpdater = async (wallet: Wallet) => {
-  updaterStack.markerMakerConfigUpdater = new IntervalUpdater({
+const startUpdater = async (quoter: Quoter, wallet: Wallet) => {
+  updaterStack.markerMakerConfigUpdater = new Updater({
     name: 'markerMakerConfig',
     updater() {
       return getMarketMakerConfig(wallet.address)
     },
   })
 
-  updaterStack.tokenListFromImtokenUpdater = new IntervalUpdater({
+  updaterStack.tokenListFromImtokenUpdater = new Updater({
     name: 'tokenListFromImtoken',
     updater() {
       return getTokenList()
     },
   })
 
-  updaterStack.tokenConfigsFromImtokenUpdater = new IntervalUpdater({
+  updaterStack.tokenConfigsFromImtokenUpdater = new Updater({
     name: 'tokenConfigsFromImtoken',
     updater() {
       return getTokenConfigsForMM(wallet.address)
     },
   })
 
-  updaterStack.pairsFromMMUpdater = new IntervalUpdater({
+  updaterStack.pairsFromMMUpdater = new Updater({
     name: 'pairsFromMM',
     updater() {
-      return getPairs()
+      return quoter.getPairs()
     },
   })
 
@@ -52,7 +52,4 @@ const startUpdater = async (wallet: Wallet) => {
   }
 }
 
-export {
-  startUpdater,
-  updaterStack,
-}
+export { startUpdater, updaterStack }

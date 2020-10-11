@@ -1,8 +1,8 @@
-import { ETH_ADDRESS } from '../constants'
+import { NULL_ADDRESS } from '../constants'
 import { MarketMakerConfig } from '../types'
 
 export const getWethAddrIfIsEth = (address, config: MarketMakerConfig) => {
-  return address.toLowerCase() === ETH_ADDRESS ?
+  return address.toLowerCase() === NULL_ADDRESS ?
     config.wethContractAddress.toLowerCase() : address.toLowerCase()
 }
 

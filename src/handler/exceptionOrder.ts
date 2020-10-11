@@ -1,12 +1,29 @@
 import * as Sentry from '@sentry/node'
 import tracker from '../utils/tracker'
-import { exceptionOrder as exceptionOrderToMM } from '../request/marketMaker'
 import { ExceptionOrder } from '../types'
 import { removeQuoteIdPrefix } from '../utils/quoteId'
 
 export const exceptionOrder = async (ctx) => {
-  const { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp, type } = ctx.request.body as ExceptionOrder
-  const order = { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId: removeQuoteIdPrefix(quoteId), timestamp, type }
+  const {
+    makerToken,
+    takerToken,
+    makerTokenAmount,
+    takerTokenAmount,
+    quoteId,
+    timestamp,
+    type,
+  } = ctx.request.body as ExceptionOrder
+  const order = {
+    makerToken,
+    takerToken,
+    makerTokenAmount,
+    takerTokenAmount,
+    quoteId: removeQuoteIdPrefix(quoteId),
+    timestamp,
+    type,
+  }
+
+  const quoter = ctx.quoter
 
   let reqToMMErrMsg = null
 
@@ -17,7 +34,7 @@ export const exceptionOrder = async (ctx) => {
   })
 
   try {
-    const res = await exceptionOrderToMM(order)
+    const res = await quoter.exceptionOrder(order)
     if (!res.result) {
       reqToMMErrMsg = 'MM exception API not response result true'
     }

@@ -1,3 +1,5 @@
+import { Quoter } from '../request/marketMaker'
+
 export interface MarketMakerConfig {
   mmId: number
   networkId: number
@@ -20,7 +22,7 @@ export interface Wallet {
 
 export interface ConfigForStart {
   EXCHANGE_URL: string
-  PROVIDER_URL: string | string[]
+  PROVIDER_URL: string
 
   WALLET_ADDRESS: string
   USE_KEYSTORE?: boolean
@@ -28,12 +30,14 @@ export interface ConfigForStart {
   WALLET_KEYSTORE?: object
   MMSK_SERVER_PORT?: string | number
 
+  CHAIN_ID?: number
   NODE_ENV?: 'DEVELOPMENT' | 'STAGING' | 'PRODUCTION'
   SENTRY_DSN?: string
 
   USE_ZERORPC?: boolean
   HTTP_SERVER_ENDPOINT?: string
   ZERORPC_SERVER_ENDPOINT?: string
+  EXTERNAL_QUOTER?: Quoter
 }
 
 export interface DealOrder {
@@ -69,3 +73,25 @@ export interface TokenConfig {
 }
 
 export type SIDE = 'BUY' | 'SELL'
+
+export interface QueryInterface {
+  base: string
+  quote: string
+  side: 'BUY' | 'SELL'
+  amount?: number
+  feefactor?: number
+  uniqId?: number | string
+  userAddr?: string
+  protocol?: Protocol
+  mode?: TradeMode
+}
+
+export enum Protocol {
+  ZeroXV2 = '0xProtocolV2',
+  ZeroXV3 = '0xProtocolV3',
+}
+
+export enum TradeMode {
+  RFQStream = 'RFQStream',
+  RFQTaker = 'RFQTaker',
+}
