@@ -2,12 +2,11 @@
 !app/**/*
 !lib/**/*
 !package.json
-!package-lock.json
 !LICENSE
+
 # blacklist
 .*
 node_modules
 src
 test
 tsconfig.json
-
