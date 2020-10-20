@@ -1,20 +1,22 @@
-import { BigNumber } from '@0xproject/utils'
-import { toBN } from './math'
-import { web3RequestWrap } from './web3'
-import { utils } from 'ethers'
+import { ethers, BigNumber } from 'ethers'
+import { config } from '../config'
 
-export const getTokenBalance = ({ address, contractAddress }): Promise<BigNumber> => {
-  return web3RequestWrap((web3) => {
-    return new Promise((resolve, reject) => {
-      web3.eth.call({
-        to: contractAddress,
-        data: `0x70a08231${utils.hexZeroPad(address, 64)}`,
-      }, (err, res) => {
-        if (err) {
-          return reject(err)
-        }
-        resolve(toBN(res === '0x' ? 0 : res))
-      })
-    })
-  })
+// ERC20 ABI
+const abi = [
+  // Read-Only Functions
+  'function balanceOf(address owner) view returns (uint256)',
+  'function decimals() view returns (uint8)',
+  'function symbol() view returns (string)',
+
+  // Authenticated Functions
+  'function transfer(address to, uint amount) returns (boolean)',
+
+  // Events
+  'event Transfer(address indexed from, address indexed to, uint amount)',
+]
+
+export const getTokenBalance = async ({ address, contractAddress }): Promise<BigNumber> => {
+  const provider = new ethers.providers.JsonRpcProvider(config.PROVIDER_URL)
+  const erc20 = new ethers.Contract(contractAddress, abi, provider)
+  return await erc20.balanceOf(address)
 }
