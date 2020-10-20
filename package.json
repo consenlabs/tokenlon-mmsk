@@ -1,6 +1,6 @@
 {
   "name": "@consenlabs/tokenlon-mmsk",
-  "version": "0.7.1-alpha.1",
+  "version": "0.7.1-alpha.2",
   "description": "Tokenlon market maker server kit",
   "author": "imToken PTE. LTD.",
   "license": "MIT",
