@@ -19,6 +19,7 @@ import { ecSignOrderHash } from '../utils/sign'
 import { getWethAddrIfIsEth } from '../utils/address'
 import { getWallet } from '../config'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
+import cryptoRandomString from 'crypto-random-string'
 
 const getFixPrecision = (decimal) => {
   return decimal < 8 ? decimal : 8
@@ -185,5 +186,20 @@ export const getFormatedSignedOrder = (params: GetFormatedSignedOrderParams) => 
     makerWalletSignature,
   }
 
+  return orderBNToString(signedOrder)
+}
+
+export const getMockSignedOrder = (params: GetFormatedSignedOrderParams) => {
+  const { order, feeFactor } = getOrderAndFeeFactor(params)
+  const o = {
+    ...order,
+    salt: generatePseudoRandomSalt(),
+  }
+  const makerWalletSignature = cryptoRandomString({ length: 40 })
+  const signedOrder = {
+    ...o,
+    feeFactor,
+    makerWalletSignature,
+  }
   return orderBNToString(signedOrder)
 }

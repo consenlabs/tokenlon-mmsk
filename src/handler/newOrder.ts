@@ -1,5 +1,5 @@
 import { PriceApiResult, Quoter } from '../request/marketMaker'
-import { getFormatedSignedOrder } from '../0x/v2'
+import { getFormatedSignedOrder, getMockSignedOrder } from '../0x/v2'
 import { getSupportedTokens } from '../utils/token'
 import { updaterStack } from '../worker'
 import { Protocol, QueryInterface, TradeMode } from '../types'
@@ -33,6 +33,34 @@ interface Response {
   quoteId?: any
   signedOrder?: SignedOrder
   orderHash?: string
+}
+
+function assembleProtocolAMMResponse(rateBody, simpleOrder: QueryInterface): Response {
+  const { rate, minAmount, maxAmount, quoteId } = rateBody
+  // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
+  // 但是，Token Config 返回的配置是 feeFactor
+  const { userAddr } = simpleOrder
+  const config = updaterStack.markerMakerConfigUpdater.cacheResult
+  const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
+  const tokenList = getSupportedTokens()
+  const formattedOrder = getMockSignedOrder({
+    simpleOrder,
+    rate,
+    userAddr: userAddr.toLowerCase(),
+    tokenList,
+    tokenConfigs,
+    config,
+    queryFeeFactor: simpleOrder.feefactor,
+  })
+  return {
+    rate,
+    minAmount,
+    maxAmount,
+    order: {
+      ...formattedOrder,
+      quoteId,
+    },
+  }
 }
 
 function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Response {
@@ -127,6 +155,10 @@ export const newOrder = async (ctx) => {
         break
       case Protocol.ZeroXV3:
         resp = await assembleProtocolV3Response(rateBody, simpleOrder, ctx.chainID)
+        break
+      case Protocol.AMM:
+        // TODO: add real AMM order call data here
+        resp = assembleProtocolAMMResponse(rateBody, simpleOrder)
         break
       default:
         throw new Error('Unknown protocol')

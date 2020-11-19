@@ -89,6 +89,7 @@ export interface QueryInterface {
 export enum Protocol {
   ZeroXV2 = '0xProtocolV2',
   ZeroXV3 = '0xProtocolV3',
+  AMM = 'AMM',
 }
 
 export enum TradeMode {

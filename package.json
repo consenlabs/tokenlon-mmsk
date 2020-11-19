@@ -14,7 +14,7 @@
     "url": "git://github.com/consenlabs/tokenlon-mmsk.git"
   },
   "publishConfig": {
-    "registry":"https://npm.pkg.github.com"
+    "registry": "https://npm.pkg.github.com"
   },
   "files": [
     "app/**/*",
@@ -61,6 +61,7 @@
     "axios-logger": "^2.3.1",
     "babel-polyfill": "6.26.0",
     "binance-api-node": "0.8.18",
+    "crypto-random-string": "^3.3.0",
     "dotenv": "^8.2.0",
     "ethereumjs-util": "^7.0.4",
     "ethers": "^5.0.5",
