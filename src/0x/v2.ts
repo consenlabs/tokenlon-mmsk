@@ -7,7 +7,6 @@ import {
   SignerType,
 } from '0x-v2-order-utils'
 import { BigNumber } from '@0xproject/utils'
-import * as _ from 'lodash'
 import * as ethUtils from 'ethereumjs-util'
 
 import { MarketMakerConfig, Token, TokenConfig } from '../types'
@@ -19,7 +18,7 @@ import { ecSignOrderHash } from '../utils/sign'
 import { getWethAddrIfIsEth } from '../utils/address'
 import { getWallet } from '../config'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
-import cryptoRandomString from 'crypto-random-string'
+import * as cryptoRandomString from 'crypto-random-string'
 
 const getFixPrecision = (decimal) => {
   return decimal < 8 ? decimal : 8
