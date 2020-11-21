@@ -11,11 +11,16 @@ import * as uuid from 'uuid'
 require('dotenv').config()
 const AMMWrapper = require('../abi/AMMWrapper.json')
 
-const UNISWAP_V1_FACTORY_ADDRESS = '0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95'.toLowerCase();
+// mainnet
+// const UNISWAP_V1_FACTORY_ADDRESS = '0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95'.toLowerCase();
+// const UNISWAP_V2_ROUTER_02_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'.toLowerCase();
+// const CURVE_COMPOUND_ADDRESS = '0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56'.toLowerCase();
+// const CURVE_USDT_ADDRESS = '0x52EA46506B9CC5Ef470C5bf89f17Dc28bB35D85C'.toLowerCase();
+// const CURVE_Y_ADDRESS = '0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51'.toLowerCase()
+
+// kovan testnet
+const UNISWAP_V1_FACTORY_ADDRESS = '0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30'.toLowerCase();
 const UNISWAP_V2_ROUTER_02_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'.toLowerCase();
-const CURVE_COMPOUND_ADDRESS = '0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56'.toLowerCase();
-const CURVE_USDT_ADDRESS = '0x52EA46506B9CC5Ef470C5bf89f17Dc28bB35D85C'.toLowerCase();
-const CURVE_Y_ADDRESS = '0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51'.toLowerCase()
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
@@ -27,60 +32,108 @@ const ammWrapper = new ethers.Contract(ammWrapperAddress, AMMWrapper.abi, provid
 const allPools = [
   UNISWAP_V1_FACTORY_ADDRESS,
   UNISWAP_V2_ROUTER_02_ADDRESS,
-  CURVE_COMPOUND_ADDRESS,
-  CURVE_USDT_ADDRESS,
-  CURVE_Y_ADDRESS,
+  // CURVE_COMPOUND_ADDRESS,
+  // CURVE_USDT_ADDRESS,
+  // CURVE_Y_ADDRESS,
 ]
+
+// mainnet
+// const addressMap = {
+//   ETH: {
+//     address: '0x0000000000000000000000000000000000000000',
+//     decimal: 18,
+//   },
+//   DAI: {
+//     address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+//     decimal: 18,
+//   },
+//   USDT: {
+//     address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+//     decimal: 6,
+//   },
+//   USDC: {
+//     address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+//     decimal: 6,
+//   },
+//   TUSD: {
+//     address: '0x0000000000085d4780B73119b644AE5ecd22b376',
+//     decimal: 18,
+//   },
+//   UNI: {
+//     address: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
+//     decimal: 18,
+//   },
+//   YFI: {
+//     address: '0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e',
+//     decimal: 18,
+//   },
+// }
+
+// kovan testnet
+const addressMap = {
+  ETH: {
+    address: '0x0000000000000000000000000000000000000000',
+    decimal: 18,
+  },
+  DAI: {
+    address: '0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa',
+    decimal: 18,
+  },
+  USDT: {
+    address: '0x07de306ff27a2b630b1141956844eb1552b956b5',
+    decimal: 6,
+  },
+  USDC: {
+    address: '0xb7a4f3e9097c08da09517b5ab877f7a917224ede',
+    decimal: 6,
+  },
+  // TUSD: {
+  //   address: '0x0000000000085d4780B73119b644AE5ecd22b376',
+  //   decimal: 18,
+  // },
+  UNI: {
+    address: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
+    decimal: 18,
+  },
+  // YFI: {
+  //   address: '0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e',
+  //   decimal: 18,
+  // },
+}
 
 const getAssetAddress = (assetName: string): any => {
   const assetNameUpperCase = assetName.toUpperCase()
-  const addressMap = {
-    ETH: {
-      address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-      decimal: 18,
-    },
-    DAI: {
-      address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-      decimal: 18,
-    },
-    USDT: {
-      address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
-      decimal: 6,
-    },
-    USDC: {
-      address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-      decimal: 6,
-    },
-    TUSD: {
-      address: '0x0000000000085d4780B73119b644AE5ecd22b376',
-      decimal: 18,
-    },
-    UNI: {
-      address: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
-      decimal: 18,
-    },
-    YFI: {
-      address: '0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e',
-      decimal: 18,
-    },
-  }
   return addressMap[assetNameUpperCase]
 }
 
+// mainnet
+// const registeredTokens = {}
+// registeredTokens[UNISWAP_V1_FACTORY_ADDRESS] = ['ETH', 'DAI', 'USDC', 'TUSD']
+// registeredTokens[UNISWAP_V2_ROUTER_02_ADDRESS] = [
+//   'ETH',
+//   'DAI',
+//   'USDT',
+//   'USDC',
+//   'TUSD',
+//   'UNI',
+//   'YFI',
+// ]
+// registeredTokens[CURVE_COMPOUND_ADDRESS] = ['DAI', 'USDC']
+// registeredTokens[CURVE_USDT_ADDRESS] = ['DAI', 'USDC', 'USDT']
+// registeredTokens[CURVE_Y_ADDRESS] = ['DAI', 'USDC', 'USDT', 'TUSD']
+
+// kovan
 const registeredTokens = {}
-registeredTokens[UNISWAP_V1_FACTORY_ADDRESS] = ['ETH', 'DAI', 'USDC', 'TUSD']
+registeredTokens[UNISWAP_V1_FACTORY_ADDRESS] = ['ETH', 'DAI', 'USDC']
 registeredTokens[UNISWAP_V2_ROUTER_02_ADDRESS] = [
   'ETH',
   'DAI',
   'USDT',
   'USDC',
-  'TUSD',
+  // 'TUSD',
   'UNI',
-  'YFI',
+  // 'YFI',
 ]
-registeredTokens[CURVE_COMPOUND_ADDRESS] = ['DAI', 'USDC']
-registeredTokens[CURVE_USDT_ADDRESS] = ['DAI', 'USDC', 'USDT']
-registeredTokens[CURVE_Y_ADDRESS] = ['DAI', 'USDC', 'USDT', 'TUSD']
 
 function filterPools(base, quote: string): string[] {
   const qualifiedPools = allPools.filter((pool) => {
@@ -246,11 +299,11 @@ function createRPCHandler(): JsonRPC {
       exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
       forwarderContractAddress: '0xd85e2fa7e7e252b27b01bf0d65c946959d2f45b8',
       zrxContractAddress: '0x2002d3812f58e35f0ea1ffbf80a75a38c32175fa',
-      tokenlonExchangeContractAddress: '0xc23dc48e847ea67cde9a93d0df242f9584abc90d',
+      tokenlonExchangeContractAddress: '0xD489f1684CF5e78D933E254BD7AC8A9A6a70d491',
       wethContractAddress: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
-      userProxyContractAddress: '0x97959853a0fb9a28432f1d4f46654fe524a12d81',
+      userProxyContractAddress: '0x25657705a6be20511687D483f2fCCfb2d92f6033',
       orderExpirationSeconds: 600,
-      mmProxyContractAddress: '0x974afc6906cdeb17f163b7a5a2d2a59aa488b94e',
+      mmProxyContractAddress: '',
       feeFactor: 30,
     }
   })

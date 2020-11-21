@@ -8,7 +8,7 @@ import { updaterStack } from './worker'
 import { getSupportedTokens } from './utils/token'
 
 export const constructQuoteResponse = (priceResult: IndicativePriceApiResult, side: SIDE) => {
-  const { minAmount, maxAmount, message } = priceResult
+  const { minAmount, maxAmount, message, makerAddress } = priceResult
   if (priceResult.exchangeable === false || !priceResult.price) {
     throw new BackendError(message || "Can't support this trade")
   }
@@ -18,6 +18,7 @@ export const constructQuoteResponse = (priceResult: IndicativePriceApiResult, si
     minAmount,
     maxAmount,
     rate: toBN((+rate).toFixed(8)).toNumber(),
+    makerAddress,
   }
 }
 

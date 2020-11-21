@@ -1,5 +1,5 @@
 import { PriceApiResult, Quoter } from '../request/marketMaker'
-import { getFormatedSignedOrder, getMockSignedOrder } from '../0x/v2'
+import { getFormatedSignedOrder, getAMMSignedOrder } from '../0x/v2'
 import { getSupportedTokens } from '../utils/token'
 import { updaterStack } from '../worker'
 import { Protocol, QueryInterface, TradeMode } from '../types'
@@ -36,14 +36,15 @@ interface Response {
 }
 
 function assembleProtocolAMMResponse(rateBody, simpleOrder: QueryInterface): Response {
-  const { rate, minAmount, maxAmount, quoteId } = rateBody
+  const { rate, minAmount, maxAmount, quoteId, makerAddress } = rateBody
   // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
   // 但是，Token Config 返回的配置是 feeFactor
   const { userAddr } = simpleOrder
   const config = updaterStack.markerMakerConfigUpdater.cacheResult
   const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
   const tokenList = getSupportedTokens()
-  const formattedOrder = getMockSignedOrder({
+  const formattedOrder = getAMMSignedOrder({
+    makerAddress: makerAddress,
     simpleOrder,
     rate,
     userAddr: userAddr.toLowerCase(),
@@ -139,8 +140,6 @@ export const newOrder = async (ctx) => {
     query['mode'] = TradeMode.RFQTaker
   }
 
-  console.log(quoter)
-
   try {
     let errMsg = validateRequest(query)
     if (errMsg) throw new ValidationError(errMsg)
@@ -149,7 +148,6 @@ export const newOrder = async (ctx) => {
     if (errMsg) throw new ValidationError(errMsg)
 
     const { simpleOrder, rateBody } = await requestMarketMaker(quoter, query)
-
     let resp: Response
     switch (query.protocol) {
       case Protocol.ZeroXV2:

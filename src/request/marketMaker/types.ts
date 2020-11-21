@@ -25,6 +25,7 @@ export interface IndicativePriceApiResult {
   minAmount: number
   maxAmount: number
   price: number
+  makerAddress?: string
   message?: string
 }
 

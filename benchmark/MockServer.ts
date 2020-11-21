@@ -55,11 +55,11 @@ function createRPCHandler(): JsonRPC {
       exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
       forwarderContractAddress: '0xd85e2fa7e7e252b27b01bf0d65c946959d2f45b8',
       zrxContractAddress: '0x2002d3812f58e35f0ea1ffbf80a75a38c32175fa',
-      tokenlonExchangeContractAddress: '0xc23dc48e847ea67cde9a93d0df242f9584abc90d',
+      tokenlonExchangeContractAddress: '0xD489f1684CF5e78D933E254BD7AC8A9A6a70d491',
       wethContractAddress: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
-      userProxyContractAddress: '0x97959853a0fb9a28432f1d4f46654fe524a12d81',
+      userProxyContractAddress: '0x25657705a6be20511687D483f2fCCfb2d92f6033',
       orderExpirationSeconds: 600,
-      mmProxyContractAddress: '0x974afc6906cdeb17f163b7a5a2d2a59aa488b94e',
+      mmProxyContractAddress: '',
       feeFactor: 30,
     }
   })

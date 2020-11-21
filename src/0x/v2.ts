@@ -202,3 +202,20 @@ export const getMockSignedOrder = (params: GetFormatedSignedOrderParams) => {
   }
   return orderBNToString(signedOrder)
 }
+
+export const getAMMSignedOrder = (params) => {
+  const { order, feeFactor } = getOrderAndFeeFactor(params)
+  console.log(order)
+  order.makerAddress = params.makerAddress
+  const o = {
+    ...order,
+    salt: generatePseudoRandomSalt(),
+  }
+  const makerWalletSignature = cryptoRandomString({ length: 40 })
+  const signedOrder = {
+    ...o,
+    feeFactor,
+    makerWalletSignature,
+  }
+  return orderBNToString(signedOrder)
+}
