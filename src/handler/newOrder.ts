@@ -156,12 +156,14 @@ export const newOrder = async (ctx) => {
       case Protocol.ZeroXV3:
         resp = await assembleProtocolV3Response(rateBody, simpleOrder, ctx.chainID)
         break
-      case Protocol.AMM:
+      case Protocol.AMMV1:
         // TODO: add real AMM order call data here
         resp = assembleProtocolAMMResponse(rateBody, simpleOrder)
         break
       default:
-        throw new Error('Unknown protocol')
+        console.warn(`unknown protocol ${query.protocol}, fallback to 0x v2`)
+        resp = assembleProtocolV2Response(rateBody, simpleOrder)
+        break
     }
 
     ctx.body = {
