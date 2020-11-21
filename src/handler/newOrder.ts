@@ -139,6 +139,8 @@ export const newOrder = async (ctx) => {
     query['mode'] = TradeMode.RFQTaker
   }
 
+  console.log(quoter)
+
   try {
     let errMsg = validateRequest(query)
     if (errMsg) throw new ValidationError(errMsg)

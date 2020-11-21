@@ -284,6 +284,46 @@ function createRPCHandler(): JsonRPC {
         minTradeAmount: 0.001,
         maxTradeAmount: 1e4,
       },
+      {
+        symbol: 'USDT',
+        contractAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        decimal: 6,
+        precision: 6,
+        minTradeAmount: 0.001,
+        maxTradeAmount: 1e7,
+      },
+      {
+        symbol: 'USDC',
+        contractAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+        decimal: 6,
+        precision: 6,
+        minTradeAmount: 0.001,
+        maxTradeAmount: 1e7,
+      },
+      {
+        symbol: 'TUSD',
+        contractAddress: '0x0000000000085d4780B73119b644AE5ecd22b376',
+        decimal: 18,
+        precision: 6,
+        minTradeAmount: 0.001,
+        maxTradeAmount: 1e7,
+      },
+      {
+        symbol: 'UNI',
+        contractAddress: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
+        decimal: 18,
+        precision: 6,
+        minTradeAmount: 0.001,
+        maxTradeAmount: 2e3,
+      },
+      {
+        symbol: 'YFI',
+        contractAddress: '0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e',
+        decimal: 18,
+        precision: 6,
+        minTradeAmount: 0.001,
+        maxTradeAmount: 1e1,
+      },
     ]
   })
 
