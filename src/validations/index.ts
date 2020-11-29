@@ -20,14 +20,16 @@ export const isValidWallet = (wallet: Wallet): boolean => {
 }
 
 export const isBigNumber = (v: any) => {
-  return v instanceof BigNumber ||
+  return (
+    v instanceof BigNumber ||
     (v && v.isBigNumber === true) ||
     (v && v._isBigNumber === true) ||
     false
+  )
 }
 
 function validateRequiredFields(values, fields): boolean {
-  return fields.every(key => values[key] && typeof values[key] === 'string')
+  return fields.every((key) => values[key] && typeof values[key] === 'string')
 }
 
 /*
@@ -36,7 +38,11 @@ function validateRequiredFields(values, fields): boolean {
  * - amount should great than zero
  * - user address should be validate
  */
-export function validateNewOrderRequest(amount: number, uniqId: string | number, userAddress: string): string {
+export function validateNewOrderRequest(
+  amount: number,
+  uniqId: string | number,
+  userAddress: string
+): string {
   let errorMessage = null
   if (_.isNaN(+amount) || +amount <= 0) {
     errorMessage = `order's amount ${amount} must be a number > 0`
@@ -59,9 +65,9 @@ export function validateRequest(params): string {
   const { side, base, quote, amount } = params
   let errorMessage = null
   if (!validateRequiredFields(params, ['base', 'quote', 'side'])) {
-    errorMessage = 'base, quote, side must be string type'
+    errorMessage = `base, quote, side must be string type, with ${JSON.stringify(params)}`
   } else if (side !== 'BUY' && side !== 'SELL') {
-    errorMessage = 'side must be one of \'BUY\' and \'SELL\''
+    errorMessage = "side must be one of 'BUY' and 'SELL'"
   } else if (!isSupportedBaseQuote(getSupportedTokens(), base, quote)) {
     errorMessage = `Don't support { Base:${base}, Quote:${quote} } trade`
   } else if (amount && (_.isNaN(+amount) || +amount < 0)) {
