@@ -90,6 +90,7 @@ export enum Protocol {
   ZeroXV2 = '0xProtocolV2',
   ZeroXV3 = '0xProtocolV3',
   AMMV1 = 'AMMV1',
+  PMMV5 = 'PMMV5',
 }
 
 export enum TradeMode {
