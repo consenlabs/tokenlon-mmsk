@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+yarn build
 # publish package to github npm package
 npm publish
 # create release tarball and hash file
