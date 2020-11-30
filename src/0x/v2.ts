@@ -36,7 +36,7 @@ export function extractAssetAmounts(
   // order makerAssetAmount is amount(DAI / base amount)
   // order takerAssetAmount is amount of WETH (amount / rate)
   if (side === 'BUY') {
-    const makerTokenPrecision = 6
+    const makerTokenPrecision = 4
     const takerTokenPrecision = getFixPrecision(takerToken.decimal)
     makerAssetAmount = fromUnitToDecimalBN(
       amountBN.toFixed(makerTokenPrecision),
@@ -50,7 +50,7 @@ export function extractAssetAmounts(
     // user side SELL
   } else {
     const makerTokenPrecision = getFixPrecision(makerToken.decimal)
-    const takerTokenPrecision = 6
+    const takerTokenPrecision = 4
     makerAssetAmount = fromUnitToDecimalBN(
       amountBN.times(rate).toFixed(makerTokenPrecision),
       makerToken.decimal
