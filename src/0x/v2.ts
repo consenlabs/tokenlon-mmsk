@@ -8,8 +8,7 @@ import {
 } from '0x-v2-order-utils'
 import { BigNumber } from '@0xproject/utils'
 import * as ethUtils from 'ethereumjs-util'
-
-import { MarketMakerConfig, Token, TokenConfig } from '../types'
+import * as cryptoRandomString from 'crypto-random-string'
 import { toBN } from '../utils/math'
 import { getTokenBySymbol } from '../utils/token'
 import { getTimestamp } from '../utils/timestamp'
@@ -18,30 +17,10 @@ import { ecSignOrderHash } from '../utils/sign'
 import { getWethAddrIfIsEth } from '../utils/address'
 import { getWallet } from '../config'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
-import * as cryptoRandomString from 'crypto-random-string'
+import { GetFormatedSignedOrderParams, GetOrderAndFeeFactorParams } from '../signer/types'
 
 const getFixPrecision = (decimal) => {
   return decimal < 8 ? decimal : 8
-}
-
-interface SimpleOrder {
-  side: string
-  base: string
-  quote: string
-  amount?: number
-}
-
-interface GetOrderAndFeeFactorParams {
-  simpleOrder: SimpleOrder
-  rate: number | string
-  tokenList: Token[]
-  tokenConfigs: TokenConfig[]
-  config: MarketMakerConfig
-  queryFeeFactor?: number
-}
-
-interface GetFormatedSignedOrderParams extends GetOrderAndFeeFactorParams {
-  userAddr: string
 }
 
 export function extractAssetAmounts(
@@ -84,14 +63,13 @@ export function extractAssetAmounts(
   return { makerAssetAmount, takerAssetAmount }
 }
 
-const getOrderAndFeeFactor = (params: GetOrderAndFeeFactorParams) => {
+export function getOrderAndFeeFactor(params: GetOrderAndFeeFactorParams) {
   const { simpleOrder, rate, tokenList, tokenConfigs, config, queryFeeFactor } = params
   const { side, amount } = simpleOrder
   const baseToken = getTokenBySymbol(tokenList, simpleOrder.base)
   const quoteToken = getTokenBySymbol(tokenList, simpleOrder.quote)
   const makerToken = side === 'BUY' ? baseToken : quoteToken
   const takerToken = side === 'BUY' ? quoteToken : baseToken
-
   const foundTokenConfig = tokenConfigs.find((t) => t.symbol === makerToken.symbol)
 
   let fFactor = config.feeFactor || 0

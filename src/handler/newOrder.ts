@@ -11,6 +11,7 @@ import { appendQuoteIdToQuoteReponse, translateQueryData } from '../quoting'
 
 import { PrivateKeyWalletSubprovider } from '@0x/subproviders'
 import { orderHashUtils, SignedOrder } from '0x-v3-order-utils'
+import { buildSignedOrder } from '../signer/pmmv5'
 
 async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
   const simpleOrder = translateQueryData(query)
@@ -33,6 +34,34 @@ interface Response {
   quoteId?: any
   signedOrder?: SignedOrder
   orderHash?: string
+}
+
+function assembleProtocolPMMV5Response(rateBody, simpleOrder: QueryInterface): Response {
+  const { rate, minAmount, maxAmount, quoteId } = rateBody
+  // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
+  // 但是，Token Config 返回的配置是 feeFactor
+  const { userAddr } = simpleOrder
+  const config = updaterStack.markerMakerConfigUpdater.cacheResult
+  const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
+  const tokenList = getSupportedTokens()
+  const formattedOrder = buildSignedOrder({
+    simpleOrder,
+    rate,
+    userAddr: userAddr.toLowerCase(),
+    tokenList,
+    tokenConfigs,
+    config,
+    queryFeeFactor: simpleOrder.feefactor,
+  })
+  return {
+    rate,
+    minAmount,
+    maxAmount,
+    order: {
+      ...formattedOrder,
+      quoteId,
+    },
+  }
 }
 
 function assembleProtocolAMMResponse(rateBody, simpleOrder: QueryInterface): Response {
@@ -159,6 +188,9 @@ export const newOrder = async (ctx) => {
       case Protocol.AMMV1:
         // TODO: add real AMM order call data here
         resp = assembleProtocolAMMResponse(rateBody, simpleOrder)
+        break
+      case Protocol.PMMV5:
+        resp = assembleProtocolPMMV5Response(rateBody, simpleOrder)
         break
       default:
         console.warn(`unknown protocol ${query.protocol}, fallback to 0x v2`)
