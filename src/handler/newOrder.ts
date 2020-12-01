@@ -204,6 +204,7 @@ export const newOrder = async (ctx) => {
       ...resp,
     }
   } catch (e) {
+    console.error(e.stack)
     ctx.body = {
       result: false,
       exchangeable: false,
