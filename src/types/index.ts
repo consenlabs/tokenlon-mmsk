@@ -13,6 +13,15 @@ export interface MarketMakerConfig {
   wethContractAddress: string
   orderExpirationSeconds: number
   feeFactor: number
+  addressBookV5?: AddressBook // Tokenlon v5 contracts
+}
+
+interface AddressBook {
+  Tokenlon: string // Entry
+  PermanentStorage: string // Contract Data
+  PMM: string // rfq order
+  AMMWrapper: string // amm order
+  UserProxy: string // user proxy
 }
 
 export interface Wallet {

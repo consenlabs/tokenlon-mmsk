@@ -11,7 +11,7 @@ import { getWallet } from '../config'
 import { ecSignOrderHash } from '../utils/sign'
 import { orderBNToString } from '../utils/format'
 import { GetFormatedSignedOrderParams } from './types'
-import { getOrderAndFeeFactor } from '../0x/v2'
+import { getOrderAndFeeFactor } from './pmmv4'
 import { BigNumber } from '0x-v2-utils'
 
 // changes of PMMV5

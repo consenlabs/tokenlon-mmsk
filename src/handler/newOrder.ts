@@ -1,17 +1,15 @@
 import { PriceApiResult, Quoter } from '../request/marketMaker'
-import { getFormatedSignedOrder, getAMMSignedOrder } from '../0x/v2'
 import { getSupportedTokens } from '../utils/token'
 import { updaterStack } from '../worker'
 import { Protocol, QueryInterface, TradeMode } from '../types'
 import { validateNewOrderRequest, validateRequest } from '../validations'
-import { signOrderByMaker } from '../0x/v3'
-import { getWallet } from '../config'
 import { ValidationError } from './errors'
 import { appendQuoteIdToQuoteReponse, translateQueryData } from '../quoting'
 
-import { PrivateKeyWalletSubprovider } from '@0x/subproviders'
-import { orderHashUtils, SignedOrder } from '0x-v3-order-utils'
+import { SignedOrder } from '0x-v2-order-utils'
 import { buildSignedOrder } from '../signer/pmmv5'
+import { buildSignedOrder as buildLagacyOrder } from '../signer/pmmv4'
+import { buildSignedOrder as buildAMMV1Order } from '../signer/ammv1'
 
 async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
   const simpleOrder = translateQueryData(query)
@@ -72,7 +70,7 @@ function assembleProtocolAMMResponse(rateBody, simpleOrder: QueryInterface): Res
   const config = updaterStack.markerMakerConfigUpdater.cacheResult
   const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
   const tokenList = getSupportedTokens()
-  const formattedOrder = getAMMSignedOrder({
+  const formattedOrder = buildAMMV1Order({
     makerAddress: makerAddress,
     simpleOrder,
     rate,
@@ -101,7 +99,7 @@ function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Resp
   const config = updaterStack.markerMakerConfigUpdater.cacheResult
   const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
   const tokenList = getSupportedTokens()
-  const formattedOrder = getFormatedSignedOrder({
+  const formattedOrder = buildLagacyOrder({
     simpleOrder,
     rate,
     userAddr: userAddr.toLowerCase(),
@@ -121,45 +119,9 @@ function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Resp
   }
 }
 
-async function assembleProtocolV3Response(
-  makerReturnsRate,
-  simpleOrder,
-  chainID: number
-): Promise<Response> {
-  const { mmProxyContractAddress, feeFactor } = updaterStack.markerMakerConfigUpdater.cacheResult
-  const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
-
-  const { rate, minAmount, maxAmount, quoteId } = makerReturnsRate
-  const pkw = new PrivateKeyWalletSubprovider(getWallet().privateKey)
-  const { tokenListFromImtokenUpdater: tokenList } = updaterStack
-  const signedOrder = await signOrderByMaker(
-    {
-      chainID,
-      userAddr: simpleOrder.userAddr,
-      makerAddr: mmProxyContractAddress,
-      simpleOrder,
-      tokenList: tokenList.cacheResult,
-      tokenConfigs,
-      cfgFeeFactor: feeFactor,
-      ...makerReturnsRate,
-    },
-    pkw
-  )
-  const orderHash = orderHashUtils.getOrderHash(signedOrder)
-  return {
-    rate,
-    minAmount,
-    maxAmount,
-    quoteId,
-    orderHash,
-    signedOrder,
-  }
-}
-
 export const newOrder = async (ctx) => {
   const query: QueryInterface = {
     protocol: Protocol.ZeroXV2, // by default is v2 protocol
-    mode: TradeMode.RFQStream, // by default is rfq stream
     ...ctx.query,
   }
 
@@ -181,9 +143,6 @@ export const newOrder = async (ctx) => {
     switch (query.protocol) {
       case Protocol.ZeroXV2:
         resp = assembleProtocolV2Response(rateBody, simpleOrder)
-        break
-      case Protocol.ZeroXV3:
-        resp = await assembleProtocolV3Response(rateBody, simpleOrder, ctx.chainID)
         break
       case Protocol.AMMV1:
         // TODO: add real AMM order call data here

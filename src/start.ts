@@ -1,6 +1,6 @@
 import 'babel-polyfill'
 import * as Sentry from '@sentry/node'
-import * as Koa from 'koa'
+import * as Koa from 'koa' // TODO: replace to express, for better logging support
 import * as Router from 'koa-router'
 import * as Bodyparser from 'koa-bodyparser'
 import * as logger from 'koa-logger'
@@ -25,9 +25,8 @@ import tracker from './utils/tracker'
 import { Quoter } from './request/marketMaker/types'
 import { determineProvider } from './utils/provider_engine'
 
-const app = new Koa()
-const router = new Router()
-
+// FIXME: construct wallet(signer), quoter and worker separately
+// FIXME: better retry implementation
 const beforeStart = async (config: ConfigForStart, triedTimes?: number) => {
   const wallet = getWallet()
   triedTimes = triedTimes || 0
@@ -70,11 +69,11 @@ const beforeStart = async (config: ConfigForStart, triedTimes?: number) => {
 }
 
 export const startMMSK = async (config: ConfigForStart) => {
-  // default 80
+  const app = new Koa()
+  const router = new Router()
   const MMSK_SERVER_PORT = config.MMSK_SERVER_PORT || 80
 
   setConfig(config)
-
   try {
     const wallet = getWallet()
     if (!isValidWallet(wallet)) {
@@ -86,15 +85,14 @@ export const startMMSK = async (config: ConfigForStart) => {
 
     const quoter = await beforeStart(config)
 
-    // for imToken server
+    // Respond to Tokenlon quoting server
     router.get('/getRate', getRate)
     router.get('/newOrder', newOrder)
     router.get('/version', version)
     router.get('/getSupportedTokenList', getSupportedTokenList)
     router.post('/dealOrder', dealOrder)
     router.post('/exceptionOrder', exceptionOrder)
-
-    // for market maker
+    // Respond to market maker backend
     router.get('/getOrderState', getOrderState)
     router.get('/getOrdersHistory', getOrdersHistory)
     router.get('/getBalance', getBalance)
