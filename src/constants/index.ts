@@ -1,4 +1,4 @@
-import { BigNumber } from '0x-v3-utils'
+import { BigNumber } from '0x-v2-utils'
 
 export const FEE_RECIPIENT_ADDRESS = '0xb9e29984fe50602e7a619662ebed4f90d93824c7'
 

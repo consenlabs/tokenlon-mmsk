@@ -23,7 +23,6 @@ import { QuoteDispatcher, QuoterProtocol } from './request/marketMaker'
 import { isValidWallet } from './validations'
 import tracker from './utils/tracker'
 import { Quoter } from './request/marketMaker/types'
-import { determineProvider } from './utils/provider_engine'
 
 // FIXME: construct wallet(signer), quoter and worker separately
 // FIXME: better retry implementation
@@ -99,7 +98,6 @@ export const startMMSK = async (config: ConfigForStart) => {
     router.get('/getBalances', getBalances)
 
     app.context.chainID = config.CHAIN_ID || 42
-    app.context.provider = determineProvider(config.PROVIDER_URL)
     app.context.quoter = quoter
 
     app
