@@ -27,13 +27,13 @@ export const generateSaltWithFeeFactor = (feeFactor: number) => {
 
 // Move fee factor to salt field
 export const buildSignedOrder = (params: GetFormatedSignedOrderParams) => {
-  const { userAddr } = params
+  const { userAddr, config } = params
   const { order, feeFactor } = getOrderAndFeeFactor(params)
   const wallet = getWallet()
 
   // TODO: read from config for PMM contract address
-  order.takerAddress = '0x74e6Bd3FFEa08F5c63B5Fb0cc80a5D29FDEFA866'.toLowerCase()
-  order.senderAddress = '0x74e6Bd3FFEa08F5c63B5Fb0cc80a5D29FDEFA866'.toLowerCase()
+  order.takerAddress = config.addressBookV5.PMM.toLowerCase()
+  order.senderAddress = config.addressBookV5.PMM.toLowerCase()
   order.feeRecipientAddress = userAddr
 
   // inject fee factor to salt
