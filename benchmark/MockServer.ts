@@ -61,6 +61,13 @@ function createRPCHandler(): JsonRPC {
       orderExpirationSeconds: 600,
       mmProxyContractAddress: '',
       feeFactor: 30,
+      addressBookV5: {
+        Tokenlon: '0xA9eedf0130963C4204D15c95a870E49E64feE8BE',
+        PMM: '0x3346CCe684E7f93DfCcbB9bFC4942791d75B766D',
+        AllowanceTarget: '0x4e033fbc27Bd9f4A0e503640BCEc0319044d0717',
+        AMMQuoter: '0x71a951c6D01911552373b77B4946b86e1F664013',
+        AMMWrapper: '0xC824f36da1e6F5E8D411A4176BEFe1bDe5568BAa',
+      },
     }
   })
   endpoint.method('auth.getMMJwtToken', (ctx, _next) => {
