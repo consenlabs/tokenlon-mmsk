@@ -63,7 +63,7 @@ function assembleProtocolPMMV5Response(rateBody, simpleOrder: QueryInterface): R
 }
 
 function assembleProtocolAMMResponse(rateBody, simpleOrder: QueryInterface): Response {
-  const { rate, minAmount, maxAmount, quoteId, makerAddress } = rateBody
+  const { rate, quoteId, makerAddress } = rateBody
   // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
   // 但是，Token Config 返回的配置是 feeFactor
   const { userAddr } = simpleOrder
@@ -80,10 +80,15 @@ function assembleProtocolAMMResponse(rateBody, simpleOrder: QueryInterface): Res
     config,
     queryFeeFactor: simpleOrder.feefactor,
   })
+
+  const tokenSymbol = simpleOrder.base
+  const tokenConfig = tokenList.find(
+    (token) => token.symbol.toUpperCase() === tokenSymbol.toUpperCase()
+  )
   return {
     rate,
-    minAmount,
-    maxAmount,
+    minAmount: tokenConfig.minTradeAmount,
+    maxAmount: tokenConfig.maxTradeAmount,
     order: {
       ...formattedOrder,
       quoteId,
