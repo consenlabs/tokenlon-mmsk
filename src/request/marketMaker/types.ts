@@ -35,6 +35,7 @@ export interface PriceApiParams extends IndicativePriceApiParams {
 
 export interface PriceApiResult extends IndicativePriceApiResult {
   quoteId: string
+  priceImpact?: number
 }
 
 export interface NotifyOrderResult {

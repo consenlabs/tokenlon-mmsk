@@ -6,6 +6,10 @@ const _ = require('lodash')
 const uuid = require('uuid')
 const AMMWrapper = require('../abi/AMMWrapper.json')
 
+const uniswap = require('@uniswap/sdk')
+const { WETH, Fetcher, Route, TokenAmount, Token, Trade, ChainId, TradeType } = uniswap
+
+
 const UNISWAP_V1_FACTORY_ADDRESS = '0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95'.toLowerCase();
 const UNISWAP_V2_ROUTER_02_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'.toLowerCase();
 const CURVE_COMPOUND_ADDRESS = '0xA2B47E3D5c44877cca798226B7B8118F9BFb7A56'.toLowerCase();
@@ -104,8 +108,8 @@ const allPairs = generateAllPairs()
 
 class AMMQuoter {
   constructor(providerUrl, ammWrapperAddress) {
-    const provider = new ethers.providers.JsonRpcProvider(providerUrl)
-    this.ammWrapper = new ethers.Contract(ammWrapperAddress, AMMWrapper.abi, provider)
+    this.provider = new ethers.providers.JsonRpcProvider(providerUrl)
+    this.ammWrapper = new ethers.Contract(ammWrapperAddress, AMMWrapper.abi, this.provider)
   }
   async getPairs() {
     return allPairs
@@ -167,6 +171,7 @@ class AMMQuoter {
     const quoteToken = getAssetAddress(quote)
     let price = 0
     let expectedAmount = 0
+    let priceImpact = 0
     let bestMaker = ZERO_ADDRESS
     const pools = filterPools(base, quote)
 
@@ -178,6 +183,23 @@ class AMMQuoter {
         ethers.utils.parseUnits(baseAmount.toString(), baseToken.decimal)
       )
       bestMaker = resp.bestMaker
+      if (bestMaker === UNISWAP_V2_ROUTER_02_ADDRESS) {
+        const pairSymbol = pair.split('/')
+        const pairData = await Fetcher.fetchPairData(
+          getAssetAddress(pairSymbol[0]).address,
+          getAssetAddress(pairSymbol[1]).address,
+          this.provider
+        )
+        const route = new Route([pairData], quoteToken.address)
+        const trade = Trade.exactIn(
+          route,
+          new TokenAmount(
+            baseToken.address,
+            ethers.utils.parseUnits(baseAmount.toString(), baseToken.decimal)
+          )
+        )
+        priceImpact = trade.priceImpact.toSignificant(8)
+      }
       const inAmount = baseAmount
       const outAmount = ethers.utils.formatUnits(resp.bestAmount, quoteToken.decimal)
       price = new BigNumber(outAmount).dividedBy(inAmount).toNumber()
@@ -190,6 +212,23 @@ class AMMQuoter {
         ethers.utils.parseUnits(baseAmount.toString(), baseToken.decimal)
       )
       bestMaker = resp.bestMaker
+      if (bestMaker === UNISWAP_V2_ROUTER_02_ADDRESS) {
+        const pairSymbol = pair.split('/')
+        const pairData = await Fetcher.fetchPairData(
+          getAssetAddress(pairSymbol[0]).address,
+          getAssetAddress(pairSymbol[1]).address,
+          this.provider
+        )
+        const route = new Route([pairData], quoteToken.address)
+        const trade = Trade.exactOut(
+          route,
+          new TokenAmount(
+            baseToken.address,
+            ethers.utils.parseUnits(baseAmount.toString(), baseToken.decimal)
+          )
+        )
+        priceImpact = trade.priceImpact.toSignificant(8)
+      }
       const inAmount = ethers.utils.formatUnits(resp.bestAmount, quoteToken.decimal)
       const outAmount = baseAmount
       price = new BigNumber(outAmount).dividedBy(inAmount).toNumber()
@@ -201,6 +240,7 @@ class AMMQuoter {
       price: price,
       expectedAmount: expectedAmount,
       makerAddress: bestMaker,
+      priceImpact: priceImpact,
     }
   }
 }
