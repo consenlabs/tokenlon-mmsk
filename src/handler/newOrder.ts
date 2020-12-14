@@ -1,7 +1,7 @@
 import { PriceApiResult, Quoter } from '../request/marketMaker'
 import { getSupportedTokens } from '../utils/token'
 import { updaterStack } from '../worker'
-import { Protocol, QueryInterface, TradeMode } from '../types'
+import { Protocol, QueryInterface } from '../types'
 import { validateNewOrderRequest, validateRequest } from '../validations'
 import { ValidationError } from './errors'
 import { appendQuoteIdToQuoteReponse, translateQueryData } from '../quoting'
@@ -129,12 +129,7 @@ export const newOrder = async (ctx) => {
     protocol: Protocol.ZeroXV2, // by default is v2 protocol
     ...ctx.query,
   }
-
   const quoter = ctx.quoter
-  // NOTICE: only v3 support RFQT mode
-  if (query.protocol == Protocol.ZeroXV3) {
-    query['mode'] = TradeMode.RFQTaker
-  }
 
   try {
     let errMsg = validateRequest(query)
@@ -150,7 +145,6 @@ export const newOrder = async (ctx) => {
         resp = assembleProtocolV2Response(rateBody, simpleOrder)
         break
       case Protocol.AMMV1:
-        // TODO: add real AMM order call data here
         resp = assembleProtocolAMMResponse(rateBody, simpleOrder)
         break
       case Protocol.PMMV5:

@@ -92,7 +92,6 @@ export interface QueryInterface {
   uniqId?: number | string
   userAddr?: string
   protocol?: Protocol
-  mode?: TradeMode
 }
 
 export enum Protocol {
@@ -100,9 +99,4 @@ export enum Protocol {
   ZeroXV3 = '0xProtocolV3',
   AMMV1 = 'AMMV1',
   PMMV5 = 'PMMV5',
-}
-
-export enum TradeMode {
-  RFQStream = 'RFQStream',
-  RFQTaker = 'RFQTaker',
 }

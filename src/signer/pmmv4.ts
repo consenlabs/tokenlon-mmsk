@@ -8,7 +8,6 @@ import {
 } from '0x-v2-order-utils'
 import { BigNumber } from '@0xproject/utils'
 import * as ethUtils from 'ethereumjs-util'
-import * as cryptoRandomString from 'crypto-random-string'
 import { toBN } from '../utils/math'
 import { getTokenBySymbol } from '../utils/token'
 import { getTimestamp } from '../utils/timestamp'
@@ -163,20 +162,5 @@ export const buildSignedOrder = (params: GetFormatedSignedOrderParams) => {
     makerWalletSignature,
   }
 
-  return orderBNToString(signedOrder)
-}
-
-export const getMockSignedOrder = (params: GetFormatedSignedOrderParams) => {
-  const { order, feeFactor } = getOrderAndFeeFactor(params)
-  const o = {
-    ...order,
-    salt: generatePseudoRandomSalt(),
-  }
-  const makerWalletSignature = cryptoRandomString({ length: 40 })
-  const signedOrder = {
-    ...o,
-    feeFactor,
-    makerWalletSignature,
-  }
   return orderBNToString(signedOrder)
 }

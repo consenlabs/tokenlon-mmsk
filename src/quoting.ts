@@ -1,4 +1,4 @@
-import { Protocol, QueryInterface, SIDE, SupportedToken } from './types'
+import { QueryInterface, SIDE, SupportedToken } from './types'
 import { IndicativePriceApiResult, PriceApiResult } from './request/marketMaker/types'
 import { BackendError } from './handler/errors'
 import { toBN } from './utils/math'
@@ -55,10 +55,6 @@ function calculateFeeFactor(baseSymbol: string, factor: number | null): number {
 // Process buy amount for WYSIWYG
 function processBuyAmount(query: QueryInterface): QueryInterface {
   const result = { ...query }
-  // TODO: process fee on v3 later
-  if (query.protocol == Protocol.ZeroXV3) {
-    return result
-  }
 
   if (typeof query.base === 'string' && query.side === 'BUY') {
     // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor

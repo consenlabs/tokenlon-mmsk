@@ -31,7 +31,6 @@ export const buildSignedOrder = (params: GetFormatedSignedOrderParams) => {
   const { order, feeFactor } = getOrderAndFeeFactor(params)
   const wallet = getWallet()
 
-  // TODO: read from config for PMM contract address
   order.takerAddress = config.addressBookV5.PMM.toLowerCase()
   order.senderAddress = config.addressBookV5.PMM.toLowerCase()
   order.feeRecipientAddress = userAddr
