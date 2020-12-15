@@ -10,7 +10,7 @@ import { getSupportedTokens } from './utils/token'
 export const constructQuoteResponse = (priceResult: IndicativePriceApiResult, side: SIDE) => {
   const { minAmount, maxAmount, message, makerAddress } = priceResult
   if (priceResult.exchangeable === false || !priceResult.price) {
-    throw new BackendError(message || "Can't support this trade")
+    throw new BackendError(message || `Can't support this trade: ${JSON.stringify(priceResult)}`)
   }
 
   const rate = side === 'BUY' ? 1 / priceResult.price : priceResult.price

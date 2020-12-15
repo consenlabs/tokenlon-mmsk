@@ -6,7 +6,7 @@ export const getRate = async (ctx) => {
   const { query, quoter } = ctx
   try {
     const updatedQueryData = translateQueryData(query)
-    console.log({ ctx, query, updatedQueryData })
+    // console.log({ ctx, query, updatedQueryData })
     const errMsg = validateRequest(updatedQueryData)
     if (errMsg) throw new ValidationError(errMsg)
 

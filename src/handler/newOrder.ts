@@ -16,6 +16,7 @@ async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
   // request to market maker backend
   const { side } = simpleOrder
   const priceResult = await quoter.getPrice(simpleOrder as any)
+  console.log('got result from market maker', { simpleOrder, priceResult })
   const rateBody = appendQuoteIdToQuoteReponse(priceResult as PriceApiResult, side) as any
   return { simpleOrder, rateBody }
 }
