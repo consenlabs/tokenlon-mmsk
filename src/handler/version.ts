@@ -1,6 +1,6 @@
 export const version = (ctx) => {
   ctx.body = {
     result: true,
-    version: '0.7.1',
+    version: '5.0.0',
   }
 }
