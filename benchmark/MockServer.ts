@@ -55,12 +55,19 @@ function createRPCHandler(): JsonRPC {
       exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
       forwarderContractAddress: '0xd85e2fa7e7e252b27b01bf0d65c946959d2f45b8',
       zrxContractAddress: '0x2002d3812f58e35f0ea1ffbf80a75a38c32175fa',
-      tokenlonExchangeContractAddress: '0xc23dc48e847ea67cde9a93d0df242f9584abc90d',
+      tokenlonExchangeContractAddress: '0xD489f1684CF5e78D933E254BD7AC8A9A6a70d491',
       wethContractAddress: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
-      userProxyContractAddress: '0x97959853a0fb9a28432f1d4f46654fe524a12d81',
+      userProxyContractAddress: '0x25657705a6be20511687D483f2fCCfb2d92f6033',
       orderExpirationSeconds: 600,
       mmProxyContractAddress: '0x974afc6906cdeb17f163b7a5a2d2a59aa488b94e',
       feeFactor: 30,
+      addressBookV5: {
+        Tokenlon: '0xF1eC89551112da48C3b43B5a167AF0b2a7Cc2614',
+        PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
+        AllowanceTarget: '0x595d711189E48e766cC0cC011e85E40702764288',
+        AMMQuoter: '0x75A4f88DeeED0acE489285D1695323eF49dBC2ab',
+        AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
+      },
     }
   })
   endpoint.method('auth.getMMJwtToken', (ctx, _next) => {
@@ -87,10 +94,26 @@ function createRPCHandler(): JsonRPC {
       },
       {
         symbol: 'DAI',
-        contractAddress: '0x5c964665b6379527b625be996020d861f27aa31d',
+        contractAddress: '0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa',
         decimal: 18,
         precision: 6,
         minTradeAmount: 0.001,
+        maxTradeAmount: 1e4,
+      },
+      {
+        symbol: 'UNI',
+        contractAddress: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
+        decimal: 18,
+        precision: 6,
+        minTradeAmount: 0.001,
+        maxTradeAmount: 1e4,
+      },
+      {
+        symbol: 'USDT',
+        contractAddress: '0xd85476c906b5301e8e9eb58d174a6f96b9dfc5ee',
+        decimal: 6,
+        precision: 4,
+        minTradeAmount: 5,
         maxTradeAmount: 1e4,
       },
     ]
@@ -104,6 +127,14 @@ function createRPCHandler(): JsonRPC {
       },
       {
         symbol: 'DAI',
+        feeFactor: 30,
+      },
+      {
+        symbol: 'UNI',
+        feeFactor: 30,
+      },
+      {
+        symbol: 'USDT',
         feeFactor: 30,
       },
     ]

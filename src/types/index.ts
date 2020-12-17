@@ -13,6 +13,15 @@ export interface MarketMakerConfig {
   wethContractAddress: string
   orderExpirationSeconds: number
   feeFactor: number
+  addressBookV5?: AddressBook // Tokenlon v5 contracts
+}
+
+interface AddressBook {
+  Tokenlon: string // Entry
+  PermanentStorage: string // Contract Data
+  PMM: string // rfq order
+  AMMWrapper: string // amm order
+  UserProxy: string // user proxy
 }
 
 export interface Wallet {
@@ -83,15 +92,11 @@ export interface QueryInterface {
   uniqId?: number | string
   userAddr?: string
   protocol?: Protocol
-  mode?: TradeMode
 }
 
 export enum Protocol {
   ZeroXV2 = '0xProtocolV2',
   ZeroXV3 = '0xProtocolV3',
-}
-
-export enum TradeMode {
-  RFQStream = 'RFQStream',
-  RFQTaker = 'RFQTaker',
+  AMMV1 = 'AMMV1',
+  PMMV5 = 'PMMV5',
 }

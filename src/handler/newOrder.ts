@@ -1,22 +1,22 @@
 import { PriceApiResult, Quoter } from '../request/marketMaker'
-import { getFormatedSignedOrder } from '../0x/v2'
 import { getSupportedTokens } from '../utils/token'
 import { updaterStack } from '../worker'
-import { Protocol, QueryInterface, TradeMode } from '../types'
+import { Protocol, QueryInterface } from '../types'
 import { validateNewOrderRequest, validateRequest } from '../validations'
-import { signOrderByMaker } from '../0x/v3'
-import { getWallet } from '../config'
 import { ValidationError } from './errors'
 import { appendQuoteIdToQuoteReponse, translateQueryData } from '../quoting'
 
-import { PrivateKeyWalletSubprovider } from '@0x/subproviders'
-import { orderHashUtils, SignedOrder } from '0x-v3-order-utils'
+import { SignedOrder } from '0x-v2-order-utils'
+import { buildSignedOrder } from '../signer/pmmv5'
+import { buildSignedOrder as buildLagacyOrder } from '../signer/pmmv4'
+import { buildSignedOrder as buildAMMV1Order } from '../signer/ammv1'
 
 async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
   const simpleOrder = translateQueryData(query)
   // request to market maker backend
   const { side } = simpleOrder
   const priceResult = await quoter.getPrice(simpleOrder as any)
+  console.log('got result from market maker', { simpleOrder, priceResult })
   const rateBody = appendQuoteIdToQuoteReponse(priceResult as PriceApiResult, side) as any
   return { simpleOrder, rateBody }
 }
@@ -35,7 +35,7 @@ interface Response {
   orderHash?: string
 }
 
-function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Response {
+function assembleProtocolPMMV5Response(rateBody, simpleOrder: QueryInterface): Response {
   const { rate, minAmount, maxAmount, quoteId } = rateBody
   // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
   // 但是，Token Config 返回的配置是 feeFactor
@@ -43,7 +43,7 @@ function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Resp
   const config = updaterStack.markerMakerConfigUpdater.cacheResult
   const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
   const tokenList = getSupportedTokens()
-  const formattedOrder = getFormatedSignedOrder({
+  const formattedOrder = buildSignedOrder({
     simpleOrder,
     rate,
     userAddr: userAddr.toLowerCase(),
@@ -63,53 +63,74 @@ function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Resp
   }
 }
 
-async function assembleProtocolV3Response(
-  makerReturnsRate,
-  simpleOrder,
-  chainID: number
-): Promise<Response> {
-  const { mmProxyContractAddress, feeFactor } = updaterStack.markerMakerConfigUpdater.cacheResult
+function assembleProtocolAMMResponse(rateBody, simpleOrder: QueryInterface): Response {
+  const { rate, quoteId, makerAddress } = rateBody
+  // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
+  // 但是，Token Config 返回的配置是 feeFactor
+  const { userAddr } = simpleOrder
+  const config = updaterStack.markerMakerConfigUpdater.cacheResult
   const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
+  const tokenList = getSupportedTokens()
+  const formattedOrder = buildAMMV1Order({
+    makerAddress: makerAddress,
+    simpleOrder,
+    rate,
+    userAddr: userAddr.toLowerCase(),
+    tokenList,
+    tokenConfigs,
+    config,
+    queryFeeFactor: simpleOrder.feefactor,
+  })
 
-  const { rate, minAmount, maxAmount, quoteId } = makerReturnsRate
-  const pkw = new PrivateKeyWalletSubprovider(getWallet().privateKey)
-  const { tokenListFromImtokenUpdater: tokenList } = updaterStack
-  const signedOrder = await signOrderByMaker(
-    {
-      chainID,
-      userAddr: simpleOrder.userAddr,
-      makerAddr: mmProxyContractAddress,
-      simpleOrder,
-      tokenList: tokenList.cacheResult,
-      tokenConfigs,
-      cfgFeeFactor: feeFactor,
-      ...makerReturnsRate,
-    },
-    pkw
+  const tokenSymbol = simpleOrder.base
+  const tokenConfig = tokenList.find(
+    (token) => token.symbol.toUpperCase() === tokenSymbol.toUpperCase()
   )
-  const orderHash = orderHashUtils.getOrderHash(signedOrder)
+  return {
+    rate,
+    minAmount: tokenConfig.minTradeAmount,
+    maxAmount: tokenConfig.maxTradeAmount,
+    order: {
+      ...formattedOrder,
+      quoteId,
+    },
+  }
+}
+
+function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Response {
+  const { rate, minAmount, maxAmount, quoteId } = rateBody
+  // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
+  // 但是，Token Config 返回的配置是 feeFactor
+  const { userAddr } = simpleOrder
+  const config = updaterStack.markerMakerConfigUpdater.cacheResult
+  const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
+  const tokenList = getSupportedTokens()
+  const formattedOrder = buildLagacyOrder({
+    simpleOrder,
+    rate,
+    userAddr: userAddr.toLowerCase(),
+    tokenList,
+    tokenConfigs,
+    config,
+    queryFeeFactor: simpleOrder.feefactor,
+  })
   return {
     rate,
     minAmount,
     maxAmount,
-    quoteId,
-    orderHash,
-    signedOrder,
+    order: {
+      ...formattedOrder,
+      quoteId,
+    },
   }
 }
 
 export const newOrder = async (ctx) => {
   const query: QueryInterface = {
     protocol: Protocol.ZeroXV2, // by default is v2 protocol
-    mode: TradeMode.RFQStream, // by default is rfq stream
     ...ctx.query,
   }
-
   const quoter = ctx.quoter
-  // NOTICE: only v3 support RFQT mode
-  if (query.protocol == Protocol.ZeroXV3) {
-    query['mode'] = TradeMode.RFQTaker
-  }
 
   try {
     let errMsg = validateRequest(query)
@@ -119,17 +140,21 @@ export const newOrder = async (ctx) => {
     if (errMsg) throw new ValidationError(errMsg)
 
     const { simpleOrder, rateBody } = await requestMarketMaker(quoter, query)
-
     let resp: Response
     switch (query.protocol) {
       case Protocol.ZeroXV2:
         resp = assembleProtocolV2Response(rateBody, simpleOrder)
         break
-      case Protocol.ZeroXV3:
-        resp = await assembleProtocolV3Response(rateBody, simpleOrder, ctx.chainID)
+      case Protocol.AMMV1:
+        resp = assembleProtocolAMMResponse(rateBody, simpleOrder)
+        break
+      case Protocol.PMMV5:
+        resp = assembleProtocolPMMV5Response(rateBody, simpleOrder)
         break
       default:
-        throw new Error('Unknown protocol')
+        console.warn(`unknown protocol ${query.protocol}, fallback to 0x v2`)
+        resp = assembleProtocolV2Response(rateBody, simpleOrder)
+        break
     }
 
     ctx.body = {
@@ -138,6 +163,7 @@ export const newOrder = async (ctx) => {
       ...resp,
     }
   } catch (e) {
+    console.error(e.stack)
     ctx.body = {
       result: false,
       exchangeable: false,

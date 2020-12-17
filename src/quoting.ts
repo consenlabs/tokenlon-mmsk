@@ -1,4 +1,4 @@
-import { Protocol, QueryInterface, SIDE, SupportedToken } from './types'
+import { QueryInterface, SIDE, SupportedToken } from './types'
 import { IndicativePriceApiResult, PriceApiResult } from './request/marketMaker/types'
 import { BackendError } from './handler/errors'
 import { toBN } from './utils/math'
@@ -8,9 +8,9 @@ import { updaterStack } from './worker'
 import { getSupportedTokens } from './utils/token'
 
 export const constructQuoteResponse = (priceResult: IndicativePriceApiResult, side: SIDE) => {
-  const { minAmount, maxAmount, message } = priceResult
+  const { minAmount, maxAmount, message, makerAddress } = priceResult
   if (priceResult.exchangeable === false || !priceResult.price) {
-    throw new BackendError(message || "Can't support this trade")
+    throw new BackendError(message || `Can't support this trade: ${JSON.stringify(priceResult)}`)
   }
 
   const rate = side === 'BUY' ? 1 / priceResult.price : priceResult.price
@@ -18,6 +18,7 @@ export const constructQuoteResponse = (priceResult: IndicativePriceApiResult, si
     minAmount,
     maxAmount,
     rate: toBN((+rate).toFixed(8)).toNumber(),
+    makerAddress,
   }
 }
 
@@ -54,10 +55,6 @@ function calculateFeeFactor(baseSymbol: string, factor: number | null): number {
 // Process buy amount for WYSIWYG
 function processBuyAmount(query: QueryInterface): QueryInterface {
   const result = { ...query }
-  // TODO: process fee on v3 later
-  if (query.protocol == Protocol.ZeroXV3) {
-    return result
-  }
 
   if (typeof query.base === 'string' && query.side === 'BUY') {
     // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor

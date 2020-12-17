@@ -7,15 +7,18 @@ module.exports = {
   //
   // Wallet
   WALLET_ADDRESS: process.env.WALLET_ADDRESS,
-  USE_KEYSTORE: true,
+  USE_KEYSTORE: false,
   WALLET_KEYSTORE: {},
-  // WALLET_PRIVATE_KEY: process.env.WALLET_PRIVATE_KEY,
+  WALLET_PRIVATE_KEY: process.env.WALLET_PRIVATE_KEY,
+
+  // AMM
+  AMMWRAPPER_CONTRACT_ADDRESS: process.env.AMMWRAPPER_CONTRACT_ADDRESS,
 
   //
   // MM backend config
-  USE_ZERORPC: true,
-  // HTTP_SERVER_ENDPOINT: process.env.HTTP_SERVER_ENDPOINT,
-  ZERORPC_SERVER_ENDPOINT: process.env.ZERORPC_SERVER_ENDPOINT,
+  USE_ZERORPC: false,
+  HTTP_SERVER_ENDPOINT: process.env.HTTP_SERVER_ENDPOINT,
+  // ZERORPC_SERVER_ENDPOINT: process.env.ZERORPC_SERVER_ENDPOINT,
 
   //
   // Server config

@@ -5,14 +5,14 @@ import { validateNewOrderRequest, validateRequest } from '../src/validations'
 
 describe('Validator', function () {
   it('validateRequest', function () {
-    expect(validateRequest({})).to.be.eq('base, quote, side must be string type')
+    expect(validateRequest({})).to.be.includes('base, quote, side must be string type')
     expect(
       validateRequest({
         base: 1,
         quote: 'ETH',
         side: 'BUY',
       })
-    ).to.be.eq('base, quote, side must be string type')
+    ).to.be.includes('base, quote, side must be string type')
   })
 
   it('validateNewOrderRequest', function () {
