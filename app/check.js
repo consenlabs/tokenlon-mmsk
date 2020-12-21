@@ -1,4 +1,2 @@
-const mmConf = require('./mmConfig')
-const mmsk = require('../lib')
-
-mmsk.checkMMSK(mmConf)
+require('dotenv').config()
+require('../lib').checkMMSK(require('./mmConfig'))
