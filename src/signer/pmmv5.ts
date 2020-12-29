@@ -3,15 +3,11 @@ import {
   orderHashUtils,
   SignatureType,
   signatureUtils,
-  SignerType,
 } from '0x-v2-order-utils'
-import * as ethUtils from 'ethereumjs-util'
-import { utils } from 'ethers'
-import { getWallet } from '../config'
-import { ecSignOrderHash } from '../utils/sign'
+import { utils, Wallet } from 'ethers'
 import { orderBNToString } from '../utils/format'
 import { GetFormatedSignedOrderParams } from './types'
-import { getOrderAndFeeFactor } from './pmmv4'
+import { getOrderAndFeeFactor, signWithUserAndFee } from './pmmv4'
 import { BigNumber } from '0x-v2-utils'
 
 // changes of PMMV5
@@ -25,11 +21,30 @@ export const generateSaltWithFeeFactor = (feeFactor: number) => {
   return new BigNumber(generatePseudoRandomSalt().toString(16).slice(0, -4) + feeHex.slice(2), 16)
 }
 
+async function signByEOA(orderHash: string, wallet: Wallet): Promise<string> {
+  const hashArray = utils.arrayify(orderHash)
+  let signature = await wallet.signMessage(hashArray)
+  signature = signature.slice(2)
+  const v = signature.slice(signature.length - 2, signature.length)
+  const rs = signature.slice(0, signature.length - 2)
+  signature = '0x' + v + rs
+  return signatureUtils.convertToSignatureWithType(signature, SignatureType.EthSign)
+}
+
+function signByMMPSigner(
+  orderHash: string,
+  userAddr: string,
+  feeFactor: number,
+  wallet: Wallet
+): string {
+  const walletSign = signWithUserAndFee(wallet, orderHash, userAddr, feeFactor)
+  return signatureUtils.convertToSignatureWithType(walletSign, SignatureType.Wallet)
+}
+
 // Move fee factor to salt field
-export const buildSignedOrder = (params: GetFormatedSignedOrderParams) => {
+export const buildSignedOrder = async (signer: Wallet, params: GetFormatedSignedOrderParams) => {
   const { userAddr, config } = params
   const { order, feeFactor } = getOrderAndFeeFactor(params)
-  const wallet = getWallet()
 
   order.takerAddress = config.addressBookV5.PMM.toLowerCase()
   order.senderAddress = config.addressBookV5.PMM.toLowerCase()
@@ -41,28 +56,10 @@ export const buildSignedOrder = (params: GetFormatedSignedOrderParams) => {
     salt: generateSaltWithFeeFactor(feeFactor),
   }
   const orderHash = orderHashUtils.getOrderHashHex(o)
-
-  // TODO: add fee factor or not depend on the MMP version
-  const hash = ethUtils.bufferToHex(
-    Buffer.concat([
-      ethUtils.toBuffer(orderHash),
-      ethUtils.toBuffer(userAddr.toLowerCase()),
-      ethUtils.toBuffer(feeFactor > 255 ? feeFactor : [0, feeFactor]),
-    ])
-  )
-  // TODO: adapter to EOA
-  const signature = ecSignOrderHash(wallet.privateKey, hash, wallet.address, SignerType.Default)
-  const walletSign = ethUtils.bufferToHex(
-    Buffer.concat([
-      ethUtils.toBuffer(signature).slice(0, 65),
-      ethUtils.toBuffer(userAddr.toLowerCase()),
-      ethUtils.toBuffer(feeFactor > 255 ? feeFactor : [0, feeFactor]),
-    ])
-  )
-  const makerWalletSignature = signatureUtils.convertToSignatureWithType(
-    walletSign,
-    SignatureType.Wallet
-  )
+  const makerWalletSignature =
+    signer.address.toLowerCase() == o.makerAddress.toLowerCase()
+      ? await signByEOA(orderHash, signer)
+      : signByMMPSigner(orderHash, userAddr, feeFactor, signer)
 
   const signedOrder = {
     ...o,

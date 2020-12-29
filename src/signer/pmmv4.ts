@@ -14,9 +14,9 @@ import { getTimestamp } from '../utils/timestamp'
 import { fromUnitToDecimalBN, orderBNToString } from '../utils/format'
 import { ecSignOrderHash } from '../utils/sign'
 import { getWethAddrIfIsEth } from '../utils/address'
-import { getWallet } from '../config'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
 import { GetFormatedSignedOrderParams, GetOrderAndFeeFactorParams } from '../signer/types'
+import { Wallet } from 'ethers'
 
 const getFixPrecision = (decimal) => {
   return decimal < 8 ? decimal : 8
@@ -123,17 +123,12 @@ export function getOrderAndFeeFactor(params: GetOrderAndFeeFactorParams) {
   }
 }
 
-export const buildSignedOrder = (params: GetFormatedSignedOrderParams) => {
-  const { userAddr } = params
-  const { order, feeFactor } = getOrderAndFeeFactor(params)
-  const wallet = getWallet()
-
-  const o = {
-    ...order,
-    salt: generatePseudoRandomSalt(),
-  }
-  const orderHash = orderHashUtils.getOrderHashHex(o)
-
+export function signWithUserAndFee(
+  signer: Wallet,
+  orderHash: string,
+  userAddr: string,
+  feeFactor: number
+) {
   const hash = ethUtils.bufferToHex(
     Buffer.concat([
       ethUtils.toBuffer(orderHash),
@@ -142,7 +137,7 @@ export const buildSignedOrder = (params: GetFormatedSignedOrderParams) => {
     ])
   )
 
-  const signature = ecSignOrderHash(wallet.privateKey, hash, wallet.address, SignerType.Default)
+  const signature = ecSignOrderHash(signer.privateKey, hash, signer.address, SignerType.Default)
 
   const walletSign = ethUtils.bufferToHex(
     Buffer.concat([
@@ -151,16 +146,27 @@ export const buildSignedOrder = (params: GetFormatedSignedOrderParams) => {
       ethUtils.toBuffer(feeFactor > 255 ? feeFactor : [0, feeFactor]),
     ])
   )
+  return walletSign
+}
+
+export const buildSignedOrder = (signer: Wallet, params: GetFormatedSignedOrderParams) => {
+  const { userAddr } = params
+  const { order, feeFactor } = getOrderAndFeeFactor(params)
+
+  const o = {
+    ...order,
+    salt: generatePseudoRandomSalt(),
+  }
+  const orderHash = orderHashUtils.getOrderHashHex(o)
+  const walletSign = signWithUserAndFee(signer, orderHash, userAddr, feeFactor)
   const makerWalletSignature = signatureUtils.convertToSignatureWithType(
     walletSign,
     SignatureType.Wallet
   )
-
   const signedOrder = {
     ...o,
     feeFactor,
     makerWalletSignature,
   }
-
   return orderBNToString(signedOrder)
 }

@@ -99,6 +99,7 @@ export const startMMSK = async (config: ConfigForStart) => {
 
     app.context.chainID = config.CHAIN_ID || 42
     app.context.quoter = quoter
+    app.context.signer = getWallet()
 
     app
       .use(async (ctx, next) => {

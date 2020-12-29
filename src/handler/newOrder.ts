@@ -7,6 +7,7 @@ import { ValidationError } from './errors'
 import { appendQuoteIdToQuoteReponse, translateQueryData } from '../quoting'
 
 import { SignedOrder } from '0x-v2-order-utils'
+import { Wallet } from 'ethers'
 import { buildSignedOrder } from '../signer/pmmv5'
 import { buildSignedOrder as buildLagacyOrder } from '../signer/pmmv4'
 import { buildSignedOrder as buildAMMV1Order } from '../signer/ammv1'
@@ -35,7 +36,11 @@ interface Response {
   orderHash?: string
 }
 
-function assembleProtocolPMMV5Response(rateBody, simpleOrder: QueryInterface): Response {
+async function assembleProtocolPMMV5Response(
+  signer: Wallet,
+  rateBody,
+  simpleOrder: QueryInterface
+): Promise<Response> {
   const { rate, minAmount, maxAmount, quoteId } = rateBody
   // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
   // 但是，Token Config 返回的配置是 feeFactor
@@ -43,7 +48,7 @@ function assembleProtocolPMMV5Response(rateBody, simpleOrder: QueryInterface): R
   const config = updaterStack.markerMakerConfigUpdater.cacheResult
   const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
   const tokenList = getSupportedTokens()
-  const formattedOrder = buildSignedOrder({
+  const formattedOrder = await buildSignedOrder(signer, {
     simpleOrder,
     rate,
     userAddr: userAddr.toLowerCase(),
@@ -97,7 +102,11 @@ function assembleProtocolAMMResponse(rateBody, simpleOrder: QueryInterface): Res
   }
 }
 
-function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Response {
+function assembleProtocolV2Response(
+  signer: Wallet,
+  rateBody,
+  simpleOrder: QueryInterface
+): Response {
   const { rate, minAmount, maxAmount, quoteId } = rateBody
   // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
   // 但是，Token Config 返回的配置是 feeFactor
@@ -105,7 +114,7 @@ function assembleProtocolV2Response(rateBody, simpleOrder: QueryInterface): Resp
   const config = updaterStack.markerMakerConfigUpdater.cacheResult
   const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
   const tokenList = getSupportedTokens()
-  const formattedOrder = buildLagacyOrder({
+  const formattedOrder = buildLagacyOrder(signer, {
     simpleOrder,
     rate,
     userAddr: userAddr.toLowerCase(),
@@ -131,6 +140,7 @@ export const newOrder = async (ctx) => {
     ...ctx.query,
   }
   const quoter = ctx.quoter
+  const signer = ctx.signer
 
   try {
     let errMsg = validateRequest(query)
@@ -140,20 +150,22 @@ export const newOrder = async (ctx) => {
     if (errMsg) throw new ValidationError(errMsg)
 
     const { simpleOrder, rateBody } = await requestMarketMaker(quoter, query)
+    const makerCfg = updaterStack.markerMakerConfigUpdater.cacheResult
+
     let resp: Response
     switch (query.protocol) {
-      case Protocol.ZeroXV2:
-        resp = assembleProtocolV2Response(rateBody, simpleOrder)
-        break
       case Protocol.AMMV1:
         resp = assembleProtocolAMMResponse(rateBody, simpleOrder)
         break
       case Protocol.PMMV5:
-        resp = assembleProtocolPMMV5Response(rateBody, simpleOrder)
+        resp = await assembleProtocolPMMV5Response(signer, rateBody, simpleOrder)
         break
       default:
         console.warn(`unknown protocol ${query.protocol}, fallback to 0x v2`)
-        resp = assembleProtocolV2Response(rateBody, simpleOrder)
+        if (signer.address.toLowerCase() == makerCfg.address) {
+          throw new Error('eoa_signer_not_work_with_tokenlon_v4_order')
+        }
+        resp = assembleProtocolV2Response(signer, rateBody, simpleOrder)
         break
     }
 

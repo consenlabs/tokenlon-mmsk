@@ -1,6 +1,7 @@
 import * as readlineSync from 'readline-sync'
 import * as keythereum from 'keythereum'
 import { ConfigForStart } from '../types'
+import { Wallet } from 'ethers'
 
 const config = {
   EXCHANGE_URL: null,
@@ -33,10 +34,7 @@ const setConfig = (conf: ConfigForStart) => {
 }
 
 const getWallet = () => {
-  return {
-    address: config.WALLET_ADDRESS,
-    privateKey: config.WALLET_PRIVATE_KEY,
-  }
+  return new Wallet(config.WALLET_PRIVATE_KEY)
 }
 
 export { config, setConfig, getWallet }
