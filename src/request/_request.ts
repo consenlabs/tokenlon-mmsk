@@ -47,17 +47,19 @@ export const sendRequest = (config): Promise<any> => {
     ...config,
   }
   return new Promise((resolve, reject) => {
-    client(rConfig).then(res => {
-      if (res.data) {
-        resolve(res.data)
-      } else {
-        reject(newError('null response', config.url))
-      }
-    }).catch(error => {
-      console.log('request error', error)
-      reject(newError(error, config.url))
-    })
-  }) as Promise<{ error: object, result: any }>
+    client(rConfig)
+      .then((res) => {
+        if (res.data) {
+          resolve(res.data)
+        } else {
+          reject(newError('null response', config.url))
+        }
+      })
+      .catch((error) => {
+        console.log('request error', error)
+        reject(newError(error, config.url))
+      })
+  }) as Promise<{ error: object; result: any }>
 }
 
 export const jsonrpc = {
@@ -72,17 +74,19 @@ export const jsonrpc = {
       method,
       params,
     }
-    return sendRequest({ method: 'post', url, data, timeout, headers }).then(data => {
-      if (data.error) {
-        throw newError(data.error, url)
-      }
+    return sendRequest({ method: 'post', url, data, timeout, headers })
+      .then((data) => {
+        if (data.error) {
+          throw newError(data.error, url)
+        }
 
-      if (_.isUndefined(data.result)) {
-        throw newError('server result is undefined', url)
-      }
-      return data.result
-    }).catch(err => {
-      throw err
-    })
+        if (_.isUndefined(data.result)) {
+          throw newError('server result is undefined', url)
+        }
+        return data.result
+      })
+      .catch((err) => {
+        throw err
+      })
   },
 }

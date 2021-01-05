@@ -1,6 +1,6 @@
 import * as readlineSync from 'readline-sync'
 import * as keythereum from 'keythereum'
-import { ConfigForStart } from '../types'
+import { ConfigForStart } from './types'
 import { Wallet } from 'ethers'
 
 const config = {

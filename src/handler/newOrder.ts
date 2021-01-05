@@ -12,7 +12,7 @@ import { buildSignedOrder as buildLagacyOrder } from '../signer/pmmv4'
 import { buildSignedOrder as buildAMMV1Order } from '../signer/ammv1'
 import { addQuoteIdPrefix } from '../utils/quoteId'
 import { BigNumber, fromUnitToDecimalBN, toBN } from '../utils/format'
-import { getWethAddrIfIsEth } from '../utils/address'
+import { getWethAddrIfIsEth } from '../utils/ethereum'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
 import { getTimestamp } from '../utils/timestamp'
 

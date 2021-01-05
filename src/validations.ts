@@ -1,8 +1,8 @@
 import * as _ from 'lodash'
 import { utils } from 'ethers'
-import { Wallet } from '../types'
+import { Wallet } from './types'
 import * as ethUtils from 'ethereumjs-util'
-import { isSupportedBaseQuote, getSupportedTokens } from '../utils/token'
+import { isSupportedBaseQuote, getSupportedTokens } from './utils/token'
 
 export const isValidWallet = (wallet: Wallet): boolean => {
   if (!wallet) {
