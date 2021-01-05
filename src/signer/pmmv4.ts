@@ -24,7 +24,12 @@ export function signWithUserAndFee(
     ])
   )
 
-  const signature = ecSignOrderHash(signer.privateKey, hash, signer.address, SignerType.Default)
+  const signature = ecSignOrderHash(
+    signer.privateKey.slice(2),
+    hash,
+    signer.address,
+    SignerType.Default
+  )
 
   const walletSign = ethUtils.bufferToHex(
     Buffer.concat([

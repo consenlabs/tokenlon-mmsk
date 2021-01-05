@@ -64,7 +64,7 @@ export interface ExceptionOrder extends DealOrder {
 
 export interface Token {
   symbol: string
-  logo: string
+  logo?: string
   contractAddress: string
   decimal: number
   precision: number

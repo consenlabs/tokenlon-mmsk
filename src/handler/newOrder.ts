@@ -167,15 +167,15 @@ export const newOrder = async (ctx) => {
     const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
     const tokenList = getSupportedTokens()
 
+    const { rate, minAmount, maxAmount, quoteId } = rateBody
     const { order, feeFactor } = getOrderAndFeeFactor(
       simpleOrder,
-      rateBody,
+      rate,
       tokenList,
       tokenConfigs,
       config
     )
 
-    const { rate, minAmount, maxAmount, quoteId } = rateBody
     const resp: Response = {
       rate,
       minAmount,
@@ -203,14 +203,14 @@ export const newOrder = async (ctx) => {
         resp.order = await buildSignedOrder(
           signer,
           order,
-          feeFactor,
           userAddr.toLowerCase(),
+          feeFactor,
           config.addressBookV5.PMM
         )
         break
       default:
-        console.warn(`unknown protocol ${query.protocol}, fallback to 0x v2`)
-        if (signer.address.toLowerCase() == makerCfg.address) {
+        console.log(`unknown protocol ${query.protocol}, fallback to 0x v2`)
+        if (signer.address.toLowerCase() == makerCfg.mmProxyContractAddress.toLowerCase()) {
           throw new Error('eoa_signer_not_work_with_tokenlon_v4_order')
         }
         resp.order = buildLagacyOrder(signer, order, userAddr, feeFactor)
@@ -224,6 +224,7 @@ export const newOrder = async (ctx) => {
       exchangeable: true,
       ...resp,
     }
+    return resp
   } catch (e) {
     console.error(e.stack)
     ctx.body = {
@@ -231,5 +232,6 @@ export const newOrder = async (ctx) => {
       exchangeable: false,
       message: e.message,
     }
+    return e.message
   }
 }

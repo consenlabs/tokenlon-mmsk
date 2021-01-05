@@ -14,7 +14,7 @@ export const isValidWallet = (wallet: Wallet): boolean => {
     console.error(`address(${address}) is not valid`)
     return false
   }
-  const addr = ethUtils.privateToAddress(new Buffer(privateKey, 'hex'))
+  const addr = ethUtils.privateToAddress(Buffer.from(privateKey, 'hex'))
   return `0x${addr.toString('hex')}`.toLowerCase() === address.toLowerCase()
 }
 
