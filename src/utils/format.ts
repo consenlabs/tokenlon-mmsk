@@ -1,42 +1,40 @@
-import * as _ from 'lodash'
-import { toBN } from './math'
-import { isBigNumber } from '../validations'
+import { reduce } from 'lodash'
 import { BigNumber } from '@0xproject/utils'
 
-const translateValueHelper = (obj: object, check: (v) => boolean, operate: (v) => any): any => {
-  let result = {}
-  _.keys(obj).forEach((key) => {
-    const v = obj[key]
-    result[key] = check(v) ? operate(v) : v
-  })
-  return result
+BigNumber.config({ ROUNDING_MODE: BigNumber.ROUND_FLOOR })
+
+export { BigNumber }
+
+export const toBN = (obj: number | string): BigNumber => new BigNumber(obj)
+
+export const isBigNumber = (v: any): boolean => {
+  return (
+    v instanceof BigNumber ||
+    (v && v.isBigNumber === true) ||
+    (v && v._isBigNumber === true) ||
+    false
+  )
 }
 
 export const orderBNToString = (order) => {
-  let result = {}
-  result = translateValueHelper(order, isBigNumber, (v) => v.toString())
-  return result
+  return reduce(
+    order,
+    (acc, v, key) => {
+      acc[key] = isBigNumber(v) ? v.toString() : v
+      return acc
+    },
+    {}
+  )
 }
 
-export const fromUnitToDecimalBN = (balance, decimal): BigNumber => {
+// apply 10**decimal to token balance
+export const fromUnitToDecimalBN = (balance: number | string, decimal: number): BigNumber => {
   const amountBN = toBN(balance || 0)
-  const decimalBN = toBN(10).toPower(decimal)
-  // 避免出现小数点的情况
-  return toBN(Math.trunc(amountBN.times(decimalBN).toNumber()))
+  const decimalBN = toBN(10).pow(decimal)
+  return amountBN.times(decimalBN).truncated()
 }
 
-export const fromDecimalToUnit = (balance, decimal) => {
-  return toBN(balance).dividedBy(Math.pow(10, decimal))
-}
-
-export const fromUnitToDecimal = (balance, decimal, base) => {
-  return fromUnitToDecimalBN(balance, decimal).toString(base)
-}
-
-// precision + 1 的位置，进行四舍五入
-export const roundAmount = (amount, precision) => {
-  const exact = Math.pow(10, precision)
-  return toBN(Math.trunc(amount * exact))
-    .dividedBy(exact)
-    .toNumber()
+// truncate out of precision part
+export const truncateAmount = (amount: number | string, precision: number): number => {
+  return toBN(toBN(amount).toFormat(precision)).toNumber()
 }
