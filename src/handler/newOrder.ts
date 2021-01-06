@@ -3,12 +3,7 @@ import { updaterStack } from '../worker'
 import { Protocol, QueryInterface } from '../types'
 import { validateNewOrderRequest, validateRequest } from '../validations'
 import { ValidationError } from './errors'
-import {
-  addQuoteIdPrefix,
-  constructQuoteResponse,
-  ensureCorrectSymbolCase,
-  translateQueryData,
-} from '../quoting'
+import { addQuoteIdPrefix, constructQuoteResponse, preprocessQuote } from '../quoting'
 
 import { assetDataUtils, SignedOrder } from '0x-v2-order-utils'
 import { buildSignedOrder } from '../signer/pmmv5'
@@ -41,7 +36,7 @@ interface Response {
 
 // request getPrice API from market maker backend
 async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
-  const simpleOrder = translateQueryData(ensureCorrectSymbolCase(query))
+  const simpleOrder = preprocessQuote(query)
   // request to market maker backend
   const { side } = simpleOrder
   const priceResult = await quoter.getPrice(simpleOrder as any)
@@ -53,10 +48,6 @@ async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
   return { simpleOrder, rateBody }
 }
 
-const getFixPrecision = (decimal) => {
-  return decimal < 8 ? decimal : 8 // NOTE: use 8 decimal here
-}
-
 function extractAssetAmounts(
   makerToken,
   takerToken,
@@ -65,13 +56,9 @@ function extractAssetAmounts(
   amountBN: BigNumber
 ) {
   let makerAssetAmount, takerAssetAmount
-  // order makerToken is DAI
-  // order takerToken is WETH
-  // order makerAssetAmount is amount(DAI / base amount)
-  // order takerAssetAmount is amount of WETH (amount / rate)
   if (side === 'BUY') {
-    const makerTokenPrecision = 4
-    const takerTokenPrecision = getFixPrecision(takerToken.decimal)
+    const makerTokenPrecision = makerToken.precision
+    const takerTokenPrecision = takerToken.decimal
     makerAssetAmount = fromUnitToDecimalBN(
       amountBN.toFixed(makerTokenPrecision),
       makerToken.decimal
@@ -81,8 +68,8 @@ function extractAssetAmounts(
       takerToken.decimal
     )
   } else {
-    const makerTokenPrecision = getFixPrecision(makerToken.decimal)
-    const takerTokenPrecision = 4
+    const makerTokenPrecision = makerToken.decimal
+    const takerTokenPrecision = takerToken.precision
     makerAssetAmount = fromUnitToDecimalBN(
       amountBN.times(rate).toFixed(makerTokenPrecision),
       makerToken.decimal
@@ -156,17 +143,16 @@ function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config
 }
 
 export const newOrder = async (ctx) => {
+  const { quoter, signer } = ctx
   const query: QueryInterface = {
-    protocol: Protocol.ZeroXV2, // by default is v2 protocol
-    ...ctx.query,
+    protocol: Protocol.PMMV4, // by default is v2 protocol
+    ...ctx.query, // overwrite from request
   }
-  const quoter = ctx.quoter
-  const signer = ctx.signer
 
   try {
     let errMsg = validateRequest(query)
     if (errMsg) throw new ValidationError(errMsg)
-    const { amount, uniqId, userAddr } = query
+    const { amount, uniqId, userAddr, protocol } = query
     errMsg = validateNewOrderRequest(amount, uniqId, userAddr)
     if (errMsg) throw new ValidationError(errMsg)
 
@@ -190,7 +176,7 @@ export const newOrder = async (ctx) => {
       minAmount,
       maxAmount,
     }
-    switch (query.protocol) {
+    switch (protocol) {
       case Protocol.AMMV1:
         // directly use system token config
         {
@@ -218,7 +204,7 @@ export const newOrder = async (ctx) => {
         )
         break
       default:
-        console.log(`unknown protocol ${query.protocol}, fallback to 0x v2`)
+        console.log(`unknown protocol ${protocol}, fallback to 0x v2`)
         if (signer.address.toLowerCase() == makerCfg.mmProxyContractAddress.toLowerCase()) {
           throw new Error('eoa_signer_not_work_with_tokenlon_v4_order')
         }

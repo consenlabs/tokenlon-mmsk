@@ -1,7 +1,10 @@
 import { reduce } from 'lodash'
 import { BigNumber } from '@0xproject/utils'
 
-BigNumber.config({ ROUNDING_MODE: BigNumber.ROUND_FLOOR })
+BigNumber.config({
+  ROUNDING_MODE: BigNumber.ROUND_FLOOR,
+  DECIMAL_PLACES: 18,
+})
 
 export { BigNumber }
 

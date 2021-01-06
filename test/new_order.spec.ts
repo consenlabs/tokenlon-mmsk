@@ -1,7 +1,7 @@
 import { assert } from 'chai'
 import 'mocha'
 import * as suppressLogs from 'mocha-suppress-logs'
-import { Wallet } from 'ethers'
+import { Wallet, utils } from 'ethers'
 import { newOrder } from '../src/handler'
 import { updaterStack, Updater } from '../src/worker'
 import { NULL_ADDRESS } from '../src/constants'
@@ -12,7 +12,7 @@ describe('NewOrder', function () {
 
   const signer = Wallet.createRandom()
 
-  before(function () {
+  beforeEach(function () {
     const mockMarkerMakerConfigUpdater = new Updater({
       name: 'mockMarkerMakerConfigUpdater',
       updater() {
@@ -78,39 +78,10 @@ describe('NewOrder', function () {
     updaterStack['tokenConfigsFromImtokenUpdater'] = mockTokenConfigsFromImtokenUpdater
   })
 
-  it('should signed pmmv4 order', async function () {
-    const signedOrderResp = await newOrder({
-      signer: Wallet.createRandom(),
-      quoter: {
-        getPrice: () => {
-          return Promise.resolve({
-            result: true,
-            exchangeable: true,
-            minAmount: 0,
-            maxAmount: 1000,
-            price: 1,
-            quoteId: 'echo-testing-9999',
-          })
-        },
-      },
-      query: {
-        base: 'ETH',
-        quote: 'USDT',
-        side: 'SELL',
-        amount: 0.1,
-        uniqId: 'testing-1111',
-        userAddr: Wallet.createRandom().address.toLowerCase(),
-      },
-    })
-
-    assert(signedOrderResp)
-    assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-9999')
-  })
-
-  it('should raise error pmmv4 order for EOA mmp', async function () {
-    assert.equal(
-      await newOrder({
-        signer: signer,
+  describe('dispatch to protocol signer', function () {
+    it('should signed pmmv4 order', async function () {
+      const signedOrderResp = await newOrder({
+        signer: Wallet.createRandom(),
         quoter: {
           getPrice: () => {
             return Promise.resolve({
@@ -131,70 +102,180 @@ describe('NewOrder', function () {
           uniqId: 'testing-1111',
           userAddr: Wallet.createRandom().address.toLowerCase(),
         },
-      }),
-      'eoa_signer_not_work_with_tokenlon_v4_order'
-    )
-  })
+      })
 
-  it('should signed pmmv5 order by MMP', async function () {
-    const signedOrderResp = await newOrder({
-      signer: Wallet.createRandom(),
-      quoter: {
-        getPrice: () => {
-          return Promise.resolve({
-            result: true,
-            exchangeable: true,
-            minAmount: 0,
-            maxAmount: 1000,
-            price: 1,
-            quoteId: 'echo-testing-8888',
-          })
-        },
-      },
-      query: {
-        base: 'ETH',
-        quote: 'USDT',
-        side: 'SELL',
-        amount: 0.1,
-        uniqId: 'testing-1111',
-        userAddr: Wallet.createRandom().address.toLowerCase(),
-        protocol: Protocol.PMMV5,
-      },
+      assert(signedOrderResp)
+      assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-9999')
     })
 
-    assert(signedOrderResp)
-    assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-8888')
-    assert.equal(signedOrderResp.order.makerWalletSignature.slice(-1), '4')
-  })
-
-  it('should signed pmmv5 order by EOA', async function () {
-    const signedOrderResp = await newOrder({
-      signer: signer,
-      quoter: {
-        getPrice: () => {
-          return Promise.resolve({
-            result: true,
-            exchangeable: true,
-            minAmount: 0,
-            maxAmount: 1000,
-            price: 1,
-            quoteId: 'echo-testing-8888',
-          })
-        },
-      },
-      query: {
-        base: 'ETH',
-        quote: 'USDT',
-        side: 'SELL',
-        amount: 0.1,
-        uniqId: 'testing-1111',
-        userAddr: Wallet.createRandom().address.toLowerCase(),
-        protocol: Protocol.PMMV5,
-      },
+    it('should raise error pmmv4 order for EOA mmp', async function () {
+      assert.equal(
+        await newOrder({
+          signer: signer,
+          quoter: {
+            getPrice: () => {
+              return Promise.resolve({
+                result: true,
+                exchangeable: true,
+                minAmount: 0,
+                maxAmount: 1000,
+                price: 1,
+                quoteId: 'echo-testing-9999',
+              })
+            },
+          },
+          query: {
+            base: 'ETH',
+            quote: 'USDT',
+            side: 'SELL',
+            amount: 0.1,
+            uniqId: 'testing-1111',
+            userAddr: Wallet.createRandom().address.toLowerCase(),
+          },
+        }),
+        'eoa_signer_not_work_with_tokenlon_v4_order'
+      )
     })
 
-    assert(signedOrderResp)
-    assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-8888')
-    assert.equal(signedOrderResp.order.makerWalletSignature.slice(-1), '3')
+    it('should signed pmmv5 order by MMP', async function () {
+      const signedOrderResp = await newOrder({
+        signer: Wallet.createRandom(),
+        quoter: {
+          getPrice: () => {
+            return Promise.resolve({
+              result: true,
+              exchangeable: true,
+              minAmount: 0,
+              maxAmount: 1000,
+              price: 1,
+              quoteId: 'echo-testing-8888',
+            })
+          },
+        },
+        query: {
+          base: 'ETH',
+          quote: 'USDT',
+          side: 'SELL',
+          amount: 0.1,
+          uniqId: 'testing-1111',
+          userAddr: Wallet.createRandom().address.toLowerCase(),
+          protocol: Protocol.PMMV5,
+        },
+      })
+
+      assert(signedOrderResp)
+      assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-8888')
+      assert.equal(signedOrderResp.order.makerWalletSignature.slice(-1), '4')
+    })
+
+    it('should signed pmmv5 order by EOA', async function () {
+      const signedOrderResp = await newOrder({
+        signer: signer,
+        quoter: {
+          getPrice: () => {
+            return Promise.resolve({
+              result: true,
+              exchangeable: true,
+              minAmount: 0,
+              maxAmount: 1000,
+              price: 1,
+              quoteId: 'echo-testing-8888',
+            })
+          },
+        },
+        query: {
+          base: 'ETH',
+          quote: 'USDT',
+          side: 'SELL',
+          amount: 0.1,
+          uniqId: 'testing-1111',
+          userAddr: Wallet.createRandom().address.toLowerCase(),
+          protocol: Protocol.PMMV5,
+        },
+      })
+
+      assert(signedOrderResp)
+      assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-8888')
+      assert.equal(signedOrderResp.order.makerWalletSignature.slice(-1), '3')
+    })
+  })
+
+  describe('handle token precision and decimals', () => {
+    it('should format taker asset amount', async function () {
+      const signedOrderResp = await newOrder({
+        signer: Wallet.createRandom(),
+        quoter: {
+          getPrice: () => {
+            return Promise.resolve({
+              result: true,
+              exchangeable: true,
+              minAmount: 0,
+              maxAmount: 1000,
+              price: 1.1,
+              quoteId: 'echo-testing-8888',
+            })
+          },
+        },
+        query: {
+          base: 'ETH',
+          quote: 'USDT',
+          side: 'BUY',
+          amount: 0.1111,
+          feeFactor: 10,
+          uniqId: 'testing-1111',
+          userAddr: Wallet.createRandom().address.toLowerCase(),
+          protocol: Protocol.PMMV5,
+        },
+      })
+
+      assert(signedOrderResp)
+      assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-8888')
+      assert.equal(signedOrderResp.order.makerWalletSignature.slice(-1), '4')
+      assert.equal(
+        signedOrderResp.order.takerAssetData.slice(34),
+        'dac17f958d2ee523a2206206994597c13d831ec7'
+      )
+      assert.equal(
+        signedOrderResp.order.takerAssetAmount,
+        utils.parseUnits('0.122539', 6).toString()
+      )
+      assert.equal(signedOrderResp.order.makerAssetAmount, utils.parseEther('0.1114').toString())
+    })
+
+    it('should format maker asset amount', async function () {
+      const signedOrderResp = await newOrder({
+        signer: Wallet.createRandom(),
+        quoter: {
+          getPrice: () => {
+            return Promise.resolve({
+              result: true,
+              exchangeable: true,
+              minAmount: 0,
+              maxAmount: 1000,
+              price: 1.1,
+              quoteId: 'echo-testing-8888',
+            })
+          },
+        },
+        query: {
+          base: 'ETH',
+          quote: 'USDT',
+          side: 'SELL',
+          amount: 0.1111,
+          uniqId: 'testing-1111',
+          userAddr: Wallet.createRandom().address.toLowerCase(),
+          protocol: Protocol.PMMV5,
+        },
+      })
+
+      assert(signedOrderResp)
+      assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-8888')
+      assert.equal(signedOrderResp.order.makerWalletSignature.slice(-1), '4')
+      assert.equal(signedOrderResp.order.takerAssetAmount, utils.parseEther('0.1111').toString())
+      assert.equal(
+        signedOrderResp.order.makerAssetAmount,
+        utils.parseUnits('0.12221', 6).toString()
+      )
+    })
   })
 })

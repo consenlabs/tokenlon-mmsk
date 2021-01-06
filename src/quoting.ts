@@ -1,9 +1,11 @@
 import { isNil } from 'lodash'
-import { QueryInterface, SIDE, SupportedToken } from './types'
+import { QueryInterface, SIDE, SupportedToken, TokenConfig } from './types'
 import { IndicativePriceApiResult } from './request/marketMaker'
 import { BackendError } from './handler/errors'
 import { updaterStack } from './worker'
 import { truncateAmount, toBN, getSupportedTokens } from './utils'
+
+const DISPLAY_PRECEISION = 8
 
 const getPrefix = (): string => `${updaterStack.markerMakerConfigUpdater.cacheResult.mmId}--`
 
@@ -27,42 +29,46 @@ export const constructQuoteResponse = (indicativePrice: IndicativePriceApiResult
   return {
     minAmount,
     maxAmount,
-    rate: toBN((+rate).toFixed(8)).toNumber(), // NOTE: number process
+    rate: toBN((+rate).toFixed(DISPLAY_PRECEISION)).toNumber(),
     makerAddress,
   }
 }
 
 // Process buy amount for WYSIWY
-function applyFeeToAmount(amount: number, feeFactor: number) {
+function applyFeeToAmount(amount: number, feeFactor: number, precision: number) {
   if (isNil(amount)) return amount
-  return truncateAmount(+amount / (1 - feeFactor / 10000), 6) // NOTE: number process
+  return truncateAmount(
+    toBN(amount)
+      .dividedBy(1 - feeFactor / 10000)
+      .toString(),
+    precision
+  )
 }
 
-function calcFeeFactorWhenBuy(baseSymbol: string, factor: number | null): number {
-  const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
-  // 用户 BUY base, 手续费就是 base 的 Token，即 order的 makerToken —— 对应做市商转出的币，用户收到的币
-  // 但是，Token Config 返回的配置是 feeFactor
-  const foundTokenConfig = tokenConfigs.find((t) => t.symbol.toUpperCase() === baseSymbol)
-  const config = updaterStack.markerMakerConfigUpdater.cacheResult
-
+function calcFeeFactorWhenBuy(tokenCfg: TokenConfig, factor: number | null): number {
   const queryFeeFactor = Number(factor)
   if (!isNaN(queryFeeFactor) && queryFeeFactor >= 0) {
     return queryFeeFactor
-  } else if (foundTokenConfig && foundTokenConfig.feeFactor) {
-    return foundTokenConfig.feeFactor
+  } else if (tokenCfg && tokenCfg.feeFactor) {
+    return tokenCfg.feeFactor
   }
-  return config.feeFactor || 0
+  return null
 }
 
 // 处理接口大小写情况，转换为系统设定格式，以及 side BUY 情况的数量调整
-export const translateQueryData = (query: QueryInterface): QueryInterface => {
-  const result = { ...query }
-
+export const preprocessQuote = (query: QueryInterface): QueryInterface => {
+  const result = ensureCorrectSymbolCase(query)
   if (typeof query.base === 'string' && query.side === 'BUY') {
+    // 用户 BUY base, 手续费就是 base 的 Token，即 order的 makerToken —— 对应做市商转出的币，用户收到的币
+    const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
+    const tokenCfg = tokenConfigs.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
+    const config = updaterStack.markerMakerConfigUpdater.cacheResult
     // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
-    // Token Config 返回的配置是 feeFactor
-    const feeFactor = calcFeeFactorWhenBuy(query.base.toUpperCase(), query.feefactor)
-    result.amount = applyFeeToAmount(query.amount, feeFactor)
+    const feeFactor = calcFeeFactorWhenBuy(tokenCfg, query.feefactor) || config.feeFactor || 10
+
+    const tokens = getSupportedTokens()
+    const found = tokens.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
+    result.amount = applyFeeToAmount(query.amount, feeFactor, found.precision)
     console.debug(
       `convert amount when buy side, amount=${query.amount}, converted=${result.amount}, feeFactor=${feeFactor}`
     )
@@ -76,18 +82,13 @@ export function ensureCorrectSymbolCase(
 ): QueryInterface {
   const tokens = supportedTokens || getSupportedTokens()
   const result = { ...query }
-
   if (typeof query.base === 'string') {
     const found = tokens.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
-    if (found) {
-      result.base = found.symbol
-    }
+    if (found) result.base = found.symbol
   }
   if (typeof query.quote === 'string') {
     const found = tokens.find((t) => t.symbol.toUpperCase() === query.quote.toUpperCase())
-    if (found) {
-      result.quote = found.symbol
-    }
+    if (found) result.quote = found.symbol
   }
   return result
 }
