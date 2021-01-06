@@ -1,11 +1,11 @@
 import { validateRequest } from '../validations'
 import { ValidationError } from './errors'
-import { constructQuoteResponse, translateQueryData } from '../quoting'
+import { constructQuoteResponse, ensureCorrectSymbolCase, translateQueryData } from '../quoting'
 
 export const getRate = async (ctx) => {
   const { query, quoter } = ctx
   try {
-    const updatedQueryData = translateQueryData(query)
+    const updatedQueryData = translateQueryData(ensureCorrectSymbolCase(query))
     // console.log({ ctx, query, updatedQueryData })
     const errMsg = validateRequest(updatedQueryData)
     if (errMsg) throw new ValidationError(errMsg)

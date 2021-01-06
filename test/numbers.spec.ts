@@ -1,6 +1,6 @@
 import { assert } from 'chai'
 import 'mocha'
-import { fromUnitToDecimalBN, orderBNToString, toBN, truncateAmount } from '../src/utils/format'
+import { fromUnitToDecimalBN, orderBNToString, toBN, truncateAmount } from '../src/utils'
 
 describe('Numbers', function () {
   it('.fromUnitToDecimalBN works', function () {

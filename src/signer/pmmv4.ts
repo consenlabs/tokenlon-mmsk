@@ -6,7 +6,7 @@ import {
   SignerType,
 } from '0x-v2-order-utils'
 import * as ethUtils from 'ethereumjs-util'
-import { orderBNToString } from '../utils/format'
+import { orderBNToString } from '../utils'
 import { ecSignOrderHash } from './ecsign'
 import { Wallet } from 'ethers'
 

@@ -1,10 +1,19 @@
 import { isNil } from 'lodash'
 import { QueryInterface, SIDE, SupportedToken } from './types'
-import { IndicativePriceApiResult } from './request/marketMaker/types'
+import { IndicativePriceApiResult } from './request/marketMaker'
 import { BackendError } from './handler/errors'
 import { updaterStack } from './worker'
-import { truncateAmount, toBN } from './utils/format'
-import { getSupportedTokens } from './utils/token'
+import { truncateAmount, toBN, getSupportedTokens } from './utils'
+
+const getPrefix = (): string => `${updaterStack.markerMakerConfigUpdater.cacheResult.mmId}--`
+
+export const addQuoteIdPrefix = (quoteId: string): string => `${getPrefix()}${quoteId}`
+
+export const removeQuoteIdPrefix = (quoteId: string): string => {
+  const prefix = getPrefix()
+  if (quoteId.startsWith(prefix)) return quoteId.replace(prefix, '')
+  return quoteId
+}
 
 export const constructQuoteResponse = (indicativePrice: IndicativePriceApiResult, side: SIDE) => {
   const { minAmount, maxAmount, message, makerAddress } = indicativePrice

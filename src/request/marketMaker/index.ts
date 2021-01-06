@@ -9,7 +9,7 @@ import {
 } from './types'
 import { ZeroRPCQuoter } from './zerorpc'
 import { HTTPQuoter } from './http'
-import { removeQuoteIdPrefix } from '../../utils/quoteId'
+import { removeQuoteIdPrefix } from '../../quoting'
 
 export enum QuoterProtocol {
   HTTP,

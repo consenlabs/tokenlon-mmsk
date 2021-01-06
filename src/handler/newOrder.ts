@@ -1,20 +1,29 @@
 import { Quoter } from '../request/marketMaker'
-import { getSupportedTokens, getTokenBySymbol } from '../utils/token'
 import { updaterStack } from '../worker'
 import { Protocol, QueryInterface } from '../types'
 import { validateNewOrderRequest, validateRequest } from '../validations'
 import { ValidationError } from './errors'
-import { constructQuoteResponse, translateQueryData } from '../quoting'
+import {
+  addQuoteIdPrefix,
+  constructQuoteResponse,
+  ensureCorrectSymbolCase,
+  translateQueryData,
+} from '../quoting'
 
 import { assetDataUtils, SignedOrder } from '0x-v2-order-utils'
 import { buildSignedOrder } from '../signer/pmmv5'
 import { buildSignedOrder as buildLagacyOrder } from '../signer/pmmv4'
 import { buildSignedOrder as buildAMMV1Order } from '../signer/ammv1'
-import { addQuoteIdPrefix } from '../utils/quoteId'
-import { BigNumber, fromUnitToDecimalBN, toBN } from '../utils/format'
-import { getWethAddrIfIsEth } from '../utils/ethereum'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
-import { getTimestamp } from '../utils/timestamp'
+import {
+  BigNumber,
+  fromUnitToDecimalBN,
+  toBN,
+  getSupportedTokens,
+  getTokenBySymbol,
+  getWethAddrIfIsEth,
+  getTimestamp,
+} from '../utils'
 
 type NumberOrString = number | string
 
@@ -32,7 +41,7 @@ interface Response {
 
 // request getPrice API from market maker backend
 async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
-  const simpleOrder = translateQueryData(query)
+  const simpleOrder = translateQueryData(ensureCorrectSymbolCase(query))
   // request to market maker backend
   const { side } = simpleOrder
   const priceResult = await quoter.getPrice(simpleOrder as any)

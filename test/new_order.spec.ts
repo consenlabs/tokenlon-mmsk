@@ -1,13 +1,15 @@
 import { assert } from 'chai'
 import 'mocha'
+import * as suppressLogs from 'mocha-suppress-logs'
 import { Wallet } from 'ethers'
 import { newOrder } from '../src/handler'
-import { updaterStack } from '../src/worker'
-import Updater from '../src/worker/updater'
+import { updaterStack, Updater } from '../src/worker'
 import { NULL_ADDRESS } from '../src/constants'
 import { Protocol } from '../src/types'
 
 describe('NewOrder', function () {
+  suppressLogs()
+
   const signer = Wallet.createRandom()
 
   before(function () {

@@ -1,5 +1,4 @@
-import { getSupportedTokens } from '../utils/token'
-import { getTokenlonTokenBalance } from '../utils/ethereum'
+import { getSupportedTokens, getTokenlonTokenBalance } from '../utils'
 
 export const getBalance = async (ctx) => {
   const { query } = ctx

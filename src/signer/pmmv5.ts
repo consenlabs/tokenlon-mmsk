@@ -5,7 +5,7 @@ import {
   signatureUtils,
 } from '0x-v2-order-utils'
 import { utils, Wallet } from 'ethers'
-import { BigNumber, orderBNToString } from '../utils/format'
+import { BigNumber, orderBNToString } from '../utils'
 import { signWithUserAndFee } from './pmmv4'
 
 // changes of PMMV5
