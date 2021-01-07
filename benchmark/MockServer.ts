@@ -9,14 +9,14 @@ function makeMarketMakerRounter(): Router {
   router.get('/pairs', function (ctx, _next) {
     ctx.body = {
       result: true,
-      pairs: ['DAI/ETH'],
+      pairs: ['DAI/ETH', 'USDT/ETH'],
     }
   })
   router.get('/indicativePrice', function (ctx, _next) {
     ctx.body = {
       result: true,
       exchangeable: true,
-      price: 0.00017508,
+      price: 0.01,
       minAmount: 0.002,
       maxAmount: 100,
     }
@@ -25,9 +25,9 @@ function makeMarketMakerRounter(): Router {
     ctx.body = {
       result: true,
       exchangeable: true,
-      price: 0.00017508,
+      price: 222,
       minAmount: 0.0002,
-      maxAmount: 100,
+      maxAmount: 500,
       quoteId: 'asfadsf-dsfsdf-ggsd-qwe-rgjty',
     }
   })
@@ -59,11 +59,11 @@ function createRPCHandler(): JsonRPC {
       wethContractAddress: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
       userProxyContractAddress: '0x25657705a6be20511687D483f2fCCfb2d92f6033',
       orderExpirationSeconds: 600,
-      mmProxyContractAddress: '0x974afc6906cdeb17f163b7a5a2d2a59aa488b94e',
+      mmProxyContractAddress: '0xf79e851C12160E9F207E54C3B65c9Be9c956b2d3',
       feeFactor: 30,
       addressBookV5: {
-        Tokenlon: '0xf1ec89551112da48c3b43b5a167af0b2a7cc2614',
-        PMM: '0x7bd7d025d4231aad1233967b527ffd7416410257',
+        Tokenlon: '0x4A234aA24A1911Fa256162Dd34395B676f5DbdA6',
+        PMM: '0xD6ec1bAd089241207C640CaE45Fec5576C3D72d5',
         AllowanceTarget: '0x595d711189e48e766cc0cc011e85e40702764288',
         AMMQuoter: '0x75a4f88deeed0ace489285d1695323ef49dbc2ab',
         AMMWrapper: '0xcf011536f10e85e376e70905eed4ca9ea8cded34',

@@ -37,6 +37,10 @@ interface Response {
 // use smallest decimals from [USDT/USDC: 6, BTC: 8, ETH: 18]
 const TRUNCATE_PRECISION = 6
 
+const findSuitablePrecision = (decimals: number): number => {
+  return decimals < 8 ? TRUNCATE_PRECISION : 8
+}
+
 // request getPrice API from market maker backend
 async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
   const simpleOrder = preprocessQuote(query)
@@ -65,12 +69,12 @@ function extractAssetAmounts(
       makerToken.decimal
     )
     takerAssetAmount = fromUnitToDecimalBN(
-      amountBN.dividedBy(rate).toFixed(TRUNCATE_PRECISION),
+      amountBN.dividedBy(rate).toFixed(findSuitablePrecision(takerToken.decimal)),
       takerToken.decimal
     )
   } else {
     makerAssetAmount = fromUnitToDecimalBN(
-      amountBN.times(rate).toFixed(TRUNCATE_PRECISION),
+      amountBN.times(rate).toFixed(findSuitablePrecision(makerToken.decimal)),
       makerToken.decimal
     )
     takerAssetAmount = fromUnitToDecimalBN(
@@ -82,21 +86,21 @@ function extractAssetAmounts(
 }
 
 function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config) {
-  const { side, amount, queryFeeFactor } = simpleOrder
+  const { side, amount, feefactor } = simpleOrder
   const baseToken = getTokenBySymbol(tokenList, simpleOrder.base)
   const quoteToken = getTokenBySymbol(tokenList, simpleOrder.quote)
   const makerToken = side === 'BUY' ? baseToken : quoteToken
   const takerToken = side === 'BUY' ? quoteToken : baseToken
   const foundTokenConfig = tokenConfigs.find((t) => t.symbol === makerToken.symbol)
 
-  let fFactor = config.feeFactor || 0
+  let fFactor = config.feeFactor || 10
   if (foundTokenConfig?.feeFactor) {
     // console.log('set fee factor from token config', { factor: foundTokenConfig.feeFactor })
     fFactor = foundTokenConfig.feeFactor
   }
-  if (queryFeeFactor && !Number.isNaN(+queryFeeFactor) && +queryFeeFactor >= 0) {
+  if (feefactor && !Number.isNaN(+feefactor) && +feefactor >= 0) {
     // console.log('set fee factor from query string', { queryFeeFactor })
-    fFactor = +queryFeeFactor
+    fFactor = +feefactor
   }
   const feeFactor = fFactor
 
