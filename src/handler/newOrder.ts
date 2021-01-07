@@ -34,6 +34,9 @@ interface Response {
   orderHash?: string
 }
 
+// use smallest decimals from [USDT/USDC: 6, BTC: 8, ETH: 18]
+const TRUNCATE_PRECISION = 6
+
 // request getPrice API from market maker backend
 async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
   const simpleOrder = preprocessQuote(query)
@@ -57,25 +60,21 @@ function extractAssetAmounts(
 ) {
   let makerAssetAmount, takerAssetAmount
   if (side === 'BUY') {
-    const makerTokenPrecision = makerToken.precision
-    const takerTokenPrecision = takerToken.decimal
     makerAssetAmount = fromUnitToDecimalBN(
-      amountBN.toFixed(makerTokenPrecision),
+      amountBN.toFixed(makerToken.precision),
       makerToken.decimal
     )
     takerAssetAmount = fromUnitToDecimalBN(
-      amountBN.dividedBy(rate).toFixed(takerTokenPrecision),
+      amountBN.dividedBy(rate).toFixed(TRUNCATE_PRECISION),
       takerToken.decimal
     )
   } else {
-    const makerTokenPrecision = makerToken.decimal
-    const takerTokenPrecision = takerToken.precision
     makerAssetAmount = fromUnitToDecimalBN(
-      amountBN.times(rate).toFixed(makerTokenPrecision),
+      amountBN.times(rate).toFixed(TRUNCATE_PRECISION),
       makerToken.decimal
     )
     takerAssetAmount = fromUnitToDecimalBN(
-      amountBN.toFixed(takerTokenPrecision),
+      amountBN.toFixed(takerToken.precision),
       takerToken.decimal
     )
   }

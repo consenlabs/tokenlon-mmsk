@@ -34,7 +34,11 @@ const setConfig = (conf: ConfigForStart) => {
 }
 
 const getWallet = () => {
-  return new Wallet(config.WALLET_PRIVATE_KEY)
+  return new Wallet(
+    config.WALLET_PRIVATE_KEY.startsWith('0x')
+      ? config.WALLET_PRIVATE_KEY
+      : '0x' + config.WALLET_PRIVATE_KEY
+  )
 }
 
 export { config, setConfig, getWallet }

@@ -20,7 +20,6 @@ import { setConfig, getWallet } from './config'
 import { ConfigForStart } from './types'
 import { startUpdater } from './worker'
 import { QuoteDispatcher, QuoterProtocol } from './request/marketMaker'
-import { isValidWallet } from './validations'
 import tracker from './utils/tracker'
 import { Quoter } from './request/marketMaker/types'
 
@@ -75,8 +74,10 @@ export const startMMSK = async (config: ConfigForStart) => {
   setConfig(config)
   try {
     const wallet = getWallet()
-    if (!isValidWallet(wallet)) {
-      throw `wallet's address and ${config.USE_KEYSTORE ? 'keystore' : 'privateKey'} not matched`
+    if (wallet.address.toLowerCase() != config.WALLET_ADDRESS.toLowerCase()) {
+      throw `wallet's address${wallet.address} and ${
+        config.USE_KEYSTORE ? 'keystore' : 'privateKey'
+      }(${config.WALLET_ADDRESS}) not matched`
     }
 
     // init sentry
