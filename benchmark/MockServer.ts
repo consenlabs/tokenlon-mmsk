@@ -9,14 +9,14 @@ function makeMarketMakerRounter(): Router {
   router.get('/pairs', function (ctx, _next) {
     ctx.body = {
       result: true,
-      pairs: ['DAI/ETH'],
+      pairs: ['DAI/ETH', 'USDT/ETH'],
     }
   })
   router.get('/indicativePrice', function (ctx, _next) {
     ctx.body = {
       result: true,
       exchangeable: true,
-      price: 0.00017508,
+      price: 0.01,
       minAmount: 0.002,
       maxAmount: 100,
     }
@@ -25,9 +25,9 @@ function makeMarketMakerRounter(): Router {
     ctx.body = {
       result: true,
       exchangeable: true,
-      price: 0.00017508,
+      price: 222,
       minAmount: 0.0002,
-      maxAmount: 100,
+      maxAmount: 500,
       quoteId: 'asfadsf-dsfsdf-ggsd-qwe-rgjty',
     }
   })
@@ -55,18 +55,18 @@ function createRPCHandler(): JsonRPC {
       exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
       forwarderContractAddress: '0xd85e2fa7e7e252b27b01bf0d65c946959d2f45b8',
       zrxContractAddress: '0x2002d3812f58e35f0ea1ffbf80a75a38c32175fa',
-      tokenlonExchangeContractAddress: '0xD489f1684CF5e78D933E254BD7AC8A9A6a70d491',
+      tokenlonExchangeContractAddress: '0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491',
       wethContractAddress: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
       userProxyContractAddress: '0x25657705a6be20511687D483f2fCCfb2d92f6033',
       orderExpirationSeconds: 600,
-      mmProxyContractAddress: '0x974afc6906cdeb17f163b7a5a2d2a59aa488b94e',
+      mmProxyContractAddress: '0xf79e851C12160E9F207E54C3B65c9Be9c956b2d3',
       feeFactor: 30,
       addressBookV5: {
-        Tokenlon: '0xF1eC89551112da48C3b43B5a167AF0b2a7Cc2614',
-        PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
-        AllowanceTarget: '0x595d711189E48e766cC0cC011e85E40702764288',
-        AMMQuoter: '0x75A4f88DeeED0acE489285D1695323eF49dBC2ab',
-        AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
+        Tokenlon: '0x4A234aA24A1911Fa256162Dd34395B676f5DbdA6',
+        PMM: '0xD6ec1bAd089241207C640CaE45Fec5576C3D72d5',
+        AllowanceTarget: '0x595d711189e48e766cc0cc011e85e40702764288',
+        AMMQuoter: '0x75a4f88deeed0ace489285d1695323ef49dbc2ab',
+        AMMWrapper: '0xcf011536f10e85e376e70905eed4ca9ea8cded34',
       },
     }
   })

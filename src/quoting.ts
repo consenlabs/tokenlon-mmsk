@@ -1,66 +1,77 @@
-import { QueryInterface, SIDE, SupportedToken } from './types'
-import { IndicativePriceApiResult, PriceApiResult } from './request/marketMaker/types'
+import { isNil } from 'lodash'
+import { QueryInterface, SIDE, SupportedToken, TokenConfig } from './types'
+import { IndicativePriceApiResult } from './request/marketMaker'
 import { BackendError } from './handler/errors'
-import { toBN } from './utils/math'
-import { addQuoteIdPrefix } from './utils/quoteId'
-import { roundAmount } from './utils/format'
 import { updaterStack } from './worker'
-import { getSupportedTokens } from './utils/token'
+import { truncateAmount, toBN, getSupportedTokens } from './utils'
 
-export const constructQuoteResponse = (priceResult: IndicativePriceApiResult, side: SIDE) => {
-  const { minAmount, maxAmount, message, makerAddress } = priceResult
-  if (priceResult.exchangeable === false || !priceResult.price) {
-    throw new BackendError(message || `Can't support this trade: ${JSON.stringify(priceResult)}`)
+const DISPLAY_PRECEISION = 8
+
+const getPrefix = (): string => `${updaterStack.markerMakerConfigUpdater.cacheResult.mmId}--`
+
+export const addQuoteIdPrefix = (quoteId: string): string => `${getPrefix()}${quoteId}`
+
+export const removeQuoteIdPrefix = (quoteId: string): string => {
+  const prefix = getPrefix()
+  if (quoteId.startsWith(prefix)) return quoteId.replace(prefix, '')
+  return quoteId
+}
+
+export const constructQuoteResponse = (indicativePrice: IndicativePriceApiResult, side: SIDE) => {
+  const { minAmount, maxAmount, message, makerAddress } = indicativePrice
+  if (indicativePrice.exchangeable === false || !indicativePrice.price) {
+    throw new BackendError(
+      message || `Can't support this trade: ${JSON.stringify(indicativePrice)}`
+    )
   }
 
-  const rate = side === 'BUY' ? 1 / priceResult.price : priceResult.price
+  const rate = side === 'BUY' ? 1 / indicativePrice.price : indicativePrice.price
   return {
     minAmount,
     maxAmount,
-    rate: toBN((+rate).toFixed(8)).toNumber(),
+    rate: toBN((+rate).toFixed(DISPLAY_PRECEISION)).toNumber(),
     makerAddress,
   }
 }
 
-export const appendQuoteIdToQuoteReponse = (priceResult: PriceApiResult, side: SIDE) => {
-  const rateBody = constructQuoteResponse(priceResult, side)
-  return {
-    ...rateBody,
-    quoteId: addQuoteIdPrefix(priceResult.quoteId),
-  }
+// Process buy amount for WYSIWY
+function applyFeeToAmount(amount: number, feeFactor: number, precision: number) {
+  if (isNil(amount)) return amount
+  return truncateAmount(
+    toBN(amount)
+      .dividedBy(1 - feeFactor / 10000)
+      .toString(),
+    precision
+  )
 }
 
-function applyFeeToAmount(amount: number, feeFactor: number) {
-  return amount ? roundAmount(+amount / (1 - feeFactor / 10000), 6) : amount
-}
-
-function calculateFeeFactor(baseSymbol: string, factor: number | null): number {
-  const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
-  // 用户 BUY base, 手续费就是 base 的 Token，即 order的 makerToken —— 对应做市商转出的币，用户收到的币
-  // 但是，Token Config 返回的配置是 feeFactor
-  const foundTokenConfig = tokenConfigs.find((t) => t.symbol.toUpperCase() === baseSymbol)
-
-  const config = updaterStack.markerMakerConfigUpdater.cacheResult
-  let result = config.feeFactor ? config.feeFactor : 0
-
+function calcFeeFactorWhenBuy(tokenCfg: TokenConfig, factor: number | null): number {
   const queryFeeFactor = Number(factor)
   if (!isNaN(queryFeeFactor) && queryFeeFactor >= 0) {
-    result = queryFeeFactor
-  } else if (foundTokenConfig && foundTokenConfig.feeFactor) {
-    result = foundTokenConfig.feeFactor
+    return queryFeeFactor
+  } else if (tokenCfg && tokenCfg.feeFactor) {
+    return tokenCfg.feeFactor
   }
-  return result
+  return null
 }
 
-// Process buy amount for WYSIWYG
-function processBuyAmount(query: QueryInterface): QueryInterface {
-  const result = { ...query }
-
+// 处理接口大小写情况，转换为系统设定格式，以及 side BUY 情况的数量调整
+export const preprocessQuote = (query: QueryInterface): QueryInterface => {
+  const result = ensureCorrectSymbolCase(query)
   if (typeof query.base === 'string' && query.side === 'BUY') {
+    // 用户 BUY base, 手续费就是 base 的 Token，即 order的 makerToken —— 对应做市商转出的币，用户收到的币
+    const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
+    const tokenCfg = tokenConfigs.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
+    const config = updaterStack.markerMakerConfigUpdater.cacheResult
     // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
-    // Token Config 返回的配置是 feeFactor
-    const feefactor = calculateFeeFactor(query.base.toUpperCase(), query.feefactor)
-    result.amount = applyFeeToAmount(query.amount, feefactor)
+    const feeFactor = calcFeeFactorWhenBuy(tokenCfg, query.feefactor) || config.feeFactor || 10
+
+    const tokens = getSupportedTokens()
+    const found = tokens.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
+    result.amount = applyFeeToAmount(query.amount, feeFactor, found.precision)
+    console.debug(
+      `convert amount when buy side, amount=${query.amount}, converted=${result.amount}, feeFactor=${feeFactor}`
+    )
   }
   return result
 }
@@ -71,23 +82,13 @@ export function ensureCorrectSymbolCase(
 ): QueryInterface {
   const tokens = supportedTokens || getSupportedTokens()
   const result = { ...query }
-
   if (typeof query.base === 'string') {
     const found = tokens.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
-    if (found) {
-      result.base = found.symbol
-    }
+    if (found) result.base = found.symbol
   }
   if (typeof query.quote === 'string') {
     const found = tokens.find((t) => t.symbol.toUpperCase() === query.quote.toUpperCase())
-    if (found) {
-      result.quote = found.symbol
-    }
+    if (found) result.quote = found.symbol
   }
   return result
-}
-
-// 处理接口大小写情况，转换为系统设定格式，以及 side BUY 情况的数量调整
-export const translateQueryData = (query: QueryInterface): QueryInterface => {
-  return processBuyAmount(ensureCorrectSymbolCase(query))
 }

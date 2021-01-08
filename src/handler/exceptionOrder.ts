@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/node'
 import tracker from '../utils/tracker'
 import { ExceptionOrder } from '../types'
-import { removeQuoteIdPrefix } from '../utils/quoteId'
+import { removeQuoteIdPrefix } from '../quoting'
 
 export const exceptionOrder = async (ctx) => {
   const {

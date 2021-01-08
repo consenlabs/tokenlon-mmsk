@@ -5,11 +5,11 @@ const check = async (quoter) => {
     const tokenA = getSupportedTokens()[0]
     const mockOrder = {
       makerToken: tokenA.symbol,
+      makerTokenAmount: 0.1,
       takerToken: tokenA.opposites[0],
-      makerTokenAmount: 40.19308759,
-      takerTokenAmount: 0.3,
+      takerTokenAmount: 50,
       timestamp: 1551855180,
-      quoteId: 'assdcjfsdhfdfoesfhafh',
+      quoteId: 'testing-quote-9999',
     }
     const resp = await quoter.dealOrder(mockOrder)
     if (resp.result !== false) {
@@ -18,7 +18,6 @@ const check = async (quoter) => {
   } catch (e) {
     return `deal API request error ${e.message}`
   }
-
   return ''
 }
 

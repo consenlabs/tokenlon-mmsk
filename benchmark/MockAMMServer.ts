@@ -19,8 +19,8 @@ const AMMWrapper = require('../abi/AMMWrapper.json')
 // const CURVE_Y_ADDRESS = '0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51'.toLowerCase()
 
 // kovan testnet
-const UNISWAP_V1_FACTORY_ADDRESS = '0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30'.toLowerCase();
-const UNISWAP_V2_ROUTER_02_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'.toLowerCase();
+const UNISWAP_V1_FACTORY_ADDRESS = '0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30'.toLowerCase()
+const UNISWAP_V2_ROUTER_02_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'.toLowerCase()
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
@@ -299,7 +299,7 @@ function createRPCHandler(): JsonRPC {
       exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
       forwarderContractAddress: '0xd85e2fa7e7e252b27b01bf0d65c946959d2f45b8',
       zrxContractAddress: '0x2002d3812f58e35f0ea1ffbf80a75a38c32175fa',
-      tokenlonExchangeContractAddress: '0xD489f1684CF5e78D933E254BD7AC8A9A6a70d491',
+      tokenlonExchangeContractAddress: '0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491',
       wethContractAddress: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
       userProxyContractAddress: '0x25657705a6be20511687D483f2fCCfb2d92f6033',
       orderExpirationSeconds: 600,

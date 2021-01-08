@@ -1,4 +1,4 @@
-import { getSupportedTokens } from '../utils/token'
+import { getSupportedTokens } from '../utils'
 
 export const getSupportedTokenList = (ctx) => {
   const tokenList = getSupportedTokens()

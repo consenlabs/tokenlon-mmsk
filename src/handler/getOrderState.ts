@@ -1,5 +1,5 @@
 import { getOrderStateForMM } from '../request/imToken'
-import { addQuoteIdPrefix, removeQuoteIdPrefix } from '../utils/quoteId'
+import { addQuoteIdPrefix, removeQuoteIdPrefix } from '../quoting'
 
 export const getOrderState = async (ctx) => {
   try {

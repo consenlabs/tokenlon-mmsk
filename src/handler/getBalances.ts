@@ -1,5 +1,4 @@
-import { getSupportedTokens } from '../utils/token'
-import { getTokenlonTokenBalance } from '../utils/balance'
+import { getSupportedTokens, getTokenlonTokenBalance } from '../utils'
 
 export const getBalances = async (ctx) => {
   try {
