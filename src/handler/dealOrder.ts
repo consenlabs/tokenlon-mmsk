@@ -1,11 +1,19 @@
 import * as Sentry from '@sentry/node'
 import tracker from '../utils/tracker'
 import { DealOrder } from '../types'
-import { removeQuoteIdPrefix } from '../utils/quoteId'
+import { removeQuoteIdPrefix } from '../quoting'
 
 export const dealOrder = async (ctx) => {
-  const { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp } = ctx.request.body as DealOrder
-  const order = { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId: removeQuoteIdPrefix(quoteId), timestamp }
+  const { makerToken, takerToken, makerTokenAmount, takerTokenAmount, quoteId, timestamp } = ctx
+    .request.body as DealOrder
+  const order = {
+    makerToken,
+    takerToken,
+    makerTokenAmount,
+    takerTokenAmount,
+    quoteId: removeQuoteIdPrefix(quoteId),
+    timestamp,
+  }
   let reqToMMErrMsg = null
 
   tracker.captureEvent({

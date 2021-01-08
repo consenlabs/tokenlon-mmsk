@@ -52,4 +52,4 @@ const startUpdater = async (quoter: Quoter, wallet: Wallet) => {
   }
 }
 
-export { startUpdater, updaterStack }
+export { startUpdater, updaterStack, Updater }

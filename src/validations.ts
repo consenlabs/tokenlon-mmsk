@@ -1,9 +1,8 @@
 import * as _ from 'lodash'
 import { utils } from 'ethers'
-import { Wallet } from '../types'
+import { Wallet } from './types'
 import * as ethUtils from 'ethereumjs-util'
-import { BigNumber } from '@0xproject/utils'
-import { isSupportedBaseQuote, getSupportedTokens } from '../utils/token'
+import { isSupportedBaseQuote, getSupportedTokens } from './utils/token'
 
 export const isValidWallet = (wallet: Wallet): boolean => {
   if (!wallet) {
@@ -15,17 +14,10 @@ export const isValidWallet = (wallet: Wallet): boolean => {
     console.error(`address(${address}) is not valid`)
     return false
   }
-  const addr = ethUtils.privateToAddress(new Buffer(privateKey, 'hex'))
-  return `0x${addr.toString('hex')}`.toLowerCase() === address.toLowerCase()
-}
-
-export const isBigNumber = (v: any) => {
-  return (
-    v instanceof BigNumber ||
-    (v && v.isBigNumber === true) ||
-    (v && v._isBigNumber === true) ||
-    false
+  const addr = ethUtils.privateToAddress(
+    Buffer.from(privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey, 'hex')
   )
+  return `0x${addr.toString('hex')}`.toLowerCase() === address.toLowerCase()
 }
 
 function validateRequiredFields(values, fields): boolean {

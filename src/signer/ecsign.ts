@@ -5,13 +5,13 @@ import { utils } from 'ethers'
 type ECSignatureBuffer = {
   v: number
   r: Buffer
-  s: Buffer;
+  s: Buffer
 }
 
 export const personalECSign = (privateKey: string, msg: string): ECSignatureBuffer => {
   const message = ethUtil.toBuffer(msg)
   const msgHash = ethUtil.hashPersonalMessage(message)
-  return ethUtil.ecsign(msgHash, new Buffer(privateKey, 'hex'))
+  return ethUtil.ecsign(msgHash, Buffer.from(privateKey, 'hex'))
 }
 
 export const personalSign = (privateKey: string, msg: string): string => {
@@ -70,7 +70,7 @@ export const ecSignOrderHash = (
   signerPrivateKey,
   orderHash: string,
   signerAddress: string,
-  signerType: SignerType,
+  signerType: SignerType
 ) => {
   let msgHashHex = orderHash
   const normalizedSignerAddress = signerAddress.toLowerCase()
@@ -96,12 +96,12 @@ export const ecSignOrderHash = (
     const isValidRSVSignature = signatureUtils.isValidECSignature(
       prefixedMsgHashHex,
       ecSignatureRSV,
-      normalizedSignerAddress,
+      normalizedSignerAddress
     )
     if (isValidRSVSignature) {
       const convertedSignatureHex = signatureUtils.convertECSignatureToSignatureHex(
         ecSignatureRSV,
-        signerType,
+        signerType
       )
       return convertedSignatureHex
     }
@@ -111,12 +111,12 @@ export const ecSignOrderHash = (
     const isValidVRSSignature = signatureUtils.isValidECSignature(
       prefixedMsgHashHex,
       ecSignatureVRS,
-      normalizedSignerAddress,
+      normalizedSignerAddress
     )
     if (isValidVRSSignature) {
       const convertedSignatureHex = signatureUtils.convertECSignatureToSignatureHex(
         ecSignatureVRS,
-        signerType,
+        signerType
       )
       return convertedSignatureHex
     }

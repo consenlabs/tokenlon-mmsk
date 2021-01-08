@@ -5,17 +5,15 @@ import {
   signatureUtils,
 } from '0x-v2-order-utils'
 import { utils, Wallet } from 'ethers'
-import { orderBNToString } from '../utils/format'
-import { GetFormatedSignedOrderParams } from './types'
-import { getOrderAndFeeFactor, signWithUserAndFee } from './pmmv4'
-import { BigNumber } from '0x-v2-utils'
+import { BigNumber, orderBNToString } from '../utils'
+import { signWithUserAndFee } from './pmmv4'
 
 // changes of PMMV5
 // - taker address point to PMM contract
 // - fee factor from salt
 // - user address from fee recipient
 
-export const generateSaltWithFeeFactor = (feeFactor: number) => {
+const generateSaltWithFeeFactor = (feeFactor: number) => {
   const feeHex = utils.hexZeroPad('0x' + feeFactor.toString(16), 2)
   // append 001e = 30 (fee factor to salt)
   return new BigNumber(generatePseudoRandomSalt().toString(16).slice(0, -4) + feeHex.slice(2), 16)
@@ -42,14 +40,10 @@ function signByMMPSigner(
 }
 
 // Move fee factor to salt field
-export const buildSignedOrder = async (signer: Wallet, params: GetFormatedSignedOrderParams) => {
-  const { userAddr, config } = params
-  const { order, feeFactor } = getOrderAndFeeFactor(params)
-
-  order.takerAddress = config.addressBookV5.PMM.toLowerCase()
-  order.senderAddress = config.addressBookV5.PMM.toLowerCase()
+export const buildSignedOrder = async (signer: Wallet, order, userAddr, feeFactor, pmm) => {
+  order.takerAddress = pmm.toLowerCase()
+  order.senderAddress = pmm.toLowerCase()
   order.feeRecipientAddress = userAddr
-
   // inject fee factor to salt
   const o = {
     ...order,

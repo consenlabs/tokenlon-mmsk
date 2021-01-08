@@ -64,7 +64,7 @@ export interface ExceptionOrder extends DealOrder {
 
 export interface Token {
   symbol: string
-  logo: string
+  logo?: string
   contractAddress: string
   decimal: number
   precision: number
@@ -95,8 +95,7 @@ export interface QueryInterface {
 }
 
 export enum Protocol {
-  ZeroXV2 = '0xProtocolV2',
-  ZeroXV3 = '0xProtocolV3',
   AMMV1 = 'AMMV1',
+  PMMV4 = 'PMMV4',
   PMMV5 = 'PMMV5',
 }

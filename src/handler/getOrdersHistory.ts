@@ -1,5 +1,5 @@
 import { getOrdersHistoryForMM } from '../request/imToken'
-import { removeQuoteIdPrefix } from '../utils/quoteId'
+import { removeQuoteIdPrefix } from '../quoting'
 
 export const getOrdersHistory = async (ctx) => {
   try {

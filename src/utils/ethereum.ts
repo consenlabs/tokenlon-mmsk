@@ -1,5 +1,8 @@
-import { ethers, BigNumber } from 'ethers'
+import { ethers, BigNumber, utils } from 'ethers'
 import { config } from '../config'
+import { updaterStack } from '../worker'
+import { MarketMakerConfig } from '../types'
+import { NULL_ADDRESS } from '../constants'
 
 // ERC20 ABI
 const abi = [
@@ -19,4 +22,19 @@ export const getTokenBalance = async ({ address, contractAddress }): Promise<Big
   const provider = new ethers.providers.JsonRpcProvider(config.PROVIDER_URL)
   const erc20 = new ethers.Contract(contractAddress, abi, provider)
   return await erc20.balanceOf(address)
+}
+
+export const getTokenlonTokenBalance = async (token) => {
+  const config = updaterStack.markerMakerConfigUpdater.cacheResult
+  const balanceBN = await getTokenBalance({
+    address: config.mmProxyContractAddress,
+    contractAddress: getWethAddrIfIsEth(token.contractAddress, config),
+  })
+  return balanceBN ? +utils.formatUnits(balanceBN, token.decimal) : 0
+}
+
+export const getWethAddrIfIsEth = (address, config: MarketMakerConfig) => {
+  return address.toLowerCase() === NULL_ADDRESS
+    ? config.wethContractAddress.toLowerCase()
+    : address.toLowerCase()
 }
