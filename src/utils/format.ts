@@ -4,6 +4,14 @@ import { BigNumber } from '@0xproject/utils'
 BigNumber.config({
   ROUNDING_MODE: BigNumber.ROUND_FLOOR,
   DECIMAL_PLACES: 18,
+  FORMAT: {
+    decimalSeparator: '.',
+    groupSeparator: '',
+    groupSize: 3,
+    secondaryGroupSize: 0,
+    fractionGroupSeparator: ' ',
+    fractionGroupSize: 0,
+  },
 })
 
 export { BigNumber }
