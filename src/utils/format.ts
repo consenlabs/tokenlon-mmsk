@@ -47,5 +47,5 @@ export const fromUnitToDecimalBN = (balance: number | string, decimal: number): 
 
 // truncate out of precision part
 export const truncateAmount = (amount: number | string, precision: number): number => {
-  return toBN(toBN(amount).toFixed(precision)).toNumber()
+  return +toBN(amount).toFixed(precision)
 }
