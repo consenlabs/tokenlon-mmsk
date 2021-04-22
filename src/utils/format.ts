@@ -4,6 +4,14 @@ import { BigNumber } from '@0xproject/utils'
 BigNumber.config({
   ROUNDING_MODE: BigNumber.ROUND_FLOOR,
   DECIMAL_PLACES: 18,
+  FORMAT: {
+    decimalSeparator: '.',
+    groupSeparator: '',
+    groupSize: 3,
+    secondaryGroupSize: 0,
+    fractionGroupSeparator: ' ',
+    fractionGroupSize: 0,
+  },
 })
 
 export { BigNumber }
@@ -39,5 +47,5 @@ export const fromUnitToDecimalBN = (balance: number | string, decimal: number): 
 
 // truncate out of precision part
 export const truncateAmount = (amount: number | string, precision: number): number => {
-  return toBN(toBN(amount).toFormat(precision)).toNumber()
+  return +toBN(amount).toFixed(precision)
 }
