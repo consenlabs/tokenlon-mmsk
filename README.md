@@ -25,4 +25,10 @@ Program setup,
 - Testing with `node app/check.js`
 - Register contract address & signer address & MMSK server url to Tokenlon team
 
+## Version Release
+
+1. bump version in `package.json`, please follow [semantic versioning](https://semver.org/).
+2. run release script under `script` folder
+3. upload tar file on github release page with writing change log
+
 copyright© imToken PTE. LTD.
