@@ -98,7 +98,7 @@ export const startMMSK = async (config: ConfigForStart) => {
     router.get('/getBalance', getBalance)
     router.get('/getBalances', getBalances)
 
-    app.context.chainID = config.CHAIN_ID || 42
+    app.context.chainID = config.CHAIN_ID || 5
     app.context.quoter = quoter
     app.context.signer = wallet
 

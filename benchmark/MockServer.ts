@@ -67,6 +67,7 @@ function createRPCHandler(): JsonRPC {
         AllowanceTarget: '0x595d711189e48e766cc0cc011e85e40702764288',
         AMMQuoter: '0x75a4f88deeed0ace489285d1695323ef49dbc2ab',
         AMMWrapper: '0xcf011536f10e85e376e70905eed4ca9ea8cded34',
+        RFQ: '0xfD474E4809e690626C67ECb7A908de4b9c464b99',
       },
     }
   })

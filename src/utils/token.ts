@@ -51,7 +51,7 @@ export const isSupportedBaseQuote = (
   quote: string
 ): boolean => {
   return tokens.some((t) => {
-    const ops = t.opposites.map(o => o.toUpperCase())
+    const ops = t.opposites.map((o) => o.toUpperCase())
     return t.symbol.toUpperCase() === base.toUpperCase() && ops.indexOf(quote.toUpperCase()) !== -1
   })
 }

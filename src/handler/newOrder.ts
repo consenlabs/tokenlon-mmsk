@@ -6,6 +6,7 @@ import { ValidationError } from './errors'
 import { addQuoteIdPrefix, constructQuoteResponse, preprocessQuote } from '../quoting'
 
 import { assetDataUtils, SignedOrder } from '0x-v2-order-utils'
+import { buildSignedOrder as buildRFQV1SignedOrder } from '../signer/rfqv1'
 import { buildSignedOrder } from '../signer/pmmv5'
 import { buildSignedOrder as buildLagacyOrder } from '../signer/pmmv4'
 import { buildSignedOrder as buildAMMV1Order } from '../signer/ammv1'
@@ -121,6 +122,7 @@ function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config
   const order = {
     makerAddress: config.mmProxyContractAddress.toLowerCase(),
     makerAssetAmount,
+    makerAssetAddress: makerToken.contractAddress,
     makerAssetData: assetDataUtils.encodeERC20AssetData(
       getWethAddrIfIsEth(makerToken.contractAddress, config)
     ),
@@ -128,6 +130,7 @@ function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config
 
     takerAddress: config.userProxyContractAddress,
     takerAssetAmount,
+    takerAssetAddress: takerToken.contractAddress,
     takerAssetData: assetDataUtils.encodeERC20AssetData(
       getWethAddrIfIsEth(takerToken.contractAddress, config)
     ),
@@ -146,7 +149,7 @@ function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config
 }
 
 export const newOrder = async (ctx) => {
-  const { quoter, signer } = ctx
+  const { quoter, signer, chainID } = ctx
   const query: QueryInterface = {
     protocol: Protocol.PMMV4, // by default is v2 protocol
     ...ctx.query, // overwrite from request
@@ -160,7 +163,6 @@ export const newOrder = async (ctx) => {
     if (errMsg) throw new ValidationError(errMsg)
 
     const { simpleOrder, rateBody } = await requestMarketMaker(quoter, query)
-    const makerCfg = updaterStack.markerMakerConfigUpdater.cacheResult
     const config = updaterStack.markerMakerConfigUpdater.cacheResult
     const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
     const tokenList = getSupportedTokens()
@@ -206,9 +208,23 @@ export const newOrder = async (ctx) => {
           config.addressBookV5.PMM
         )
         break
+      case Protocol.RFQV1:
+        const rfqOrer = {
+          takerAddr: userAddr.toLowerCase(),
+          makerAddr: order.makerAddress,
+          takerAssetAddr: order.takerAssetAddress,
+          makerAssetAddr: order.makerAssetAddress,
+          takerAssetAmount: order.takerAssetAmount,
+          makerAssetAmount: order.makerAssetAmount,
+          deadline: order.expirationTimeSeconds.toNumber(),
+          feeFactor: feeFactor,
+          salt: null, // calculated in builder
+        }
+        resp.order = await buildRFQV1SignedOrder(signer, rfqOrer, chainID, config.addressBookV5.RFQ)
+        break
       default:
         console.log(`unknown protocol ${protocol}, fallback to 0x v2`)
-        if (signer.address.toLowerCase() == makerCfg.mmProxyContractAddress.toLowerCase()) {
+        if (signer.address.toLowerCase() == config.mmProxyContractAddress.toLowerCase()) {
           throw new Error('eoa_signer_not_work_with_tokenlon_v4_order')
         }
         resp.order = buildLagacyOrder(signer, order, userAddr, feeFactor)

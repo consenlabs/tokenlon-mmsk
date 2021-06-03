@@ -19,7 +19,8 @@ export interface MarketMakerConfig {
 interface AddressBook {
   Tokenlon: string // Entry
   PermanentStorage: string // Contract Data
-  PMM: string // rfq order
+  PMM: string // pmm order
+  RFQ: string // rfq order
   AMMWrapper: string // amm order
   UserProxy: string // user proxy
 }
@@ -98,4 +99,5 @@ export enum Protocol {
   AMMV1 = 'AMMV1',
   PMMV4 = 'PMMV4',
   PMMV5 = 'PMMV5',
+  RFQV1 = 'RFQV1',
 }
