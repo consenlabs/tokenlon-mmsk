@@ -13,7 +13,7 @@ import { signWithUserAndFee } from './pmmv4'
 // - fee factor from salt
 // - user address from fee recipient
 
-const generateSaltWithFeeFactor = (feeFactor: number) => {
+export const generateSaltWithFeeFactor = (feeFactor: number) => {
   const feeHex = utils.hexZeroPad('0x' + feeFactor.toString(16), 2)
   // append 001e = 30 (fee factor to salt)
   return new BigNumber(generatePseudoRandomSalt().toString(16).slice(0, -4) + feeHex.slice(2), 16)

@@ -1,3 +1,4 @@
+import { BigNumber } from '../utils'
 import { MarketMakerConfig, Token, TokenConfig } from '../types'
 
 export interface SimpleOrder {
@@ -18,4 +19,16 @@ export interface GetOrderAndFeeFactorParams {
 
 export interface GetFormatedSignedOrderParams extends GetOrderAndFeeFactorParams {
   userAddr: string
+}
+
+export interface RFQOrder {
+  takerAddr: string
+  makerAddr: string
+  takerAssetAddr: string
+  makerAssetAddr: string
+  takerAssetAmount: BigNumber
+  makerAssetAmount: BigNumber
+  salt: BigNumber
+  deadline: number
+  feeFactor: number
 }

@@ -10,6 +10,10 @@ import { orderBNToString } from '../utils'
 import { ecSignOrderHash } from './ecsign'
 import { Wallet } from 'ethers'
 
+// Signature:
+// +------|---------|---------|---------|---------+
+// |  V   |    R    |    S    |userAddr |feeFactor|
+// +------|---------|---------|---------|---------+
 export function signWithUserAndFee(
   signer: Wallet,
   orderHash: string,
