@@ -53,7 +53,8 @@ function isMethodArg(x: unknown): x is MethodArg {
 function isValidMethodArgs(x: unknown): x is MethodArgs | undefined {
   return (
     x === undefined ||
-    (Array.isArray(x) && x.every((xi) => isMethodArg(xi) || (Array.isArray(xi) && xi.every(isMethodArg))))
+    (Array.isArray(x) &&
+      x.every((xi) => isMethodArg(xi) || (Array.isArray(xi) && xi.every(isMethodArg))))
   )
 }
 
@@ -62,8 +63,6 @@ interface CallResult {
   readonly data: string | undefined
   readonly blockNumber: number | undefined
 }
-
-const INVALID_RESULT: CallResult = { valid: false, blockNumber: undefined, data: undefined }
 
 // use this options object
 export const NEVER_RELOAD: ListenerOptions = {
@@ -82,8 +81,20 @@ export interface CallState {
   readonly error: boolean
 }
 
-const INVALID_CALL_STATE: CallState = { valid: false, result: undefined, loading: false, syncing: false, error: false }
-const LOADING_CALL_STATE: CallState = { valid: true, result: undefined, loading: true, syncing: true, error: false }
+const INVALID_CALL_STATE: CallState = {
+  valid: false,
+  result: undefined,
+  loading: false,
+  syncing: false,
+  error: false,
+}
+const LOADING_CALL_STATE: CallState = {
+  valid: true,
+  result: undefined,
+  loading: true,
+  syncing: true,
+  error: false,
+}
 
 function toCallState(
   callResult: CallResult | undefined,
@@ -133,21 +144,23 @@ export async function useMultipleContractSingleData(
 ): Promise<CallState[]> {
   const chainId = 1
   const fragment = contractInterface.getFunction(methodName)
-  const callData: string | undefined = fragment && isValidMethodArgs(callInputs)
-  ? contractInterface.encodeFunctionData(fragment, callInputs)
-  : undefined
+  const callData: string | undefined =
+    fragment && isValidMethodArgs(callInputs)
+      ? contractInterface.encodeFunctionData(fragment, callInputs)
+      : undefined
 
-  const calls = fragment && addresses && addresses.length > 0 && callData
-    ? addresses.map<Call | undefined>((target) => {
-        return target && callData
-          ? {
-              target,
-              callData,
-              ...(gasRequired ? { gasRequired } : {}),
-            }
-          : undefined
-      })
-    : []
+  const calls =
+    fragment && addresses && addresses.length > 0 && callData
+      ? addresses.map<Call | undefined>((target) => {
+          return target && callData
+            ? {
+                target,
+                callData,
+                ...(gasRequired ? { gasRequired } : {}),
+              }
+            : undefined
+        })
+      : []
 
   const latestBlockNumber = await provider.getBlockNumber()
   const multicall2 = new Contract(MULTICALL2_ADDRESSES[chainId], multicall2Abi, provider)
@@ -160,7 +173,9 @@ export async function useMultipleContractSingleData(
 
     return { valid: true, data, blockNumber: results?.blockNumber }
   })
-  return results.map((result: any) => toCallState(result, contractInterface, fragment, latestBlockNumber))
+  return results.map((result: any) =>
+    toCallState(result, contractInterface, fragment, latestBlockNumber)
+  )
 }
 
 export async function useSingleContractMultipleData(
@@ -168,21 +183,26 @@ export async function useSingleContractMultipleData(
   contract: Contract | null | undefined,
   methodName: string,
   callInputs: OptionalMethodInputs[],
+  /* tslint:disable:no-unused-variable */
   options?: ListenerOptions,
   gasRequired?: number
 ): Promise<CallState[]> {
   const chainId = 1
   const fragment = contract?.interface?.getFunction(methodName)
 
-  const calls = contract && fragment && callInputs?.length > 0 && callInputs.every((inputs) => isValidMethodArgs(inputs))
-  ? callInputs.map<Call>((inputs) => {
-      return {
-        target: contract.address,
-        callData: contract.interface.encodeFunctionData(fragment, inputs),
-        ...(gasRequired ? { gasRequired } : {}),
-      }
-    })
-  : []
+  const calls =
+    contract &&
+    fragment &&
+    callInputs?.length > 0 &&
+    callInputs.every((inputs) => isValidMethodArgs(inputs))
+      ? callInputs.map<Call>((inputs) => {
+          return {
+            target: contract.address,
+            callData: contract.interface.encodeFunctionData(fragment, inputs),
+            ...(gasRequired ? { gasRequired } : {}),
+          }
+        })
+      : []
   const latestBlockNumber = await provider.getBlockNumber()
   const multicall2 = new Contract(MULTICALL2_ADDRESSES[chainId], multicall2Abi, provider)
   let results: any = await multicall2.callStatic.tryBlockAndAggregate(false, calls)
@@ -194,6 +214,7 @@ export async function useSingleContractMultipleData(
 
     return { valid: true, data, blockNumber: results?.blockNumber }
   })
-  return results.map((result: any) => toCallState(result, contract?.interface, fragment, latestBlockNumber))
+  return results.map((result: any) =>
+    toCallState(result, contract?.interface, fragment, latestBlockNumber)
+  )
 }
-

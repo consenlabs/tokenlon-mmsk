@@ -20,14 +20,13 @@ export async function useV3SwapPools(
   const allCurrencyCombinations = useAllCurrencyCombinations(currencyIn, currencyOut)
 
   const allCurrencyCombinationsWithAllFees: [Token, Token, FeeAmount][] =
-  allCurrencyCombinations
-    .reduce<[Token, Token, FeeAmount][]>((list, [tokenA, tokenB]) => {
-    return list.concat([
-      [tokenA, tokenB, FeeAmount.LOW],
-      [tokenA, tokenB, FeeAmount.MEDIUM],
-      [tokenA, tokenB, FeeAmount.HIGH],
-    ])
-  }, [])
+  allCurrencyCombinations.reduce<[Token, Token, FeeAmount][]>((list, [tokenA, tokenB]) => {
+      return list.concat([
+        [tokenA, tokenB, FeeAmount.LOW],
+        [tokenA, tokenB, FeeAmount.MEDIUM],
+        [tokenA, tokenB, FeeAmount.HIGH],
+      ])
+    }, [])
   const pools = await usePools(provider, allCurrencyCombinationsWithAllFees)
 
   return {

@@ -27,7 +27,7 @@ interface Response {
   minAmount: NumberOrString
   maxAmount: NumberOrString
   order?: {
-    quoteId: any
+    quoteId?: any
   }
   quoteId?: any
   signedOrder?: SignedOrder

@@ -1,12 +1,28 @@
 import { abi as IUniswapV2PairABI } from '@uniswap/v2-core/build/IUniswapV2Pair.json'
 import { abi as UniswapV2Factory  } from '@uniswap/v2-core/build/UniswapV2Factory.json'
 import { Interface } from '@ethersproject/abi'
-import { ChainId, Currency, CurrencyAmount, Pair, ETHER, Token, TokenAmount, WETH } from '@uniswap/sdk'
+import {
+  ChainId,
+  Currency,
+  CurrencyAmount,
+  Pair,
+  ETHER,
+  Token,
+  TokenAmount,
+  WETH,
+} from '@uniswap/sdk'
 import { multicall } from '../multicall'
 import { JsonRpcProvider } from '@ethersproject/providers'
 
-export function wrappedCurrency(currency: Currency | undefined, chainId: ChainId | undefined): Token | undefined {
-  return chainId && currency === ETHER ? WETH[chainId] : currency instanceof Token ? currency : undefined
+export function wrappedCurrency(
+  currency: Currency | undefined,
+  chainId: ChainId | undefined
+): Token | undefined {
+  return chainId && currency === ETHER
+    ? WETH[chainId]
+    : currency instanceof Token
+    ? currency
+    : undefined
 }
 
 export function wrappedCurrencyAmount(
@@ -28,15 +44,20 @@ export enum PairState {
   LOADING,
   NOT_EXISTS,
   EXISTS,
-  INVALID
+  INVALID,
 }
 
 export const SUSHISWAP_FACTORY_ADDRESS = '0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac'
 
-export const usePairs = async (currencies: [Currency | undefined, Currency | undefined][], provider: JsonRpcProvider, chainId: number, isSushiSwap = false): Promise<[PairState, Pair | null][]> => {
+export const usePairs = async (
+  currencies: [Currency | undefined, Currency | undefined][],
+  provider: JsonRpcProvider,
+  chainId: number,
+  isSushiSwap = false
+): Promise<[PairState, Pair | null][]> => {
   const tokens = currencies.map(([currencyA, currencyB]) => [
     wrappedCurrency(currencyA, chainId),
-    wrappedCurrency(currencyB, chainId)
+    wrappedCurrency(currencyB, chainId),
   ])
   const blockTag = 'latest'
   let pairAddresses: (string | undefined)[] = []
