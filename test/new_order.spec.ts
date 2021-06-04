@@ -83,39 +83,10 @@ describe('NewOrder', function () {
   })
 
   describe('dispatch to protocol signer', function () {
-    it('should signed pmmv4 order', async function () {
-      const signedOrderResp = await newOrder({
-        signer: Wallet.createRandom(),
-        quoter: {
-          getPrice: () => {
-            return Promise.resolve({
-              result: true,
-              exchangeable: true,
-              minAmount: 0,
-              maxAmount: 1000,
-              price: 1,
-              quoteId: 'echo-testing-9999',
-            })
-          },
-        },
-        query: {
-          base: 'ETH',
-          quote: 'USDT',
-          side: 'SELL',
-          amount: 0.1,
-          uniqId: 'testing-1111',
-          userAddr: Wallet.createRandom().address.toLowerCase(),
-        },
-      })
-
-      assert(signedOrderResp)
-      assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-9999')
-    })
-
-    it('should raise error pmmv4 order for EOA mmp', async function () {
+    it('should raise error for pmmv4 order', async function () {
       assert.equal(
         await newOrder({
-          signer: signer,
+          signer: Wallet.createRandom(),
           quoter: {
             getPrice: () => {
               return Promise.resolve({
@@ -135,9 +106,10 @@ describe('NewOrder', function () {
             amount: 0.1,
             uniqId: 'testing-1111',
             userAddr: Wallet.createRandom().address.toLowerCase(),
+            protocol: 'PMMV4',
           },
         }),
-        'eoa_signer_not_work_with_tokenlon_v4_order'
+        'Unrecognized protocol: PMMV4'
       )
     })
 

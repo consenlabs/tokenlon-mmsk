@@ -8,7 +8,6 @@ import { addQuoteIdPrefix, constructQuoteResponse, preprocessQuote } from '../qu
 import { assetDataUtils, SignedOrder } from '0x-v2-order-utils'
 import { buildSignedOrder as buildRFQV1SignedOrder } from '../signer/rfqv1'
 import { buildSignedOrder } from '../signer/pmmv5'
-import { buildSignedOrder as buildLagacyOrder } from '../signer/pmmv4'
 import { buildSignedOrder as buildAMMV1Order } from '../signer/ammv1'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
 import {
@@ -151,7 +150,7 @@ function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config
 export const newOrder = async (ctx) => {
   const { quoter, signer, chainID } = ctx
   const query: QueryInterface = {
-    protocol: Protocol.PMMV4, // by default is v2 protocol
+    protocol: Protocol.PMMV5, // by default is v2 protocol
     ...ctx.query, // overwrite from request
   }
 
@@ -223,12 +222,8 @@ export const newOrder = async (ctx) => {
         resp.order = await buildRFQV1SignedOrder(signer, rfqOrer, chainID, config.addressBookV5.RFQ)
         break
       default:
-        console.log(`unknown protocol ${protocol}, fallback to 0x v2`)
-        if (signer.address.toLowerCase() == config.mmProxyContractAddress.toLowerCase()) {
-          throw new Error('eoa_signer_not_work_with_tokenlon_v4_order')
-        }
-        resp.order = buildLagacyOrder(signer, order, userAddr, feeFactor)
-        break
+        console.log(`unknown protocol ${protocol}`)
+        throw new Error('Unrecognized protocol: ' + protocol)
     }
 
     resp.order.quoteId = quoteId

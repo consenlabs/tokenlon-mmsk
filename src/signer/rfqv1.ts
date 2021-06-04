@@ -1,7 +1,6 @@
 import { Wallet } from 'ethers'
 import { orderBNToString } from '../utils'
-import { signWithUserAndFee } from './pmmv4'
-import { generateSaltWithFeeFactor } from './pmmv5'
+import { generateSaltWithFeeFactor, signWithUserAndFee } from './pmmv5'
 import { RFQOrder } from './types'
 import { getOrderSignDigest } from './orderHash'
 import * as ethUtils from 'ethereumjs-util'
@@ -24,9 +23,9 @@ export enum SignatureType {
 }
 
 // Signature:
-// +------|---------|---------|-------------------|------+
-// |  R   |    S    |    V    | reserved 32 bytes | type |
-// +------|---------|---------|-------------------|------+
+// +------|---------|---------|-------------------|---------+
+// |  R   |    S    |    V    | reserved 32 bytes | type(3) |
+// +------|---------|---------|-------------------|---------+
 export async function signByEOA(orderHash: string, wallet: Wallet): Promise<string> {
   // signature: R+S+V
   let signature = await wallet.signMessage(orderHash)
@@ -41,9 +40,9 @@ export async function signByEOA(orderHash: string, wallet: Wallet): Promise<stri
 
 // For V4 Maket Maker Proxy (MMP)
 // Signature:
-// +------|---------|---------|---------|---------|------+
-// |  V   |    R    |    S    |userAddr |feeFactor| type |
-// +------|---------|---------|---------|---------|------+
+// +------|---------|---------|---------|---------|---------+
+// |  V   |    R    |    S    |userAddr |feeFactor| type(6) |
+// +------|---------|---------|---------|---------|---------+
 export function signByMMPSigner(
   orderHash: string,
   userAddr: string,
