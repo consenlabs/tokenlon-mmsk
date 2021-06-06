@@ -27,6 +27,7 @@ interface Response {
   maxAmount: NumberOrString
   order?: {
     quoteId: any
+    protocol: Protocol
   }
   quoteId?: any
   signedOrder?: SignedOrder
@@ -221,6 +222,7 @@ export const newOrder = async (ctx) => {
     }
 
     resp.order.quoteId = quoteId
+    resp.order.protocol = protocol
 
     ctx.body = {
       result: true,

@@ -123,6 +123,7 @@ describe('NewOrder', function () {
         senderAddress,
         feeRecipientAddress,
         quoteId,
+        protocol,
       }) => ({
         makerAddress: makerAddress.toLowerCase(),
         makerAssetAmount,
@@ -133,6 +134,7 @@ describe('NewOrder', function () {
         senderAddress: senderAddress.toLowerCase(),
         feeRecipientAddress: feeRecipientAddress.toLowerCase(),
         quoteId,
+        protocol,
       }))(signedOrderResp.order)
       const expected = {
         makerAddress: '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852',
@@ -146,6 +148,7 @@ describe('NewOrder', function () {
         senderAddress: '0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491',
         feeRecipientAddress: '0xb9e29984fe50602e7a619662ebed4f90d93824c7',
         quoteId: '1--echo-testing-8888',
+        protocol: Protocol.AMMV1,
       }
       // verify data object
       assert.deepEqual(actual, expected)
@@ -225,6 +228,7 @@ describe('NewOrder', function () {
         feeRecipientAddress,
         exchangeAddress,
         quoteId,
+        protocol,
       }) => ({
         makerAddress: makerAddress.toLowerCase(),
         makerAssetAmount,
@@ -238,6 +242,7 @@ describe('NewOrder', function () {
         feeRecipientAddress: feeRecipientAddress.toLowerCase(),
         exchangeAddress: exchangeAddress.toLowerCase(),
         quoteId,
+        protocol,
       }))(signedOrderResp.order)
       const expected = {
         makerAddress: signer.address.toLowerCase(),
@@ -254,6 +259,7 @@ describe('NewOrder', function () {
         feeRecipientAddress: userAddr,
         exchangeAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
         quoteId: '1--echo-testing-8888',
+        protocol: Protocol.PMMV5,
       }
       // verify data object
       assert.deepEqual(actual, expected)
@@ -303,6 +309,7 @@ describe('NewOrder', function () {
         feeRecipientAddress,
         exchangeAddress,
         quoteId,
+        protocol,
       }) => ({
         makerAddress: makerAddress.toLowerCase(),
         makerAssetAmount,
@@ -316,6 +323,7 @@ describe('NewOrder', function () {
         feeRecipientAddress: feeRecipientAddress.toLowerCase(),
         exchangeAddress: exchangeAddress.toLowerCase(),
         quoteId,
+        protocol,
       }))(signedOrderResp.order)
       const expected = {
         makerAddress: signer.address.toLowerCase(),
@@ -332,6 +340,7 @@ describe('NewOrder', function () {
         feeRecipientAddress: userAddr,
         exchangeAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
         quoteId: '1--echo-testing-8888',
+        protocol: Protocol.PMMV5,
       }
       // verify data object
       assert.deepEqual(actual, expected)
@@ -377,6 +386,7 @@ describe('NewOrder', function () {
         takerAssetAmount,
         makerAssetAmount,
         quoteId,
+        protocol,
       }) => ({
         takerAddr: takerAddr.toLowerCase(),
         makerAddr: makerAddr.toLowerCase(),
@@ -385,6 +395,7 @@ describe('NewOrder', function () {
         takerAssetAmount,
         makerAssetAmount,
         quoteId,
+        protocol,
       }))(signedOrderResp.order)
       const expected = {
         takerAddr: userAddr,
@@ -394,6 +405,7 @@ describe('NewOrder', function () {
         takerAssetAmount: '100000000000000000',
         makerAssetAmount: '100000',
         quoteId: '1--echo-testing-8888',
+        protocol: Protocol.RFQV1,
       }
       // verify data object
       assert.deepEqual(actual, expected)
@@ -441,6 +453,7 @@ describe('NewOrder', function () {
         takerAssetAmount,
         makerAssetAmount,
         quoteId,
+        protocol,
       }) => ({
         takerAddr: takerAddr.toLowerCase(),
         makerAddr: makerAddr.toLowerCase(),
@@ -449,6 +462,7 @@ describe('NewOrder', function () {
         takerAssetAmount,
         makerAssetAmount,
         quoteId,
+        protocol,
       }))(signedOrderResp.order)
       const expected = {
         takerAddr: userAddr,
@@ -458,6 +472,7 @@ describe('NewOrder', function () {
         takerAssetAmount: '100000000000000000',
         makerAssetAmount: '100000',
         quoteId: '1--echo-testing-8888',
+        protocol: Protocol.RFQV1,
       }
       // verify data object
       assert.deepEqual(actual, expected)
