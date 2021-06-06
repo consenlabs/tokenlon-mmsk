@@ -1,7 +1,6 @@
 import { ethers, BigNumber, utils } from 'ethers'
 import { config } from '../config'
 import { updaterStack } from '../worker'
-import { MarketMakerConfig } from '../types'
 import { NULL_ADDRESS } from '../constants'
 
 // ERC20 ABI
@@ -28,13 +27,11 @@ export const getTokenlonTokenBalance = async (token) => {
   const config = updaterStack.markerMakerConfigUpdater.cacheResult
   const balanceBN = await getTokenBalance({
     address: config.mmProxyContractAddress,
-    contractAddress: getWethAddrIfIsEth(token.contractAddress, config),
+    contractAddress: getWethAddrIfIsEth(token.contractAddress, config.wethContractAddress),
   })
   return balanceBN ? +utils.formatUnits(balanceBN, token.decimal) : 0
 }
 
-export const getWethAddrIfIsEth = (address, config: MarketMakerConfig) => {
-  return address.toLowerCase() === NULL_ADDRESS
-    ? config.wethContractAddress.toLowerCase()
-    : address.toLowerCase()
+export const getWethAddrIfIsEth = (address, wethAddress) => {
+  return address.toLowerCase() === NULL_ADDRESS ? wethAddress.toLowerCase() : address.toLowerCase()
 }

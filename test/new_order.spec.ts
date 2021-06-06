@@ -83,10 +83,80 @@ describe('NewOrder', function () {
   })
 
   describe('dispatch to protocol signer', function () {
+    it('should signed ammv1 order by uniswap', async function () {
+      const ammAddr = '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
+      const signedOrderResp = await newOrder({
+        signer: signer,
+        quoter: {
+          getPrice: () => {
+            return Promise.resolve({
+              result: true,
+              exchangeable: true,
+              minAmount: 0,
+              maxAmount: 1000,
+              price: 1,
+              makerAddress: ammAddr,
+              quoteId: 'echo-testing-8888',
+            })
+          },
+        },
+        query: {
+          base: 'ETH',
+          quote: 'USDT',
+          side: 'SELL',
+          amount: 0.1,
+          uniqId: 'testing-1111',
+          userAddr: Wallet.createRandom().address.toLowerCase(),
+          protocol: Protocol.AMMV1,
+        },
+      })
+
+      assert(signedOrderResp)
+
+      const actual = (({
+        makerAddress,
+        makerAssetAmount,
+        makerAssetData,
+        takerAddress,
+        takerAssetAmount,
+        takerAssetData,
+        senderAddress,
+        feeRecipientAddress,
+        quoteId,
+      }) => ({
+        makerAddress: makerAddress.toLowerCase(),
+        makerAssetAmount,
+        makerAssetData,
+        takerAddress: takerAddress.toLowerCase(),
+        takerAssetAmount,
+        takerAssetData,
+        senderAddress: senderAddress.toLowerCase(),
+        feeRecipientAddress: feeRecipientAddress.toLowerCase(),
+        quoteId,
+      }))(signedOrderResp.order)
+      const expected = {
+        makerAddress: '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852',
+        makerAssetAmount: '100000',
+        makerAssetData:
+          '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7',
+        takerAddress: '0x25657705a6be20511687d483f2fccfb2d92f6033',
+        takerAssetAmount: '100000000000000000',
+        takerAssetData:
+          '0xf47261b00000000000000000000000000000000000000000000000000000000000000000',
+        senderAddress: '0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491',
+        feeRecipientAddress: '0xb9e29984fe50602e7a619662ebed4f90d93824c7',
+        quoteId: '1--echo-testing-8888',
+      }
+      // verify data object
+      assert.deepEqual(actual, expected)
+      // verify signature length, the signature is generated ramdonly.
+      assert.equal(signedOrderResp.order.makerWalletSignature.length, 40)
+    })
+
     it('should raise error for pmmv4 order', async function () {
       assert.equal(
         await newOrder({
-          signer: Wallet.createRandom(),
+          signer: signer,
           quoter: {
             getPrice: () => {
               return Promise.resolve({
@@ -114,6 +184,7 @@ describe('NewOrder', function () {
     })
 
     it('should signed pmmv5 order by MMP', async function () {
+      const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
         signer: Wallet.createRandom(),
         quoter: {
@@ -134,17 +205,64 @@ describe('NewOrder', function () {
           side: 'SELL',
           amount: 0.1,
           uniqId: 'testing-1111',
-          userAddr: Wallet.createRandom().address.toLowerCase(),
+          userAddr: userAddr,
           protocol: Protocol.PMMV5,
         },
       })
 
       assert(signedOrderResp)
-      assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-8888')
+
+      const actual = (({
+        makerAddress,
+        makerAssetAmount,
+        makerAssetData,
+        makerFee,
+        takerAddress,
+        takerAssetAmount,
+        takerAssetData,
+        takerFee,
+        senderAddress,
+        feeRecipientAddress,
+        exchangeAddress,
+        quoteId,
+      }) => ({
+        makerAddress: makerAddress.toLowerCase(),
+        makerAssetAmount,
+        makerAssetData,
+        makerFee,
+        takerAddress: takerAddress.toLowerCase(),
+        takerAssetAmount,
+        takerAssetData,
+        takerFee,
+        senderAddress: senderAddress.toLowerCase(),
+        feeRecipientAddress: feeRecipientAddress.toLowerCase(),
+        exchangeAddress: exchangeAddress.toLowerCase(),
+        quoteId,
+      }))(signedOrderResp.order)
+      const expected = {
+        makerAddress: signer.address.toLowerCase(),
+        makerAssetAmount: '100000',
+        makerAssetData:
+          '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7',
+        makerFee: '0',
+        takerAddress: '0x7bd7d025d4231aad1233967b527ffd7416410257',
+        takerAssetAmount: '100000000000000000',
+        takerAssetData:
+          '0xf47261b0000000000000000000000000d0a1e359811322d97991e03f863a0c30c2cf029c',
+        takerFee: '0',
+        senderAddress: '0x7bd7d025d4231aad1233967b527ffd7416410257',
+        feeRecipientAddress: userAddr,
+        exchangeAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
+        quoteId: '1--echo-testing-8888',
+      }
+      // verify data object
+      assert.deepEqual(actual, expected)
+      // verify signature type
       assert.equal(signedOrderResp.order.makerWalletSignature.slice(-1), '4')
     })
 
     it('should signed pmmv5 order by EOA', async function () {
+      const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
         signer: signer,
         quoter: {
@@ -165,17 +283,64 @@ describe('NewOrder', function () {
           side: 'SELL',
           amount: 0.1,
           uniqId: 'testing-1111',
-          userAddr: Wallet.createRandom().address.toLowerCase(),
+          userAddr: userAddr,
           protocol: Protocol.PMMV5,
         },
       })
 
       assert(signedOrderResp)
-      assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-8888')
+
+      const actual = (({
+        makerAddress,
+        makerAssetAmount,
+        makerAssetData,
+        makerFee,
+        takerAddress,
+        takerAssetAmount,
+        takerAssetData,
+        takerFee,
+        senderAddress,
+        feeRecipientAddress,
+        exchangeAddress,
+        quoteId,
+      }) => ({
+        makerAddress: makerAddress.toLowerCase(),
+        makerAssetAmount,
+        makerAssetData,
+        makerFee,
+        takerAddress: takerAddress.toLowerCase(),
+        takerAssetAmount,
+        takerAssetData,
+        takerFee,
+        senderAddress: senderAddress.toLowerCase(),
+        feeRecipientAddress: feeRecipientAddress.toLowerCase(),
+        exchangeAddress: exchangeAddress.toLowerCase(),
+        quoteId,
+      }))(signedOrderResp.order)
+      const expected = {
+        makerAddress: signer.address.toLowerCase(),
+        makerAssetAmount: '100000',
+        makerAssetData:
+          '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7',
+        makerFee: '0',
+        takerAddress: '0x7bd7d025d4231aad1233967b527ffd7416410257',
+        takerAssetAmount: '100000000000000000',
+        takerAssetData:
+          '0xf47261b0000000000000000000000000d0a1e359811322d97991e03f863a0c30c2cf029c',
+        takerFee: '0',
+        senderAddress: '0x7bd7d025d4231aad1233967b527ffd7416410257',
+        feeRecipientAddress: userAddr,
+        exchangeAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
+        quoteId: '1--echo-testing-8888',
+      }
+      // verify data object
+      assert.deepEqual(actual, expected)
+      // verify signature type
       assert.equal(signedOrderResp.order.makerWalletSignature.slice(-1), '3')
     })
 
     it('should signed rfqv1 order by MMP', async function () {
+      const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
         signer: Wallet.createRandom(),
         chainID: 1,
@@ -197,20 +362,49 @@ describe('NewOrder', function () {
           side: 'SELL',
           amount: 0.1,
           uniqId: 'testing-1111',
-          userAddr: Wallet.createRandom().address.toLowerCase(),
+          userAddr: userAddr,
           protocol: Protocol.RFQV1,
         },
       })
 
       assert(signedOrderResp)
-      assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-8888')
 
+      const actual = (({
+        takerAddr,
+        makerAddr,
+        takerAssetAddr,
+        makerAssetAddr,
+        takerAssetAmount,
+        makerAssetAmount,
+        quoteId,
+      }) => ({
+        takerAddr: takerAddr.toLowerCase(),
+        makerAddr: makerAddr.toLowerCase(),
+        takerAssetAddr: takerAssetAddr.toLowerCase(),
+        makerAssetAddr: makerAssetAddr.toLowerCase(),
+        takerAssetAmount,
+        makerAssetAmount,
+        quoteId,
+      }))(signedOrderResp.order)
+      const expected = {
+        takerAddr: userAddr,
+        makerAddr: signer.address.toLowerCase(),
+        takerAssetAddr: '0x0000000000000000000000000000000000000000',
+        makerAssetAddr: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        takerAssetAmount: '100000000000000000',
+        makerAssetAmount: '100000',
+        quoteId: '1--echo-testing-8888',
+      }
+      // verify data object
+      assert.deepEqual(actual, expected)
+      // verify signature type
       const sigBytes = utils.arrayify(signedOrderResp.order.makerWalletSignature)
       assert.equal(sigBytes.length, 88)
       assert.equal(sigBytes[87], SignatureType.Wallet)
     })
 
     it('should signed rfqv1 order by EOA', async function () {
+      const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
         signer: signer,
         chainID: 1,
@@ -232,18 +426,46 @@ describe('NewOrder', function () {
           side: 'SELL',
           amount: 0.1,
           uniqId: 'testing-1111',
-          userAddr: Wallet.createRandom().address.toLowerCase(),
+          userAddr: userAddr,
           protocol: Protocol.RFQV1,
         },
       })
 
       assert(signedOrderResp)
-      assert.equal(signedOrderResp.order.quoteId, '1--echo-testing-8888')
 
+      const actual = (({
+        takerAddr,
+        makerAddr,
+        takerAssetAddr,
+        makerAssetAddr,
+        takerAssetAmount,
+        makerAssetAmount,
+        quoteId,
+      }) => ({
+        takerAddr: takerAddr.toLowerCase(),
+        makerAddr: makerAddr.toLowerCase(),
+        takerAssetAddr: takerAssetAddr.toLowerCase(),
+        makerAssetAddr: makerAssetAddr.toLowerCase(),
+        takerAssetAmount,
+        makerAssetAmount,
+        quoteId,
+      }))(signedOrderResp.order)
+      const expected = {
+        takerAddr: userAddr,
+        makerAddr: signer.address.toLowerCase(),
+        takerAssetAddr: '0x0000000000000000000000000000000000000000',
+        makerAssetAddr: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        takerAssetAmount: '100000000000000000',
+        makerAssetAmount: '100000',
+        quoteId: '1--echo-testing-8888',
+      }
+      // verify data object
+      assert.deepEqual(actual, expected)
+      // verify signature type
       const sigBytes = utils.arrayify(signedOrderResp.order.makerWalletSignature)
       assert.equal(sigBytes.length, 98)
       assert.equal(sigBytes[97], SignatureType.EthSign)
-
+      // verify signature
       const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQ
       const orderHash = getOrderSignDigest(signedOrderResp.order, 1, rfqAddr)
       const recoved = utils.verifyMessage(orderHash, utils.hexlify(sigBytes.slice(0, 65)))

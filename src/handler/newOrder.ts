@@ -5,7 +5,7 @@ import { validateNewOrderRequest, validateRequest } from '../validations'
 import { ValidationError } from './errors'
 import { addQuoteIdPrefix, constructQuoteResponse, preprocessQuote } from '../quoting'
 
-import { assetDataUtils, SignedOrder } from '0x-v2-order-utils'
+import { SignedOrder } from '0x-v2-order-utils'
 import { buildSignedOrder as buildRFQV1SignedOrder } from '../signer/rfqv1'
 import { buildSignedOrder } from '../signer/pmmv5'
 import { buildSignedOrder as buildAMMV1Order } from '../signer/ammv1'
@@ -16,7 +16,6 @@ import {
   toBN,
   getSupportedTokens,
   getTokenBySymbol,
-  getWethAddrIfIsEth,
   getTimestamp,
 } from '../utils'
 
@@ -122,17 +121,11 @@ function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config
     makerAddress: config.mmProxyContractAddress.toLowerCase(),
     makerAssetAmount,
     makerAssetAddress: makerToken.contractAddress,
-    makerAssetData: assetDataUtils.encodeERC20AssetData(
-      getWethAddrIfIsEth(makerToken.contractAddress, config)
-    ),
     makerFee: toBN(0),
 
     takerAddress: config.userProxyContractAddress,
     takerAssetAmount,
     takerAssetAddress: takerToken.contractAddress,
-    takerAssetData: assetDataUtils.encodeERC20AssetData(
-      getWethAddrIfIsEth(takerToken.contractAddress, config)
-    ),
     takerFee: toBN(0),
 
     senderAddress: config.tokenlonExchangeContractAddress.toLowerCase(),
@@ -204,7 +197,8 @@ export const newOrder = async (ctx) => {
           order,
           userAddr.toLowerCase(),
           feeFactor,
-          config.addressBookV5.PMM
+          config.addressBookV5.PMM,
+          config.wethContractAddress
         )
         break
       case Protocol.RFQV1:
