@@ -1,8 +1,8 @@
 import { Wallet } from 'ethers'
-import { orderBNToString } from '../utils'
+import { orderBNToString, BigNumber } from '../utils'
 import { generateSaltWithFeeFactor, signWithUserAndFee } from './pmmv5'
-import { RFQOrder } from './types'
 import { getOrderSignDigest } from './orderHash'
+import { RFQOrder } from './types'
 import * as ethUtils from 'ethereumjs-util'
 
 // spec of RFQV1
@@ -60,17 +60,20 @@ export function signByMMPSigner(
 
 export const buildSignedOrder = async (
   signer: Wallet,
-  order: RFQOrder,
+  order,
+  userAddr: string,
   chainId: number,
   rfqAddr: string
 ) => {
   // inject fee factor to salt
-  const userAddr = order.takerAddr
   const feeFactor = order.feeFactor
+  order.takerAddress = userAddr.toLowerCase()
   order.salt = generateSaltWithFeeFactor(feeFactor)
-  const orderHash = getOrderSignDigest(order, chainId, rfqAddr)
+
+  const rfqOrer = toRFQOrder(order)
+  const orderHash = getOrderSignDigest(rfqOrer, chainId, rfqAddr)
   const makerWalletSignature =
-    signer.address.toLowerCase() == order.makerAddr.toLowerCase()
+    signer.address.toLowerCase() == order.makerAddress.toLowerCase()
       ? await signByEOA(orderHash, signer)
       : signByMMPSigner(orderHash, userAddr, feeFactor, signer)
 
@@ -80,4 +83,20 @@ export const buildSignedOrder = async (
   }
 
   return orderBNToString(signedOrder)
+}
+
+const toNumber = (obj: BigNumber | string): number => new BigNumber(obj).toNumber()
+
+export function toRFQOrder(order): RFQOrder {
+  return {
+    takerAddr: order.takerAddress,
+    makerAddr: order.makerAddress,
+    takerAssetAddr: order.takerAssetAddress,
+    makerAssetAddr: order.makerAssetAddress,
+    takerAssetAmount: order.takerAssetAmount,
+    makerAssetAmount: order.makerAssetAmount,
+    deadline: toNumber(order.expirationTimeSeconds),
+    feeFactor: order.feeFactor,
+    salt: order.salt,
+  }
 }

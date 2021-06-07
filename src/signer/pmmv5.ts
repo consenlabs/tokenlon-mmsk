@@ -1,14 +1,13 @@
 import {
   generatePseudoRandomSalt,
   orderHashUtils,
-  assetDataUtils,
   SignatureType,
   signatureUtils,
   SignerType,
 } from '0x-v2-order-utils'
 import * as ethUtils from 'ethereumjs-util'
 import { utils, Wallet } from 'ethers'
-import { BigNumber, orderBNToString, getWethAddrIfIsEth } from '../utils'
+import { BigNumber, orderBNToString } from '../utils'
 import { ecSignOrderHash } from './ecsign'
 
 // changes of PMMV5
@@ -87,23 +86,12 @@ function signByMMPSigner(
 }
 
 // Move fee factor to salt field
-export const buildSignedOrder = async (
-  signer: Wallet,
-  order,
-  userAddr,
-  feeFactor,
-  pmm,
-  wethAddress
-) => {
+export const buildSignedOrder = async (signer: Wallet, order, userAddr, pmm) => {
+  const feeFactor = order.feeFactor
   order.takerAddress = pmm.toLowerCase()
   order.senderAddress = pmm.toLowerCase()
   order.feeRecipientAddress = userAddr
-  order.makerAssetData = assetDataUtils.encodeERC20AssetData(
-    getWethAddrIfIsEth(order.makerAssetAddress, wethAddress)
-  )
-  order.takerAssetData = assetDataUtils.encodeERC20AssetData(
-    getWethAddrIfIsEth(order.takerAssetAddress, wethAddress)
-  )
+
   // inject fee factor to salt
   const o = {
     ...order,
@@ -117,7 +105,6 @@ export const buildSignedOrder = async (
 
   const signedOrder = {
     ...o,
-    feeFactor,
     makerWalletSignature,
   }
 
