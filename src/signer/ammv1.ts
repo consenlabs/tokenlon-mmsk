@@ -4,23 +4,27 @@ import * as cryptoRandomString from 'crypto-random-string'
 import { orderBNToString } from '../utils'
 import { NULL_ADDRESS } from '../constants'
 
-export const buildSignedOrder = (order, feeFactor, makerAddress, wethAddress) => {
+export const buildSignedOrder = (order, makerAddress, wethAddress) => {
+  const makerAssetAddress = order.makerAssetAddress.toLowerCase()
+  const takerAssetAddress = order.takerAssetAddress.toLowerCase()
   // = Rewrite order fields
   // 1. change maker address to LP pool address
   order.makerAddress = makerAddress
   // 2. convert weth to eth
-  const makerTokenAddress = assetDataUtils.decodeERC20AssetData(order.makerAssetData).tokenAddress
-  if (makerTokenAddress.toLowerCase() === wethAddress) {
+  if (makerAssetAddress === wethAddress.toLowerCase()) {
     order.makerAssetData = assetDataUtils.encodeERC20AssetData(NULL_ADDRESS)
+  } else {
+    order.makerAssetData = assetDataUtils.encodeERC20AssetData(makerAssetAddress)
   }
-  const takerTokenAddress = assetDataUtils.decodeERC20AssetData(order.takerAssetData).tokenAddress
-  if (takerTokenAddress.toLowerCase() === wethAddress) {
+
+  if (takerAssetAddress === wethAddress.toLowerCase()) {
     order.takerAssetData = assetDataUtils.encodeERC20AssetData(NULL_ADDRESS)
+  } else {
+    order.takerAssetData = assetDataUtils.encodeERC20AssetData(takerAssetAddress)
   }
   // NOTE: for AMM order we don't do signing here
   const signedOrder = {
     ...order,
-    feeFactor,
     salt: generatePseudoRandomSalt(),
     makerWalletSignature: cryptoRandomString({ length: 40 }),
   }

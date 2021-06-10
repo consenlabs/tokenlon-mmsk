@@ -5,9 +5,9 @@ import { validateNewOrderRequest, validateRequest } from '../validations'
 import { ValidationError } from './errors'
 import { addQuoteIdPrefix, constructQuoteResponse, preprocessQuote } from '../quoting'
 
-import { assetDataUtils, SignedOrder } from '0x-v2-order-utils'
+import { assetDataUtils } from '0x-v2-order-utils'
+import { buildSignedOrder as buildRFQV1SignedOrder } from '../signer/rfqv1'
 import { buildSignedOrder } from '../signer/pmmv5'
-import { buildSignedOrder as buildLagacyOrder } from '../signer/pmmv4'
 import { buildSignedOrder as buildAMMV1Order } from '../signer/ammv1'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
 import {
@@ -22,16 +22,49 @@ import {
 
 type NumberOrString = number | string
 
+interface Order {
+  // quoteId is from market maker backend quoter.
+  quoteId: string
+  // protocol represents the order type as enum, [PMMV4, PMMV5, AMMV1, RFQV1, AMMV2].
+  protocol: Protocol
+
+  // Common fields
+  makerAddress: string
+  makerAssetAmount: string
+  makerAssetAddress: string
+  takerAddress: string
+  takerAssetAmount: string
+  takerAssetAddress: string
+  expirationTimeSeconds: string
+  // feeFactor is tokenlon protocol field, works like BPS, should <= 10000.
+  feeFactor: number
+  // salt represents the uniqueness of order, is to prevent replay attack.
+  salt: string
+
+  // 0x protocol specific fields
+  makerAssetData: string
+  takerAssetData: string
+  senderAddress: string
+  // For PMMV5, we use this field as receiver address (user address).
+  feeRecipientAddress: string
+  exchangeAddress: string
+
+  // makerFee and takerFee are not used, but keep to make 0x order signature.
+  makerFee: string
+  takerFee: string
+
+  // PMM/RFQ market maker signature
+  makerWalletSignature: string
+
+  // Extra data
+  payload: string
+}
+
 interface Response {
   rate: NumberOrString
   minAmount: NumberOrString
   maxAmount: NumberOrString
-  order?: {
-    quoteId: any
-  }
-  quoteId?: any
-  signedOrder?: SignedOrder
-  orderHash?: string
+  order?: Order
 }
 
 // use smallest decimals from [USDT/USDC: 6, BTC: 8, ETH: 18]
@@ -102,7 +135,6 @@ function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config
     // console.log('set fee factor from query string', { queryFeeFactor })
     fFactor = +feefactor
   }
-  const feeFactor = fFactor
 
   // 针对用户买，对于做市商是提供卖单
   // 用户用quote 买base，做市商要构建卖base 换quote的order
@@ -118,18 +150,20 @@ function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config
     toBN(amount)
   )
 
-  const order = {
+  return {
     makerAddress: config.mmProxyContractAddress.toLowerCase(),
     makerAssetAmount,
+    makerAssetAddress: makerToken.contractAddress,
     makerAssetData: assetDataUtils.encodeERC20AssetData(
-      getWethAddrIfIsEth(makerToken.contractAddress, config)
+      getWethAddrIfIsEth(makerToken.contractAddress, config.wethContractAddress)
     ),
     makerFee: toBN(0),
 
     takerAddress: config.userProxyContractAddress,
     takerAssetAmount,
+    takerAssetAddress: takerToken.contractAddress,
     takerAssetData: assetDataUtils.encodeERC20AssetData(
-      getWethAddrIfIsEth(takerToken.contractAddress, config)
+      getWethAddrIfIsEth(takerToken.contractAddress, config.wethContractAddress)
     ),
     takerFee: toBN(0),
 
@@ -137,18 +171,15 @@ function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config
     feeRecipientAddress: FEE_RECIPIENT_ADDRESS,
     expirationTimeSeconds: toBN(getTimestamp() + +config.orderExpirationSeconds),
     exchangeAddress: config.exchangeContractAddress,
-  }
 
-  return {
-    order,
-    feeFactor,
+    feeFactor: fFactor,
   }
 }
 
 export const newOrder = async (ctx) => {
-  const { quoter, signer } = ctx
+  const { quoter, signer, chainID } = ctx
   const query: QueryInterface = {
-    protocol: Protocol.PMMV4, // by default is v2 protocol
+    protocol: Protocol.PMMV5, // by default is v2 protocol
     ...ctx.query, // overwrite from request
   }
 
@@ -160,19 +191,12 @@ export const newOrder = async (ctx) => {
     if (errMsg) throw new ValidationError(errMsg)
 
     const { simpleOrder, rateBody } = await requestMarketMaker(quoter, query)
-    const makerCfg = updaterStack.markerMakerConfigUpdater.cacheResult
     const config = updaterStack.markerMakerConfigUpdater.cacheResult
     const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
     const tokenList = getSupportedTokens()
 
     const { rate, minAmount, maxAmount, quoteId } = rateBody
-    const { order, feeFactor } = getOrderAndFeeFactor(
-      simpleOrder,
-      rate,
-      tokenList,
-      tokenConfigs,
-      config
-    )
+    const order = getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config)
 
     const resp: Response = {
       rate,
@@ -190,32 +214,32 @@ export const newOrder = async (ctx) => {
           resp.minAmount = tokenConfig.minTradeAmount
           resp.maxAmount = tokenConfig.maxTradeAmount
         }
-        resp.order = buildAMMV1Order(
-          order,
-          feeFactor,
-          rateBody.makerAddress,
-          config.wethContractAddress
-        )
+        resp.order = buildAMMV1Order(order, rateBody.makerAddress, config.wethContractAddress)
         break
       case Protocol.PMMV5:
         resp.order = await buildSignedOrder(
           signer,
           order,
           userAddr.toLowerCase(),
-          feeFactor,
           config.addressBookV5.PMM
         )
         break
-      default:
-        console.log(`unknown protocol ${protocol}, fallback to 0x v2`)
-        if (signer.address.toLowerCase() == makerCfg.mmProxyContractAddress.toLowerCase()) {
-          throw new Error('eoa_signer_not_work_with_tokenlon_v4_order')
-        }
-        resp.order = buildLagacyOrder(signer, order, userAddr, feeFactor)
+      case Protocol.RFQV1:
+        resp.order = await buildRFQV1SignedOrder(
+          signer,
+          order,
+          userAddr.toLowerCase(),
+          chainID,
+          config.addressBookV5.RFQ
+        )
         break
+      default:
+        console.log(`unknown protocol ${protocol}`)
+        throw new Error('Unrecognized protocol: ' + protocol)
     }
 
     resp.order.quoteId = quoteId
+    resp.order.protocol = protocol
 
     ctx.body = {
       result: true,
