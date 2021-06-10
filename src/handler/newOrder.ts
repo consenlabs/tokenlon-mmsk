@@ -23,7 +23,9 @@ import {
 type NumberOrString = number | string
 
 interface Order {
+  // quoteId is from market maker backend quoter.
   quoteId: string
+  // protocol represents the order type as enum, [PMMV4, PMMV5, AMMV1, RFQV1, AMMV2].
   protocol: Protocol
 
   // Common fields
@@ -34,17 +36,22 @@ interface Order {
   takerAssetAmount: string
   takerAssetAddress: string
   expirationTimeSeconds: string
+  // feeFactor is tokenlon protocol field, works like BPS, should <= 10000.
   feeFactor: number
+  // salt represents the uniqueness of order, is to prevent replay attack.
   salt: string
 
   // 0x protocol specific fields
   makerAssetData: string
-  makerFee: string
   takerAssetData: string
-  takerFee: string
   senderAddress: string
+  // For PMMV5, we use this field as receiver address (user address).
   feeRecipientAddress: string
   exchangeAddress: string
+
+  // makerFee and takerFee are not used, but keep to make 0x order signature.
+  makerFee: string
+  takerFee: string
 
   // PMM/RFQ market maker signature
   makerWalletSignature: string
