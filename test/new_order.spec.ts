@@ -423,7 +423,11 @@ describe('NewOrder', function () {
       // verify signature
       const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQ
       const orderHash = getOrderSignDigest(toRFQOrder(signedOrderResp.order), 1, rfqAddr)
-      const recoved = utils.verifyMessage(orderHash, utils.hexlify(sigBytes.slice(0, 65)))
+
+      const recoved = utils.verifyMessage(
+        utils.arrayify(orderHash),
+        utils.hexlify(sigBytes.slice(0, 65))
+      )
       assert.equal(recoved.toLowerCase(), signer.address.toLowerCase())
       // verify random values
       assert.isTrue(signedOrderResp.order.salt.length > 0)
