@@ -218,7 +218,7 @@ describe('NewOrder', function () {
       )
       assert.equal(order.takerAddress, '0x7bd7d025d4231aad1233967b527ffd7416410257')
       assert.equal(order.takerAssetAmount, '100000000000000000')
-      assert.equal(order.takerAssetAddress, '0x0000000000000000000000000000000000000000')
+      assert.equal(order.takerAssetAddress, '0xd0a1e359811322d97991e03f863a0c30c2cf029c')
       assert.equal(
         order.takerAssetData,
         '0xf47261b0000000000000000000000000d0a1e359811322d97991e03f863a0c30c2cf029c'
@@ -279,7 +279,7 @@ describe('NewOrder', function () {
       )
       assert.equal(order.takerAddress, '0x7bd7d025d4231aad1233967b527ffd7416410257')
       assert.equal(order.takerAssetAmount, '100000000000000000')
-      assert.equal(order.takerAssetAddress, '0x0000000000000000000000000000000000000000')
+      assert.equal(order.takerAssetAddress, '0xd0a1e359811322d97991e03f863a0c30c2cf029c')
       assert.equal(
         order.takerAssetData,
         '0xf47261b0000000000000000000000000d0a1e359811322d97991e03f863a0c30c2cf029c'
@@ -341,7 +341,7 @@ describe('NewOrder', function () {
       )
       assert.equal(order.takerAddress, userAddr)
       assert.equal(order.takerAssetAmount, '100000000000000000')
-      assert.equal(order.takerAssetAddress, '0x0000000000000000000000000000000000000000')
+      assert.equal(order.takerAssetAddress, '0xd0a1e359811322d97991e03f863a0c30c2cf029c')
       assert.equal(
         order.takerAssetData,
         '0xf47261b0000000000000000000000000d0a1e359811322d97991e03f863a0c30c2cf029c'
@@ -405,7 +405,7 @@ describe('NewOrder', function () {
       )
       assert.equal(order.takerAddress, userAddr)
       assert.equal(order.takerAssetAmount, '100000000000000000')
-      assert.equal(order.takerAssetAddress, '0x0000000000000000000000000000000000000000')
+      assert.equal(order.takerAssetAddress, '0xd0a1e359811322d97991e03f863a0c30c2cf029c')
       assert.equal(
         order.takerAssetData,
         '0xf47261b0000000000000000000000000d0a1e359811322d97991e03f863a0c30c2cf029c'
