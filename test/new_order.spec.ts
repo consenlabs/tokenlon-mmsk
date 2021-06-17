@@ -145,6 +145,78 @@ describe('NewOrder', function () {
       assert.isTrue(Number(order.expirationTimeSeconds) > 0)
     })
 
+    it('should signed ammv2 order by uniswap v2', async function () {
+      const ammAddr = '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
+      const payload = Buffer.from(
+        JSON.stringify({
+          path: [
+            '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+            '0xdac17f958d2ee523a2206206994597c13d831ec7',
+          ],
+        })
+      ).toString('base64')
+      const signedOrderResp = await newOrder({
+        signer: signer,
+        quoter: {
+          getPrice: () => {
+            return Promise.resolve({
+              result: true,
+              exchangeable: true,
+              minAmount: 0,
+              maxAmount: 1000,
+              price: 1,
+              makerAddress: ammAddr,
+              quoteId: 'echo-testing-8888',
+              payload: payload,
+            })
+          },
+        },
+        query: {
+          base: 'ETH',
+          quote: 'USDT',
+          side: 'SELL',
+          amount: 0.1,
+          uniqId: 'testing-1111',
+          userAddr: Wallet.createRandom().address.toLowerCase(),
+          protocol: Protocol.AMMV2,
+        },
+      })
+
+      assert(signedOrderResp)
+
+      // verify data object
+      const order = signedOrderResp.order
+      assert(order)
+      assert.equal(order.protocol, Protocol.AMMV2)
+      assert.equal(order.quoteId, '1--echo-testing-8888')
+      assert.equal(order.makerAddress, '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852')
+      assert.equal(order.makerAssetAmount, '100000')
+      assert.equal(order.makerAssetAddress, '0xdac17f958d2ee523a2206206994597c13d831ec7')
+      assert.equal(
+        order.makerAssetData,
+        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+      )
+      assert.equal(order.takerAddress, '0x25657705a6be20511687d483f2fccfb2d92f6033')
+      assert.equal(order.takerAssetAmount, '100000000000000000')
+      assert.equal(order.takerAssetAddress, '0x0000000000000000000000000000000000000000')
+      assert.equal(
+        order.takerAssetData,
+        '0xf47261b00000000000000000000000000000000000000000000000000000000000000000'
+      )
+      assert.equal(order.senderAddress, '0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
+      assert.equal(order.feeRecipientAddress, '0xb9e29984fe50602e7a619662ebed4f90d93824c7')
+      assert.equal(order.exchangeAddress, '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
+      // The following fields are to be compatible `Order` struct.
+      assert.equal(order.makerFee, '0')
+      assert.equal(order.takerFee, '0')
+      // verify signature length, the signature is generated ramdonly.
+      assert.equal(order.makerWalletSignature.length, 40)
+      // verify random values
+      assert.isTrue(order.salt.length > 0)
+      assert.isTrue(Number(order.expirationTimeSeconds) > 0)
+      assert.equal(order.payload, payload)
+    })
+
     it('should raise error for pmmv4 order', async function () {
       assert.equal(
         await newOrder({

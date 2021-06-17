@@ -4,7 +4,7 @@ import * as cryptoRandomString from 'crypto-random-string'
 import { orderBNToString } from '../utils'
 import { NULL_ADDRESS } from '../constants'
 
-export const buildSignedOrder = (order, makerAddress, wethAddress): any => {
+export const buildSignedOrder = (order, payload, makerAddress, wethAddress): any => {
   const makerAssetAddress = order.makerAssetAddress.toLowerCase()
   const takerAssetAddress = order.takerAssetAddress.toLowerCase()
   // = Rewrite order fields
@@ -12,17 +12,20 @@ export const buildSignedOrder = (order, makerAddress, wethAddress): any => {
   order.makerAddress = makerAddress
   // 2. convert weth to eth
   if (makerAssetAddress === wethAddress.toLowerCase()) {
-    order.makerAssetAddress = NULL_ADDRESS
     order.makerAssetData = assetDataUtils.encodeERC20AssetData(NULL_ADDRESS)
+  } else {
+    order.makerAssetData = assetDataUtils.encodeERC20AssetData(makerAssetAddress)
   }
 
   if (takerAssetAddress === wethAddress.toLowerCase()) {
-    order.takerAssetAddress = NULL_ADDRESS
     order.takerAssetData = assetDataUtils.encodeERC20AssetData(NULL_ADDRESS)
+  } else {
+    order.takerAssetData = assetDataUtils.encodeERC20AssetData(takerAssetAddress)
   }
   // NOTE: for AMM order we don't do signing here
   const signedOrder = {
     ...order,
+    payload: payload,
     salt: generatePseudoRandomSalt(),
     makerWalletSignature: cryptoRandomString({ length: 40 }),
   }

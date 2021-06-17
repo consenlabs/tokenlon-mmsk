@@ -97,6 +97,7 @@ export interface QueryInterface {
 
 export enum Protocol {
   AMMV1 = 'AMMV1',
+  AMMV2 = 'AMMV2',
   PMMV5 = 'PMMV5',
   RFQV1 = 'RFQV1',
 }

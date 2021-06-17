@@ -20,22 +20,23 @@ const getHeaders = () => {
   }
 }
 
-const newError = (message, url: string) => {
+const newError = (message: any | string, url: string) => {
+  let responseMessage = ''
   if (_.isObject(message) && message.message) {
-    const error = message
+    const error: any = message
     if (_.isObject(error.response) && _.isObject(error.response.data)) {
       if (error.response.data.error) {
         message = error.response.data.error.message
       }
     } else {
-      message = `${url}: ${message.message}`
+      responseMessage = `${url}: ${message.message}`
     }
   } else {
-    message = `${url}: ${message}`
+    responseMessage = `${url}: ${message}`
   }
-  const error = new Error(message)
-  error.message = message
-  error.toString = () => message
+  const error = new Error(responseMessage)
+  error.message = responseMessage
+  error.toString = () => responseMessage
   return error
 }
 
@@ -59,7 +60,7 @@ export const sendRequest = (config): Promise<any> => {
         console.log('request error', error)
         reject(newError(error, config.url))
       })
-  }) as Promise<{ error: object; result: any }>
+  }) as Promise<{ error: unknown; result: any }>
 }
 
 export const jsonrpc = {
