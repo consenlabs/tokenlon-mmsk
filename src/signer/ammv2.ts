@@ -14,15 +14,11 @@ export const buildSignedOrder = (order, payload, makerAddress, wethAddress): any
   if (makerAssetAddress === wethAddress.toLowerCase()) {
     order.makerAssetAddress = NULL_ADDRESS
     order.makerAssetData = assetDataUtils.encodeERC20AssetData(NULL_ADDRESS)
-  } else {
-    order.makerAssetData = assetDataUtils.encodeERC20AssetData(makerAssetAddress)
   }
 
   if (takerAssetAddress === wethAddress.toLowerCase()) {
     order.takerAssetAddress = NULL_ADDRESS
     order.takerAssetData = assetDataUtils.encodeERC20AssetData(NULL_ADDRESS)
-  } else {
-    order.takerAssetData = assetDataUtils.encodeERC20AssetData(takerAssetAddress)
   }
   // NOTE: for AMM order we don't do signing here
   const signedOrder = {
