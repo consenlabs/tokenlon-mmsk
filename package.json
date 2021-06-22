@@ -1,6 +1,6 @@
 {
   "name": "@consenlabs/tokenlon-mmsk",
-  "version": "5.2.0-alpha.0",
+  "version": "5.2.0-alpha.1",
   "description": "Tokenlon market maker server kit",
   "author": "imToken PTE. LTD.",
   "license": "MIT",
@@ -64,7 +64,7 @@
     "crypto-random-string": "^3.3.0",
     "dotenv": "^8.2.0",
     "ethereumjs-util": "^7.0.4",
-    "ethers": "^5.0.5",
+    "ethers": "^5.2.0",
     "keythereum": "1.0.4",
     "koa": "2.5.3",
     "koa-bodyparser": "4.2.1",

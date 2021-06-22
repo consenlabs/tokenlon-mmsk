@@ -1,4 +1,4 @@
-import { Wallet } from 'ethers'
+import { Wallet, utils } from 'ethers'
 import { orderBNToString, BigNumber } from '../utils'
 import { generateSaltWithFeeFactor, signWithUserAndFee } from './pmmv5'
 import { getOrderSignDigest } from './orderHash'
@@ -28,7 +28,8 @@ export enum SignatureType {
 // +------|---------|---------|-------------------|---------+
 export async function signByEOA(orderHash: string, wallet: Wallet): Promise<string> {
   // signature: R+S+V
-  let signature = await wallet.signMessage(orderHash)
+  const hashArray = utils.arrayify(orderHash)
+  let signature = await wallet.signMessage(hashArray)
   var signatureBuffer = Buffer.concat([
     ethUtils.toBuffer(signature),
     ethUtils.toBuffer('0x' + '00'.repeat(32)),

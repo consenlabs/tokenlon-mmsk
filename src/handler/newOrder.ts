@@ -150,21 +150,28 @@ function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config
     toBN(amount)
   )
 
+  // ETH -> WETH
+  const makerAssetAddress = getWethAddrIfIsEth(
+    makerToken.contractAddress,
+    config.wethContractAddress
+  )
+  // ETH -> WETH
+  const takerAssetAddress = getWethAddrIfIsEth(
+    takerToken.contractAddress,
+    config.wethContractAddress
+  )
+
   return {
     makerAddress: config.mmProxyContractAddress.toLowerCase(),
     makerAssetAmount,
-    makerAssetAddress: makerToken.contractAddress,
-    makerAssetData: assetDataUtils.encodeERC20AssetData(
-      getWethAddrIfIsEth(makerToken.contractAddress, config.wethContractAddress)
-    ),
+    makerAssetAddress: makerAssetAddress,
+    makerAssetData: assetDataUtils.encodeERC20AssetData(makerAssetAddress),
     makerFee: toBN(0),
 
     takerAddress: config.userProxyContractAddress,
     takerAssetAmount,
-    takerAssetAddress: takerToken.contractAddress,
-    takerAssetData: assetDataUtils.encodeERC20AssetData(
-      getWethAddrIfIsEth(takerToken.contractAddress, config.wethContractAddress)
-    ),
+    takerAssetAddress: takerAssetAddress,
+    takerAssetData: assetDataUtils.encodeERC20AssetData(takerAssetAddress),
     takerFee: toBN(0),
 
     senderAddress: config.tokenlonExchangeContractAddress.toLowerCase(),

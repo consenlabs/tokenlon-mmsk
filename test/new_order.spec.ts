@@ -218,7 +218,7 @@ describe('NewOrder', function () {
       )
       assert.equal(order.takerAddress, '0x7bd7d025d4231aad1233967b527ffd7416410257')
       assert.equal(order.takerAssetAmount, '100000000000000000')
-      assert.equal(order.takerAssetAddress, '0x0000000000000000000000000000000000000000')
+      assert.equal(order.takerAssetAddress, '0xd0a1e359811322d97991e03f863a0c30c2cf029c')
       assert.equal(
         order.takerAssetData,
         '0xf47261b0000000000000000000000000d0a1e359811322d97991e03f863a0c30c2cf029c'
@@ -279,7 +279,7 @@ describe('NewOrder', function () {
       )
       assert.equal(order.takerAddress, '0x7bd7d025d4231aad1233967b527ffd7416410257')
       assert.equal(order.takerAssetAmount, '100000000000000000')
-      assert.equal(order.takerAssetAddress, '0x0000000000000000000000000000000000000000')
+      assert.equal(order.takerAssetAddress, '0xd0a1e359811322d97991e03f863a0c30c2cf029c')
       assert.equal(
         order.takerAssetData,
         '0xf47261b0000000000000000000000000d0a1e359811322d97991e03f863a0c30c2cf029c'
@@ -341,7 +341,7 @@ describe('NewOrder', function () {
       )
       assert.equal(order.takerAddress, userAddr)
       assert.equal(order.takerAssetAmount, '100000000000000000')
-      assert.equal(order.takerAssetAddress, '0x0000000000000000000000000000000000000000')
+      assert.equal(order.takerAssetAddress, '0xd0a1e359811322d97991e03f863a0c30c2cf029c')
       assert.equal(
         order.takerAssetData,
         '0xf47261b0000000000000000000000000d0a1e359811322d97991e03f863a0c30c2cf029c'
@@ -405,7 +405,7 @@ describe('NewOrder', function () {
       )
       assert.equal(order.takerAddress, userAddr)
       assert.equal(order.takerAssetAmount, '100000000000000000')
-      assert.equal(order.takerAssetAddress, '0x0000000000000000000000000000000000000000')
+      assert.equal(order.takerAssetAddress, '0xd0a1e359811322d97991e03f863a0c30c2cf029c')
       assert.equal(
         order.takerAssetData,
         '0xf47261b0000000000000000000000000d0a1e359811322d97991e03f863a0c30c2cf029c'
@@ -423,7 +423,11 @@ describe('NewOrder', function () {
       // verify signature
       const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQ
       const orderHash = getOrderSignDigest(toRFQOrder(signedOrderResp.order), 1, rfqAddr)
-      const recoved = utils.verifyMessage(orderHash, utils.hexlify(sigBytes.slice(0, 65)))
+
+      const recoved = utils.verifyMessage(
+        utils.arrayify(orderHash),
+        utils.hexlify(sigBytes.slice(0, 65))
+      )
       assert.equal(recoved.toLowerCase(), signer.address.toLowerCase())
       // verify random values
       assert.isTrue(signedOrderResp.order.salt.length > 0)
