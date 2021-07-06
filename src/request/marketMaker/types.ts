@@ -15,6 +15,8 @@ export interface Quoter {
 export interface IndicativePriceApiParams {
   base: string
   quote: string
+  baseAddress: string
+  quoteAddress: string
   side: SIDE
   amount?: number
 }

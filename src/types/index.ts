@@ -87,6 +87,8 @@ export type SIDE = 'BUY' | 'SELL'
 export interface QueryInterface {
   base: string
   quote: string
+  baseAddress?: string
+  quoteAddress?: string
   side: 'BUY' | 'SELL'
   amount?: number
   feefactor?: number
