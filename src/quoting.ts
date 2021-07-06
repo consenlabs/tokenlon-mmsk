@@ -60,7 +60,7 @@ export const preprocessQuote = (query: QueryInterface): QueryInterface => {
   const result = ensureCorrectSymbolCase(query)
   if (typeof query.base === 'string' && query.side === 'BUY') {
     // 用户 BUY base, 手续费就是 base 的 Token，即 order的 makerToken —— 对应做市商转出的币，用户收到的币
-    const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
+    const tokenConfigs: TokenConfig[] = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
     const tokenCfg = tokenConfigs.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
     const config = updaterStack.markerMakerConfigUpdater.cacheResult
     // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
@@ -68,10 +68,12 @@ export const preprocessQuote = (query: QueryInterface): QueryInterface => {
 
     const tokens = getSupportedTokens()
     const found = tokens.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
-    result.amount = applyFeeToAmount(query.amount, feeFactor, found.precision)
-    console.debug(
-      `convert amount when buy side, amount=${query.amount}, converted=${result.amount}, feeFactor=${feeFactor}`
-    )
+    if (found) {
+      result.amount = applyFeeToAmount(query.amount, feeFactor, found.precision)
+      console.debug(
+        `convert amount when buy side, amount=${query.amount}, converted=${result.amount}, feeFactor=${feeFactor}`
+      )
+    }
   }
   return result
 }
@@ -84,11 +86,20 @@ export function ensureCorrectSymbolCase(
   const result = { ...query }
   if (typeof query.base === 'string') {
     const found = tokens.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
-    if (found) result.base = found.symbol
+    if (found) {
+      result.base = found.symbol
+      result.baseAddress = found.contractAddress.toLowerCase()
+    }
   }
   if (typeof query.quote === 'string') {
     const found = tokens.find((t) => t.symbol.toUpperCase() === query.quote.toUpperCase())
-    if (found) result.quote = found.symbol
+    if (found) {
+      result.quote = found.symbol
+      result.quoteAddress = found.contractAddress.toLowerCase()
+    }
   }
+  console.log(
+    `ensureCorrectSymbolCase, query=${JSON.stringify(query)}, result=${JSON.stringify(result)}`
+  )
   return result
 }

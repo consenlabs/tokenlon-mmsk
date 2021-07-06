@@ -66,3 +66,7 @@ export const isSupportedBaseQuote = (
 export const getTokenBySymbol = (tokens, symbol) => {
   return tokens.find((t) => t.symbol.toUpperCase() === symbol.toUpperCase())
 }
+
+export const getTokenByAddress = (tokens, address) => {
+  return tokens.find((t) => t.contractAddress.toLowerCase() === address.toLowerCase())
+}
