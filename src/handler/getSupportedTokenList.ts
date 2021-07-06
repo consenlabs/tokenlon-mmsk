@@ -5,7 +5,9 @@ export const getSupportedTokenList = (ctx) => {
   ctx.body = {
     result: true,
     tokens: tokenList.map(({ symbol, opposites }) => {
-      return { symbol, opposites }
+      // To be compatible with current tokenlon api
+      const oppositeSymbols = opposites.map((token) => token.symbol)
+      return { symbol, opposites: oppositeSymbols }
     }),
   }
 }

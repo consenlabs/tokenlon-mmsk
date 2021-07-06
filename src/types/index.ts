@@ -74,7 +74,7 @@ export interface Token {
 }
 
 export interface SupportedToken extends Token {
-  opposites: string[]
+  opposites: Token[]
 }
 
 export interface TokenConfig {
