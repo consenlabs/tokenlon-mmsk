@@ -65,7 +65,7 @@ export const buildSignedOrder = async (
   userAddr: string,
   chainId: number,
   rfqAddr: string
-) => {
+): Promise<any> => {
   // inject fee factor to salt
   const feeFactor = order.feeFactor
   order.takerAddress = userAddr.toLowerCase()

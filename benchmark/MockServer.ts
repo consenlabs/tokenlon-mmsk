@@ -98,8 +98,8 @@ function createRPCHandler(): JsonRPC {
         contractAddress: '0x6dA0e6ABd44175f50C563cd8b860DD988A7C3433',
         decimal: 18,
         precision: 6,
-        minTradeAmount: 0.001,
-        maxTradeAmount: 1e4,
+        minTradeAmount: 0.1,
+        maxTradeAmount: 1e1,
       },
       {
         symbol: 'UNI',

@@ -9,6 +9,7 @@ import { assetDataUtils } from '0x-v2-order-utils'
 import { buildSignedOrder as buildRFQV1SignedOrder } from '../signer/rfqv1'
 import { buildSignedOrder } from '../signer/pmmv5'
 import { buildSignedOrder as buildAMMV1Order } from '../signer/ammv1'
+import { buildSignedOrder as buildAMMV2Order } from '../signer/ammv2'
 import { FEE_RECIPIENT_ADDRESS } from '../constants'
 import {
   BigNumber,
@@ -84,6 +85,7 @@ async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
   const rateBody = {
     ...constructQuoteResponse(priceResult, side),
     quoteId: addQuoteIdPrefix(priceResult.quoteId),
+    payload: priceResult.payload,
   }
   return { simpleOrder, rateBody }
 }
@@ -222,6 +224,22 @@ export const newOrder = async (ctx) => {
           resp.maxAmount = tokenConfig.maxTradeAmount
         }
         resp.order = buildAMMV1Order(order, rateBody.makerAddress, config.wethContractAddress)
+        break
+      case Protocol.AMMV2:
+        {
+          const tokenSymbol = simpleOrder.base
+          const tokenConfig = tokenList.find(
+            (token) => token.symbol.toUpperCase() === tokenSymbol.toUpperCase()
+          )
+          resp.minAmount = tokenConfig.minTradeAmount
+          resp.maxAmount = tokenConfig.maxTradeAmount
+        }
+        resp.order = buildAMMV2Order(
+          order,
+          rateBody.payload,
+          rateBody.makerAddress,
+          config.wethContractAddress
+        )
         break
       case Protocol.PMMV5:
         resp.order = await buildSignedOrder(

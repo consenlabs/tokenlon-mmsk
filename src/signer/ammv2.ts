@@ -4,7 +4,7 @@ import * as cryptoRandomString from 'crypto-random-string'
 import { orderBNToString } from '../utils'
 import { NULL_ADDRESS } from '../constants'
 
-export const buildSignedOrder = (order, makerAddress, wethAddress): any => {
+export const buildSignedOrder = (order, payload, makerAddress, wethAddress): any => {
   const makerAssetAddress = order.makerAssetAddress.toLowerCase()
   const takerAssetAddress = order.takerAssetAddress.toLowerCase()
   // = Rewrite order fields
@@ -23,6 +23,7 @@ export const buildSignedOrder = (order, makerAddress, wethAddress): any => {
   // NOTE: for AMM order we don't do signing here
   const signedOrder = {
     ...order,
+    payload: payload,
     salt: generatePseudoRandomSalt(),
     makerWalletSignature: cryptoRandomString({ length: 40 }),
   }

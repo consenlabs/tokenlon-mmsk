@@ -86,7 +86,7 @@ function signByMMPSigner(
 }
 
 // Move fee factor to salt field
-export const buildSignedOrder = async (signer: Wallet, order, userAddr, pmm) => {
+export const buildSignedOrder = async (signer: Wallet, order, userAddr, pmm): Promise<any> => {
   const feeFactor = order.feeFactor
   order.takerAddress = pmm.toLowerCase()
   order.senderAddress = pmm.toLowerCase()
