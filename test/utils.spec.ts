@@ -119,4 +119,21 @@ describe('translateBaseQuote()', function () {
       side: 'BUY',
     })
   })
+
+  it('correct symbol when query by token address', function () {
+    let pair: QueryInterface = {
+      base: '',
+      quote: '',
+      baseAddress: '0x5c964665b6379527b625be996020d861f27aa31d',
+      quoteAddress: '0x0000000000000000000000000000000000000000',
+      side: 'BUY',
+    }
+    expect(ensureCorrectSymbolCase(pair, supportTokens)).to.eql({
+      base: 'DAI',
+      baseAddress: '0x5c964665b6379527b625be996020d861f27aa31d',
+      quote: 'ETH',
+      quoteAddress: '0x0000000000000000000000000000000000000000',
+      side: 'BUY',
+    })
+  })
 })

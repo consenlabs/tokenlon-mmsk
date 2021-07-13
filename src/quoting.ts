@@ -84,18 +84,36 @@ export function ensureCorrectSymbolCase(
 ): QueryInterface {
   const tokens = supportedTokens || getSupportedTokens()
   const result = { ...query }
-  if (typeof query.base === 'string') {
-    const found = tokens.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
-    if (found) {
-      result.base = found.symbol
-      result.baseAddress = found.contractAddress.toLowerCase()
+  // query token by address
+  if (query.baseAddress && query.quoteAddress) {
+    const baseToken = tokens.find(
+      (t) => t.contractAddress.toLowerCase() === query.baseAddress.toLowerCase()
+    )
+    if (baseToken) {
+      result.base = baseToken.symbol
+      result.baseAddress = baseToken.contractAddress.toLowerCase()
     }
-  }
-  if (typeof query.quote === 'string') {
-    const found = tokens.find((t) => t.symbol.toUpperCase() === query.quote.toUpperCase())
-    if (found) {
-      result.quote = found.symbol
-      result.quoteAddress = found.contractAddress.toLowerCase()
+    const quoteToken = tokens.find(
+      (t) => t.contractAddress.toLowerCase() === query.quoteAddress.toLowerCase()
+    )
+    if (quoteToken) {
+      result.quote = quoteToken.symbol
+      result.quoteAddress = quoteToken.contractAddress.toLowerCase()
+    }
+  } else {
+    if (typeof query.base === 'string') {
+      const found = tokens.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
+      if (found) {
+        result.base = found.symbol
+        result.baseAddress = found.contractAddress.toLowerCase()
+      }
+    }
+    if (typeof query.quote === 'string') {
+      const found = tokens.find((t) => t.symbol.toUpperCase() === query.quote.toUpperCase())
+      if (found) {
+        result.quote = found.symbol
+        result.quoteAddress = found.contractAddress.toLowerCase()
+      }
     }
   }
   console.log(
