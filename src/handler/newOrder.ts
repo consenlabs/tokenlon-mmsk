@@ -216,23 +216,23 @@ export const newOrder = async (ctx) => {
       case Protocol.AMMV1:
         // directly use system token config
         {
-          const tokenSymbol = query.base
-          const tokenConfig = tokenList.find(
-            (token) => token.symbol.toUpperCase() === tokenSymbol.toUpperCase()
+          const baseTokenAddr = query.baseAddress
+          const baseToken = tokenList.find(
+            (token) => token.contractAddress.toLowerCase() === baseTokenAddr.toLowerCase()
           )
-          resp.minAmount = tokenConfig.minTradeAmount
-          resp.maxAmount = tokenConfig.maxTradeAmount
+          resp.minAmount = baseToken.minTradeAmount
+          resp.maxAmount = baseToken.maxTradeAmount
         }
         resp.order = buildAMMV1Order(order, rateBody.makerAddress, config.wethContractAddress)
         break
       case Protocol.AMMV2:
         {
-          const tokenSymbol = query.base
-          const tokenConfig = tokenList.find(
-            (token) => token.symbol.toUpperCase() === tokenSymbol.toUpperCase()
+          const baseTokenAddr = query.baseAddress
+          const baseToken = tokenList.find(
+            (token) => token.contractAddress.toLowerCase() === baseTokenAddr.toLowerCase()
           )
-          resp.minAmount = tokenConfig.minTradeAmount
-          resp.maxAmount = tokenConfig.maxTradeAmount
+          resp.minAmount = baseToken.minTradeAmount
+          resp.maxAmount = baseToken.maxTradeAmount
         }
         resp.order = buildAMMV2Order(
           order,
