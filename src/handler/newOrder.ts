@@ -16,7 +16,7 @@ import {
   fromUnitToDecimalBN,
   toBN,
   getSupportedTokens,
-  getTokenBySymbol,
+  getTokenByAddress,
   getWethAddrIfIsEth,
   getTimestamp,
 } from '../utils'
@@ -77,17 +77,16 @@ const findSuitablePrecision = (decimals: number): number => {
 
 // request getPrice API from market maker backend
 async function requestMarketMaker(quoter: Quoter, query: QueryInterface) {
-  const simpleOrder = preprocessQuote(query)
   // request to market maker backend
-  const { side } = simpleOrder
-  const priceResult = await quoter.getPrice(simpleOrder as any)
-  console.log('got result from market maker', { simpleOrder, priceResult })
+  const { side } = query
+  const priceResult = await quoter.getPrice(query as any)
+  console.log('got result from market maker', { query, priceResult })
   const rateBody = {
     ...constructQuoteResponse(priceResult, side),
     quoteId: addQuoteIdPrefix(priceResult.quoteId),
     payload: priceResult.payload,
   }
-  return { simpleOrder, rateBody }
+  return rateBody
 }
 
 function extractAssetAmounts(
@@ -120,10 +119,10 @@ function extractAssetAmounts(
   return { makerAssetAmount, takerAssetAmount }
 }
 
-function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config) {
-  const { side, amount, feefactor } = simpleOrder
-  const baseToken = getTokenBySymbol(tokenList, simpleOrder.base)
-  const quoteToken = getTokenBySymbol(tokenList, simpleOrder.quote)
+function getOrderAndFeeFactor(query: QueryInterface, rate, tokenList, tokenConfigs, config) {
+  const { side, amount, feefactor } = query
+  const baseToken = getTokenByAddress(tokenList, query.baseAddress)
+  const quoteToken = getTokenByAddress(tokenList, query.quoteAddress)
   const makerToken = side === 'BUY' ? baseToken : quoteToken
   const takerToken = side === 'BUY' ? quoteToken : baseToken
   const foundTokenConfig = tokenConfigs.find((t) => t.symbol === makerToken.symbol)
@@ -187,25 +186,26 @@ function getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config
 
 export const newOrder = async (ctx) => {
   const { quoter, signer, chainID } = ctx
-  const query: QueryInterface = {
+  const req: QueryInterface = {
     protocol: Protocol.PMMV5, // by default is v2 protocol
     ...ctx.query, // overwrite from request
   }
 
   try {
+    const query = preprocessQuote(req)
     let errMsg = validateRequest(query)
     if (errMsg) throw new ValidationError(errMsg)
     const { amount, uniqId, userAddr, protocol } = query
     errMsg = validateNewOrderRequest(amount, uniqId, userAddr)
     if (errMsg) throw new ValidationError(errMsg)
 
-    const { simpleOrder, rateBody } = await requestMarketMaker(quoter, query)
+    const rateBody = await requestMarketMaker(quoter, query)
     const config = updaterStack.markerMakerConfigUpdater.cacheResult
     const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
     const tokenList = getSupportedTokens()
 
     const { rate, minAmount, maxAmount, quoteId } = rateBody
-    const order = getOrderAndFeeFactor(simpleOrder, rate, tokenList, tokenConfigs, config)
+    const order = getOrderAndFeeFactor(query, rate, tokenList, tokenConfigs, config)
 
     const resp: Response = {
       rate,
@@ -216,23 +216,23 @@ export const newOrder = async (ctx) => {
       case Protocol.AMMV1:
         // directly use system token config
         {
-          const tokenSymbol = simpleOrder.base
-          const tokenConfig = tokenList.find(
-            (token) => token.symbol.toUpperCase() === tokenSymbol.toUpperCase()
+          const baseTokenAddr = query.baseAddress
+          const baseToken = tokenList.find(
+            (token) => token.contractAddress.toLowerCase() === baseTokenAddr.toLowerCase()
           )
-          resp.minAmount = tokenConfig.minTradeAmount
-          resp.maxAmount = tokenConfig.maxTradeAmount
+          resp.minAmount = baseToken.minTradeAmount
+          resp.maxAmount = baseToken.maxTradeAmount
         }
         resp.order = buildAMMV1Order(order, rateBody.makerAddress, config.wethContractAddress)
         break
       case Protocol.AMMV2:
         {
-          const tokenSymbol = simpleOrder.base
-          const tokenConfig = tokenList.find(
-            (token) => token.symbol.toUpperCase() === tokenSymbol.toUpperCase()
+          const baseTokenAddr = query.baseAddress
+          const baseToken = tokenList.find(
+            (token) => token.contractAddress.toLowerCase() === baseTokenAddr.toLowerCase()
           )
-          resp.minAmount = tokenConfig.minTradeAmount
-          resp.maxAmount = tokenConfig.maxTradeAmount
+          resp.minAmount = baseToken.minTradeAmount
+          resp.maxAmount = baseToken.maxTradeAmount
         }
         resp.order = buildAMMV2Order(
           order,

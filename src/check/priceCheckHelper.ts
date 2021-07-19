@@ -1,22 +1,36 @@
 import * as _ from 'lodash'
 import { getSupportedTokens } from '../utils/token'
+import { NULL_ADDRESS } from '../constants'
 
 const checkMinAndMaxAmount = (resp, { base, quote, side }) => {
   const { minAmount, maxAmount } = resp
-  if (minAmount === void 0 || maxAmount === void 0) return `${base}-${quote} ${side} trade must have minAmount and maxAmount field`
-  if (minAmount > maxAmount) return `${base}-${quote} ${side} trade's minAmount largerer than maxAmount`
+  if (minAmount === void 0 || maxAmount === void 0)
+    return `${base}-${quote} ${side} trade must have minAmount and maxAmount field`
+  if (minAmount > maxAmount)
+    return `${base}-${quote} ${side} trade's minAmount largerer than maxAmount`
 }
 
-const checkBaseQuoteTrade = async (apiFunc, { base, quote }, isIndicative, tokenSupported) => {
+const checkBaseQuoteTrade = async (
+  apiFunc,
+  { base, quote, baseAddress, quoteAddress },
+  isIndicative,
+  tokenSupported
+) => {
   const uniqId = 'uniq'
   const amountArr = isIndicative ? [undefined, 0, 0.1] : [0.1, 100]
 
   for (let side of ['BUY', 'SELL']) {
-    for (let item of [{ base, quote }, { base: quote, quote: base }]) {
+    for (let item of [
+      { base, quote, baseAddress, quoteAddress },
+      {
+        base: quote,
+        quote: base,
+        baseAddress: quoteAddress,
+        quoteAddress: baseAddress,
+      },
+    ]) {
       for (let amount of amountArr) {
-        const base = item.base
-        const quote = item.quote
-        const params = { base, quote, side }
+        const params = { ...item, side }
         if (amount !== undefined) {
           Object.assign(params, { amount })
         }
@@ -31,19 +45,20 @@ const checkBaseQuoteTrade = async (apiFunc, { base, quote }, isIndicative, token
 
           if (!resp.result || !resp.exchangeable) {
             // 数量不存在的报价，必须支持
-            if (tokenSupported && amount === undefined) return `can not support ${base}-${quote} ${side} trade`
+            if (tokenSupported && amount === undefined)
+              return `can not support ${base}-${quote} ${side} trade`
 
             // 必须包含 message
-            if (!resp.message) return `${base}-${quote} ${side} message is needed if result or exchangeable is false`
-
+            if (!resp.message)
+              return `${base}-${quote} ${side} message is needed if result or exchangeable is false`
           } else {
-
             if (tokenSupported) {
               // 价格不存在问题
               if (!resp.price) return `${base}-${quote} ${side} price ${resp.price} incorrect`
 
               // price 接口 必须包含 quoteId 字段
-              if (!isIndicative && (!resp.quoteId || !_.isString(resp.quoteId))) return `${base}-${quote} ${side} response need an non-empty string quoteId`
+              if (!isIndicative && (!resp.quoteId || !_.isString(resp.quoteId)))
+                return `${base}-${quote} ${side} response need an non-empty string quoteId`
 
               // TODO: 价格合理性检查
             }
@@ -54,7 +69,6 @@ const checkBaseQuoteTrade = async (apiFunc, { base, quote }, isIndicative, token
             const minMaxAmountValidateMsg = checkMinAndMaxAmount(resp, { base, quote, side })
             if (minMaxAmountValidateMsg) return minMaxAmountValidateMsg
           }
-
         } catch (e) {
           return `API request ${base}-${quote} ${side} error ${e.message}`
         }
@@ -67,23 +81,46 @@ export const priceCheckHelper = async (apiFunc, isIndicative) => {
   const supportedTokens = getSupportedTokens()
 
   // ETH token
-  const ethToken = supportedTokens.find(t => t.symbol === 'ETH')
+  const ethToken = supportedTokens.find((t) => t.symbol === 'ETH')
   let base = ethToken.symbol
-  let quote = ethToken.opposites[0]
+  let baseAddress = NULL_ADDRESS
+  let quote = ethToken.opposites[0].symbol
+  let quoteAddress = ethToken.opposites[0].contractAddress
 
-  const supportedTokenTradeValidateMsg = await checkBaseQuoteTrade(apiFunc, { base, quote }, isIndicative, true)
+  const supportedTokenTradeValidateMsg = await checkBaseQuoteTrade(
+    apiFunc,
+    { base, quote, baseAddress, quoteAddress },
+    isIndicative,
+    true
+  )
   if (supportedTokenTradeValidateMsg) return supportedTokenTradeValidateMsg
 
   quote = 'ABCDEFG'
-  const unsupportedTokenTradeValidateMsg = await checkBaseQuoteTrade(apiFunc, { base, quote }, isIndicative, false)
+  quoteAddress = '0xabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcde'
+  const unsupportedTokenTradeValidateMsg = await checkBaseQuoteTrade(
+    apiFunc,
+    { base, quote, baseAddress, quoteAddress },
+    isIndicative,
+    false
+  )
   if (unsupportedTokenTradeValidateMsg) return unsupportedTokenTradeValidateMsg
 
-  const otherToken = supportedTokens.find(t => t.symbol !== 'ETH' && t.opposites.length > 1)
+  const otherToken = supportedTokens.find((t) => t.symbol !== 'ETH' && t.opposites.length > 1)
 
   if (otherToken) {
     base = otherToken.symbol
-    quote = otherToken.opposites.find(symbol => symbol !== 'ETH')
-    const twoErc20TokenTradeValidateMsg = await checkBaseQuoteTrade(apiFunc, { base, quote }, isIndicative, true)
-    if (twoErc20TokenTradeValidateMsg) return twoErc20TokenTradeValidateMsg
+    baseAddress = otherToken.contractAddress
+    const quoteToken = otherToken.opposites.find((token) => token.symbol !== 'ETH')
+    if (quoteToken) {
+      quote = quoteToken.symbol
+      quoteAddress = quoteToken.contractAddress
+      const twoErc20TokenTradeValidateMsg = await checkBaseQuoteTrade(
+        apiFunc,
+        { base, quote, baseAddress, quoteAddress },
+        isIndicative,
+        true
+      )
+      if (twoErc20TokenTradeValidateMsg) return twoErc20TokenTradeValidateMsg
+    }
   }
 }

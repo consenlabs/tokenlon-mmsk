@@ -74,7 +74,7 @@ export interface Token {
 }
 
 export interface SupportedToken extends Token {
-  opposites: string[]
+  opposites: Token[]
 }
 
 export interface TokenConfig {
@@ -87,6 +87,8 @@ export type SIDE = 'BUY' | 'SELL'
 export interface QueryInterface {
   base: string
   quote: string
+  baseAddress?: string
+  quoteAddress?: string
   side: 'BUY' | 'SELL'
   amount?: number
   feefactor?: number

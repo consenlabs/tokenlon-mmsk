@@ -6,7 +6,7 @@ const check = async (quoter) => {
     const mockOrder = {
       makerToken: tokenA.symbol,
       makerTokenAmount: 0.1,
-      takerToken: tokenA.opposites[0],
+      takerToken: tokenA.opposites[0].symbol,
       takerTokenAmount: 50,
       timestamp: 1551855180,
       quoteId: 'testing-quote-9999',

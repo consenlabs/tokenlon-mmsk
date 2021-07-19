@@ -6,7 +6,6 @@ export const getRate = async (ctx) => {
   const { query, quoter } = ctx
   try {
     const updatedQueryData = preprocessQuote(query)
-    // console.log({ ctx, query, updatedQueryData })
     const errMsg = validateRequest(updatedQueryData)
     if (errMsg) throw new ValidationError(errMsg)
 
