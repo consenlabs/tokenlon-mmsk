@@ -35,14 +35,10 @@ export const constructQuoteResponse = (indicativePrice: IndicativePriceApiResult
 }
 
 // Process buy amount for WYSIWY
-function applyFeeToAmount(amount: number, feeFactor: number, precision: number) {
+export function applyFeeToAmount(amount: number, feeFactor: number, precision: number): number {
   if (isNil(amount)) return amount
-  return truncateAmount(
-    toBN(amount)
-      .dividedBy(1 - feeFactor / 10000)
-      .toString(),
-    precision
-  )
+  const rate = toBN(1).sub(toBN(feeFactor).div(10000))
+  return truncateAmount(toBN(amount).dividedBy(rate).toString(), precision)
 }
 
 function calcFeeFactorWhenBuy(tokenCfg: TokenConfig, factor: number | null): number {
