@@ -20,7 +20,11 @@ const getHeaders = () => {
   }
 }
 
-const newError = (message: any | string, url: string) => {
+interface Message {
+  message: string
+}
+
+const newError = (message: string | Message, url: string) => {
   let responseMessage = ''
   if (_.isObject(message) && message.message) {
     const error: any = message

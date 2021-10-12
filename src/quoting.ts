@@ -1,4 +1,4 @@
-import { isNil } from 'lodash'
+import { isNil, memoize } from 'lodash'
 import { QueryInterface, SIDE, SupportedToken, TokenConfig } from './types'
 import { IndicativePriceApiResult } from './request/marketMaker'
 import { BackendError } from './handler/errors'
@@ -51,19 +51,30 @@ function calcFeeFactorWhenBuy(tokenCfg: TokenConfig, factor: number | null): num
   return null
 }
 
+const _getTokenCfg = (base, tokenConfigs) => {
+  return tokenConfigs.find((t) => t.symbol.toUpperCase() === base)
+}
+
+const getTokenCfg = memoize(_getTokenCfg)
+
+const _getToken = (base, tokens) => {
+  return tokens.find((t) => t.symbol.toUpperCase() === base)
+}
+
+const getToken = memoize(_getToken)
+
 // 处理接口大小写情况，转换为系统设定格式，以及 side BUY 情况的数量调整
 export const preprocessQuote = (query: QueryInterface): QueryInterface => {
   const result = ensureCorrectSymbolCase(query)
   if (typeof query.base === 'string' && query.side === 'BUY') {
     // 用户 BUY base, 手续费就是 base 的 Token，即 order的 makerToken —— 对应做市商转出的币，用户收到的币
     const tokenConfigs: TokenConfig[] = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
-    const tokenCfg = tokenConfigs.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
+    const tokenCfg = getTokenCfg(query.base.toUpperCase(), tokenConfigs)
     const config = updaterStack.markerMakerConfigUpdater.cacheResult
     // 注意：query 上，后端传递的是 feefactor，而不是 feeFactor
     const feeFactor = calcFeeFactorWhenBuy(tokenCfg, query.feefactor) || config.feeFactor || 10
-
     const tokens = getSupportedTokens()
-    const found = tokens.find((t) => t.symbol.toUpperCase() === query.base.toUpperCase())
+    const found = getToken(query.base.toUpperCase(), tokens)
     if (found) {
       result.amount = applyFeeToAmount(query.amount, feeFactor, found.precision)
       console.debug(

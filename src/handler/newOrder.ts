@@ -1,3 +1,4 @@
+import { memoize } from 'lodash'
 import { Quoter } from '../request/marketMaker'
 import { updaterStack } from '../worker'
 import { Protocol, QueryInterface } from '../types'
@@ -184,6 +185,14 @@ function getOrderAndFeeFactor(query: QueryInterface, rate, tokenList, tokenConfi
   }
 }
 
+const _getBaseTokenByAddress = (baseTokenAddr, tokenList) => {
+  return tokenList.find(
+    (token) => token.contractAddress.toLowerCase() === baseTokenAddr
+  )
+}
+
+const getBaseTokenByAddress = memoize(_getBaseTokenByAddress)
+
 export const newOrder = async (ctx) => {
   const { quoter, signer, chainID } = ctx
   const req: QueryInterface = {
@@ -217,9 +226,7 @@ export const newOrder = async (ctx) => {
         // directly use system token config
         {
           const baseTokenAddr = query.baseAddress
-          const baseToken = tokenList.find(
-            (token) => token.contractAddress.toLowerCase() === baseTokenAddr.toLowerCase()
-          )
+          const baseToken = getBaseTokenByAddress(baseTokenAddr.toLowerCase(), tokenList)
           resp.minAmount = baseToken.minTradeAmount
           resp.maxAmount = baseToken.maxTradeAmount
         }
@@ -228,9 +235,7 @@ export const newOrder = async (ctx) => {
       case Protocol.AMMV2:
         {
           const baseTokenAddr = query.baseAddress
-          const baseToken = tokenList.find(
-            (token) => token.contractAddress.toLowerCase() === baseTokenAddr.toLowerCase()
-          )
+          const baseToken = getBaseTokenByAddress(baseTokenAddr.toLowerCase(), tokenList)
           resp.minAmount = baseToken.minTradeAmount
           resp.maxAmount = baseToken.maxTradeAmount
         }
