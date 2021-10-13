@@ -18,7 +18,10 @@ const helper = (stack, token1, token2) => {
  *   TUSD: ['SNT']
  * }
  */
-const _transferPairStrArrToTokenStack = (pairStrArr) => {
+const _transferPairStrArrToTokenStack = (key: string, pairStrArr) => {
+  if (!key) {
+    return {}
+  }
   const stack = {}
   pairStrArr.forEach((pairStr) => {
     const [tokenA, tokenB] = pairStr.split('/')
@@ -30,10 +33,13 @@ const _transferPairStrArrToTokenStack = (pairStrArr) => {
 
 const transferPairStrArrToTokenStack = memoize(_transferPairStrArrToTokenStack)
 
-const _mapTokens = ({
+const _mapTokens = (key: string, {
   tokenList,
   tokenStack
 }) => {
+  if (!key) {
+    return []
+  }
   const result = []
   for (const token of tokenList) {
     const { symbol } = token
@@ -59,12 +65,19 @@ const mapTokens = memoize(_mapTokens)
 
 export const getSupportedTokens = (): SupportedToken[] => {
   const { tokenListFromImtokenUpdater, pairsFromMMUpdater } = updaterStack
-  const tokenStack = transferPairStrArrToTokenStack(pairsFromMMUpdater.cacheResult)
+  const tokenStack = transferPairStrArrToTokenStack(
+    JSON.stringify(pairsFromMMUpdater.cacheResult),
+    pairsFromMMUpdater.cacheResult
+  )
   const tokenList: Token[] = tokenListFromImtokenUpdater.cacheResult
-  return mapTokens({
+  const lists = {
     tokenList: tokenList,
     tokenStack: tokenStack
-  })
+  }
+  return mapTokens(
+    JSON.stringify(lists),
+    lists
+  )
 }
 
 export const isSupportedBaseQuote = (
