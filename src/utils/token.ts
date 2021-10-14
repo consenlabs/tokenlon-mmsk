@@ -1,3 +1,4 @@
+import { memoize } from 'lodash'
 import { updaterStack } from '../worker'
 import { SupportedToken, Token } from '../types'
 
@@ -17,7 +18,10 @@ const helper = (stack, token1, token2) => {
  *   TUSD: ['SNT']
  * }
  */
-const transferPairStrArrToTokenStack = (pairStrArr) => {
+const _transferPairStrArrToTokenStack = (key: string, pairStrArr) => {
+  if (!key) {
+    return {}
+  }
   const stack = {}
   pairStrArr.forEach((pairStr) => {
     const [tokenA, tokenB] = pairStr.split('/')
@@ -27,10 +31,15 @@ const transferPairStrArrToTokenStack = (pairStrArr) => {
   return stack
 }
 
-export const getSupportedTokens = (): SupportedToken[] => {
-  const { tokenListFromImtokenUpdater, pairsFromMMUpdater } = updaterStack
-  const tokenStack = transferPairStrArrToTokenStack(pairsFromMMUpdater.cacheResult)
-  const tokenList: Token[] = tokenListFromImtokenUpdater.cacheResult
+const transferPairStrArrToTokenStack = memoize(_transferPairStrArrToTokenStack)
+
+const _mapTokens = (key: string, {
+  tokenList,
+  tokenStack
+}) => {
+  if (!key) {
+    return []
+  }
   const result = []
   for (const token of tokenList) {
     const { symbol } = token
@@ -50,6 +59,25 @@ export const getSupportedTokens = (): SupportedToken[] => {
     }
   }
   return result
+}
+
+const mapTokens = memoize(_mapTokens)
+
+export const getSupportedTokens = (): SupportedToken[] => {
+  const { tokenListFromImtokenUpdater, pairsFromMMUpdater } = updaterStack
+  const tokenStack = transferPairStrArrToTokenStack(
+    JSON.stringify(pairsFromMMUpdater.cacheResult),
+    pairsFromMMUpdater.cacheResult
+  )
+  const tokenList: Token[] = tokenListFromImtokenUpdater.cacheResult
+  const lists = {
+    tokenList: tokenList,
+    tokenStack: tokenStack
+  }
+  return mapTokens(
+    JSON.stringify(lists),
+    lists
+  )
 }
 
 export const isSupportedBaseQuote = (
