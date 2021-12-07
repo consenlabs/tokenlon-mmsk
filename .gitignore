@@ -9,3 +9,5 @@ package-lock.json
 lib
 .env
 *.tgz
+artifacts/
+cache/
