@@ -26,7 +26,7 @@
     "check": "node ./app/check.js",
     "clean": "rm -rf ./lib",
     "start": "node ./app/start.js",
-    "test": "chainId=1 npx hardhat --network hardhat test",
+    "test": "DEBUG=nock.scope:api.token.im chainId=1 npx hardhat --network hardhat test",
     "watch": "tsc -w"
   },
   "devDependencies": {

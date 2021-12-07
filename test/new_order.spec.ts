@@ -1,7 +1,5 @@
 import { ethers, network } from 'hardhat'
 import { Wallet, utils, Contract } from 'ethers'
-import axios from 'axios'
-import httpAdapter from 'axios/lib/adapters/http'
 import { newOrder } from '../src/handler'
 import { updaterStack, Updater } from '../src/worker'
 import { NULL_ADDRESS } from '../src/constants'
@@ -14,41 +12,6 @@ import { Signer as TokenlonSigner, RestfulService, AllowanceTarget, USDT, ABI, W
 import * as crypto from 'crypto'
 import { expect } from 'chai'
 const nock = require('nock')
-
-axios.defaults.adapter = httpAdapter
-nock(`${RestfulService[1]}`)
-.persist()
-.post('/order/place', (body: any) => {
-  return body.order
-})
-.reply(200, { success: true })
-.post('/order/approve_and_swap', (body: any) => {
-  if (!body.approvalTx || !body.approvalTx.rawTx) {
-    throw new Error('Should send approval tx')
-  }
-  if (body.protocol == Protocol.AMMV2 && !body.payload) {
-    throw new Error('Should set payload when protocol is AMMV2')
-  }
-  return body.order
-})
-.reply(200, { success: true })
-
-nock(`${RestfulService[5]}`)
-.persist()
-.post('/order/place', (body: any) => {
-  return body.order
-})
-.reply(200, { success: true })
-.post('/order/approve_and_swap', (body: any) => {
-  if (!body.approvalTx || !body.approvalTx.rawTx) {
-    throw new Error('Should send approval tx')
-  }
-  if (body.protocol == Protocol.AMMV2 && !body.payload) {
-    throw new Error('Should set payload when protocol is AMMV2')
-  }
-  return body.order
-})
-.reply(200, { success: true })
 
 describe('NewOrder', function () {
   const signer = Wallet.createRandom()
@@ -392,6 +355,12 @@ describe('NewOrder', function () {
     it('should signed rfqv1 order by MMP', async () => {
       const ethersNetwork = await ethers.provider.getNetwork()
       const chainId = ethersNetwork.chainId
+      nock(`${RestfulService[chainId]}`)
+      .persist()
+      .post('/order/place')
+      .reply(200, { success: true })
+      .post('/order/approve_and_swap')
+      .reply(200, { success: true })
       const usdtHolders = {
         1: '0x15abb66bA754F05cBC0165A64A11cDed1543dE48',
         5: '0x031BBFB9379c4e6E3F42fb93a9f09C060c7fA037'
