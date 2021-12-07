@@ -368,19 +368,9 @@ describe('NewOrder', function () {
       const usdt = await ethers.getContractAt(ABI.IERC20, USDT[chainId])
       nock(`${RestfulService[chainId]}`)
       .persist()
-      .post('/order/place', (body: any) => {
-        return body.order
-      })
+      .post('/order/place')
       .reply(200, { success: true })
-      .post('/order/approve_and_swap', (body: any) => {
-        if (!body.approvalTx || !body.approvalTx.rawTx) {
-          throw new Error('Should send approval tx')
-        }
-        if (body.protocol == Protocol.AMMV2 && !body.payload) {
-          throw new Error('Should set payload when protocol is AMMV2')
-        }
-        return body.order
-      })
+      .post('/order/approve_and_swap')
       .reply(200, { success: true })
       const [ deployer, ethHolder ] = await ethers.getSigners()
       const privateKey = crypto.randomBytes(32)
