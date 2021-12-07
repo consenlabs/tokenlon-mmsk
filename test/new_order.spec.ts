@@ -12,6 +12,8 @@ import { Signer as TokenlonSigner, RestfulService, AllowanceTarget, USDT, ABI, W
 import * as crypto from 'crypto'
 import { expect } from 'chai'
 const nock = require('nock')
+const axios = require('axios')
+axios.defaults.adapter = require('axios/lib/adapters/http')
 
 describe('NewOrder', function () {
   const signer = Wallet.createRandom()
@@ -355,11 +357,9 @@ describe('NewOrder', function () {
     it('should signed rfqv1 order by MMP', async () => {
       const ethersNetwork = await ethers.provider.getNetwork()
       const chainId = ethersNetwork.chainId
-      nock(`${RestfulService[chainId]}`)
+      const scope = nock(`${RestfulService[chainId]}`)
       .persist()
       .post('/order/place')
-      .reply(200, { success: true })
-      .post('/order/approve_and_swap')
       .reply(200, { success: true })
       const usdtHolders = {
         1: '0x15abb66bA754F05cBC0165A64A11cDed1543dE48',
@@ -510,6 +510,7 @@ describe('NewOrder', function () {
       const userUsdtBalanceAfter = await usdt.balanceOf(user.address)
       console.log(`user got ${ethers.utils.formatUnits(userUsdtBalanceAfter.sub(userUsdtBalanceBefore), 6)} usdt`)
       expect(Number(userUsdtBalanceAfter.sub(userUsdtBalanceBefore))).gt(0)
+      scope.done()
     }).timeout(360000)
 
     it('should signed rfqv1 order by EOA', async function () {
