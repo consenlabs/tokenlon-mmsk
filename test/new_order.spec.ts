@@ -355,6 +355,11 @@ describe('NewOrder', function () {
     it('should signed rfqv1 order by MMP', async () => {
       const ethersNetwork = await ethers.provider.getNetwork()
       const chainId = ethersNetwork.chainId
+      nock(`${RestfulService[chainId]}`)
+      .post('/order/place')
+      .reply(200, { success: true })
+      .post('/order/approve_and_swap')
+      .reply(200, { success: true })
       const usdtHolders = {
         1: '0x15abb66bA754F05cBC0165A64A11cDed1543dE48',
         5: '0x031BBFB9379c4e6E3F42fb93a9f09C060c7fA037'
@@ -366,12 +371,6 @@ describe('NewOrder', function () {
       })
       const usdtHolder = await ethers.provider.getSigner(usdtHolderAddr)
       const usdt = await ethers.getContractAt(ABI.IERC20, USDT[chainId])
-      nock(`${RestfulService[chainId]}`)
-      .persist()
-      .post('/order/place')
-      .reply(200, { success: true })
-      .post('/order/approve_and_swap')
-      .reply(200, { success: true })
       const [ deployer, ethHolder ] = await ethers.getSigners()
       const privateKey = crypto.randomBytes(32)
       const user = new ethers.Wallet(privateKey, ethers.provider)
