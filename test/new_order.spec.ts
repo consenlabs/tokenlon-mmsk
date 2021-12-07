@@ -1,5 +1,7 @@
 import { ethers, network } from 'hardhat'
 import { Wallet, utils, Contract } from 'ethers'
+import axios from 'axios'
+import httpAdapter from 'axios/lib/adapters/http'
 import { newOrder } from '../src/handler'
 import { updaterStack, Updater } from '../src/worker'
 import { NULL_ADDRESS } from '../src/constants'
@@ -10,9 +12,10 @@ import { BigNumber } from '../src/utils'
 import * as ethUtils from 'ethereumjs-util'
 import { Signer as TokenlonSigner, RestfulService, AllowanceTarget, USDT, ABI, WETH } from '@tokenlon/sdk'
 import * as crypto from 'crypto'
-import * as nock from 'nock'
 import { expect } from 'chai'
+const nock = require('nock')
 
+axios.defaults.adapter = httpAdapter
 nock(`${RestfulService[1]}`)
 .persist()
 .post('/order/place', (body: any) => {
