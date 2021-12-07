@@ -13,6 +13,40 @@ import * as crypto from 'crypto'
 import * as nock from 'nock'
 import { expect } from 'chai'
 
+nock(`${RestfulService[1]}`)
+.persist()
+.post('/order/place', (body: any) => {
+  return body.order
+})
+.reply(200, { success: true })
+.post('/order/approve_and_swap', (body: any) => {
+  if (!body.approvalTx || !body.approvalTx.rawTx) {
+    throw new Error('Should send approval tx')
+  }
+  if (body.protocol == Protocol.AMMV2 && !body.payload) {
+    throw new Error('Should set payload when protocol is AMMV2')
+  }
+  return body.order
+})
+.reply(200, { success: true })
+
+nock(`${RestfulService[5]}`)
+.persist()
+.post('/order/place', (body: any) => {
+  return body.order
+})
+.reply(200, { success: true })
+.post('/order/approve_and_swap', (body: any) => {
+  if (!body.approvalTx || !body.approvalTx.rawTx) {
+    throw new Error('Should send approval tx')
+  }
+  if (body.protocol == Protocol.AMMV2 && !body.payload) {
+    throw new Error('Should set payload when protocol is AMMV2')
+  }
+  return body.order
+})
+.reply(200, { success: true })
+
 describe('NewOrder', function () {
   const signer = Wallet.createRandom()
   let chainId: number
@@ -355,11 +389,6 @@ describe('NewOrder', function () {
     it('should signed rfqv1 order by MMP', async () => {
       const ethersNetwork = await ethers.provider.getNetwork()
       const chainId = ethersNetwork.chainId
-      nock(`${RestfulService[chainId]}`)
-      .post('/order/place')
-      .reply(200, { success: true })
-      .post('/order/approve_and_swap')
-      .reply(200, { success: true })
       const usdtHolders = {
         1: '0x15abb66bA754F05cBC0165A64A11cDed1543dE48',
         5: '0x031BBFB9379c4e6E3F42fb93a9f09C060c7fA037'
