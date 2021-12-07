@@ -1,5 +1,4 @@
 import { expect } from 'chai'
-import 'mocha'
 import { Wallet } from 'ethers'
 import { validateNewOrderRequest, validateRequest } from '../src/validations'
 

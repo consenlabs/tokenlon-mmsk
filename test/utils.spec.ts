@@ -1,5 +1,4 @@
 import { expect } from 'chai'
-import 'mocha'
 import { QueryInterface } from '../src/types'
 import { ensureCorrectSymbolCase } from '../src/quoting'
 
