@@ -46,7 +46,7 @@
     "ethereum-types": "^3.2.0",
     "hardhat": "2.5.0",
     "hardhat-gas-reporter": "1.0.4",
-    "nock": "13.0.11",
+    "nock": "^13.2.1",
     "npm-run-all": "4.1.5",
     "prettier": "^2.0.5",
     "ts-node": "8.10.2",
