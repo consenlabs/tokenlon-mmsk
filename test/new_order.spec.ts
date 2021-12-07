@@ -513,10 +513,6 @@ describe('NewOrder', function () {
       const userUsdtBalanceBefore = await usdt.balanceOf(user.address)
       const result = await tokenlonSigner.sendOrderBySelf(signResult, {
         receiverAddress: user.address
-      }, {
-        gasLimit: '1000000',
-        maxFeePerGas: '100000000000',
-        maxPriorityFeePerGas: '1000000000'
       })
       console.log(result)
       const receipt = await result.tx.wait()
