@@ -1,6 +1,5 @@
 import { expect } from 'chai'
-import 'mocha'
-import { Wallet } from 'ethers'
+import { ethers } from 'hardhat'
 import { validateNewOrderRequest, validateRequest } from '../src/validations'
 
 describe('Validator', function () {
@@ -16,7 +15,7 @@ describe('Validator', function () {
   })
 
   it('validateNewOrderRequest', function () {
-    expect(validateNewOrderRequest(1, 'foobar', Wallet.createRandom().address)).to.be.eq(null)
+    expect(validateNewOrderRequest(1, 'foobar', ethers.Wallet.createRandom().address)).to.be.eq(null)
     expect(validateNewOrderRequest(1, 'foobar', 'baz')).to.be.eq(
       `userAddress:baz is not a valid address`
     )

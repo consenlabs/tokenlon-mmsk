@@ -1,5 +1,4 @@
 import { assert } from 'chai'
-import 'mocha'
 import { fromUnitToDecimalBN, orderBNToString, toBN, truncateAmount } from '../src/utils'
 
 describe('Numbers', function () {
