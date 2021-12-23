@@ -4,11 +4,11 @@ import { newOrder } from '../src/handler'
 import { updaterStack, Updater } from '../src/worker'
 import { NULL_ADDRESS } from '../src/constants'
 import { Protocol } from '../src/types'
+import { BigNumber } from '../src/utils'
 import { SignatureType, toRFQOrder } from '../src/signer/rfqv1'
 import { getOrderSignDigest } from '../src/signer/orderHash'
-import { BigNumber } from '../src/utils'
 import * as ethUtils from 'ethereumjs-util'
-import { Signer as TokenlonSigner, AllowanceTarget, USDT, ABI, WETH } from '@tokenlon/sdk'
+import { Signer as TokenlonSigner, AllowanceTarget, USDT, ABI, WETH, Tokenlon, UserProxy, AMMWrapper, RFQ } from '@tokenlon/sdk'
 import * as crypto from 'crypto'
 import { expect } from 'chai'
 
@@ -31,17 +31,17 @@ describe('NewOrder', function () {
     mockMarkerMakerConfigUpdater.cacheResult = {
       mmId: 1,
       mmProxyContractAddress: signer.address.toLowerCase(),
-      tokenlonExchangeContractAddress: '0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491',
-      exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
-      userProxyContractAddress: '0x25657705a6be20511687d483f2fccfb2d92f6033',
+      tokenlonExchangeContractAddress: Tokenlon[chainId].toLowerCase(),
+      exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b'.toLowerCase(),
+      userProxyContractAddress: UserProxy[chainId].toLowerCase(),
       wethContractAddress: WETH[chainId].toLowerCase(),
       orderExpirationSeconds: 600,
       feeFactor: 30,
       addressBookV5: {
-        Tokenlon: '0xF1eC89551112da48C3b43B5a167AF0b2a7Cc2614',
-        PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
-        AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
-        RFQ: '0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F',
+        Tokenlon: Tokenlon[chainId].toLowerCase(),
+        PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257'.toLowerCase(),
+        AMMWrapper: AMMWrapper[chainId].toLowerCase(),
+        RFQ: RFQ[chainId].toLowerCase(),
       },
     }
     const mockTokenConfigsFromImtokenUpdater = new Updater({
@@ -68,7 +68,7 @@ describe('NewOrder', function () {
       },
       {
         symbol: 'USDT',
-        contractAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        contractAddress: USDT[chainId].toLowerCase(),
         decimal: 6,
         precision: 4,
         minTradeAmount: 1,
@@ -88,11 +88,13 @@ describe('NewOrder', function () {
     updaterStack['tokenConfigsFromImtokenUpdater'] = mockTokenConfigsFromImtokenUpdater
   })
 
-  describe('dispatch to protocol signer', function () {
-    it('should signed ammv1 order by uniswap', async function () {
+  describe('Dispatch to protocol signer', function () {
+    it('Should sign ammv1 order by uniswap', async function () {
       const ammAddr = '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
+      const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
         signer: signer,
+        chainID: chainId,
         quoter: {
           getPrice: () => {
             return Promise.resolve({
@@ -112,7 +114,7 @@ describe('NewOrder', function () {
           side: 'SELL',
           amount: 0.1,
           uniqId: 'testing-1111',
-          userAddr: Wallet.createRandom().address.toLowerCase(),
+          userAddr: userAddr,
           protocol: Protocol.AMMV1,
         },
       })
@@ -121,6 +123,7 @@ describe('NewOrder', function () {
 
       // verify data object
       const order = signedOrderResp.order
+      console.log(order)
       expect(order).is.not.null
       expect(order.protocol).eq(Protocol.AMMV1)
       expect(order.quoteId).eq('1--echo-testing-8888')
@@ -128,11 +131,11 @@ describe('NewOrder', function () {
       expect(order.makerAssetAmount).eq('100000')
       expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
       expect(order.makerAssetData).eq('0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7')
-      expect(order.takerAddress).eq('0x25657705a6be20511687d483f2fccfb2d92f6033')
+      expect(order.takerAddress).eq(UserProxy[chainId].toLowerCase())
       expect(order.takerAssetAmount).eq('100000000000000000')
       expect(order.takerAssetAddress).eq('0x0000000000000000000000000000000000000000')
       expect(order.takerAssetData).eq('0xf47261b00000000000000000000000000000000000000000000000000000000000000000')
-      expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
+      expect(order.senderAddress).eq(Tokenlon[chainId].toLowerCase())
       expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
       expect(order.exchangeAddress).eq('0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
       // The following fields are to be compatible `Order` struct.
@@ -145,8 +148,9 @@ describe('NewOrder', function () {
       expect(Number(order.expirationTimeSeconds) > 0).is.true
     })
 
-    it('should signed ammv2 order by uniswap v2', async function () {
+    it('Should sign ammv2 order by uniswap v2', async function () {
       const ammAddr = '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
+      const userAddr = Wallet.createRandom().address.toLowerCase()
       const payload = Buffer.from(
         JSON.stringify({
           path: [
@@ -157,6 +161,7 @@ describe('NewOrder', function () {
       ).toString('base64')
       const signedOrderResp = await newOrder({
         signer: signer,
+        chainID: chainId,
         quoter: {
           getPrice: () => {
             return Promise.resolve({
@@ -177,7 +182,7 @@ describe('NewOrder', function () {
           side: 'SELL',
           amount: 0.1,
           uniqId: 'testing-1111',
-          userAddr: Wallet.createRandom().address.toLowerCase(),
+          userAddr: userAddr,
           protocol: Protocol.AMMV2,
         },
       })
@@ -186,6 +191,7 @@ describe('NewOrder', function () {
 
       // verify data object
       const order = signedOrderResp.order
+      console.log(order)
       expect(order).is.not.null
       expect(order.protocol).eq(Protocol.AMMV2)
       expect(order.quoteId).eq('1--echo-testing-8888')
@@ -193,11 +199,11 @@ describe('NewOrder', function () {
       expect(order.makerAssetAmount).eq('100000')
       expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
       expect(order.makerAssetData).eq('0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7')
-      expect(order.takerAddress).eq('0x25657705a6be20511687d483f2fccfb2d92f6033')
+      expect(order.takerAddress).eq(UserProxy[chainId].toLowerCase())
       expect(order.takerAssetAmount).eq('100000000000000000')
       expect(order.takerAssetAddress).eq('0x0000000000000000000000000000000000000000')
       expect(order.takerAssetData).eq('0xf47261b00000000000000000000000000000000000000000000000000000000000000000')
-      expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
+      expect(order.senderAddress).eq(Tokenlon[chainId].toLowerCase())
       expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
       expect(order.exchangeAddress).eq('0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
       // The following fields are to be compatible `Order` struct.
@@ -211,10 +217,11 @@ describe('NewOrder', function () {
       expect(order.payload).eq(payload)
     })
 
-    it('should raise error for pmmv4 order', async function () {
+    it('Should raise error for pmmv4 order', async function () {
       expect(
         await newOrder({
           signer: signer,
+          chainID: chainId,
           quoter: {
             getPrice: () => {
               return Promise.resolve({
@@ -241,10 +248,11 @@ describe('NewOrder', function () {
       )
     })
 
-    it('should signed pmmv5 order by MMP', async function () {
+    it('Should sign pmmv5 order by MMP', async function () {
       const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
         signer: Wallet.createRandom(),
+        chainID: chainId,
         quoter: {
           getPrice: () => {
             return Promise.resolve({
@@ -279,11 +287,11 @@ describe('NewOrder', function () {
       expect(order.makerAssetAmount).eq('100000')
       expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
       expect(order.makerAssetData).eq('0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7')
-      expect(order.takerAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257')
+      expect(order.takerAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257'.toLowerCase())
       expect(order.takerAssetAmount).eq('100000000000000000')
       expect(order.takerAssetAddress).eq(WETH[chainId].toLowerCase())
       expect(order.takerAssetData).eq(`0xf47261b0000000000000000000000000${WETH[chainId].toLowerCase().slice(2)}`)
-      expect(order.senderAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257')
+      expect(order.senderAddress).eq('0x7bd7d025D4231aAD1233967b527FFd7416410257'.toLowerCase())
       expect(order.feeRecipientAddress).eq(userAddr)
       expect(order.exchangeAddress).eq('0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
       // The following fields are to be compatible `Order` struct.
@@ -296,10 +304,11 @@ describe('NewOrder', function () {
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
     })
 
-    it('should signed pmmv5 order by EOA', async function () {
+    it('Should sign pmmv5 order by EOA', async function () {
       const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
         signer: signer,
+        chainID: chainId,
         quoter: {
           getPrice: () => {
             return Promise.resolve({
@@ -334,11 +343,11 @@ describe('NewOrder', function () {
       expect(order.makerAssetAmount).eq('100000')
       expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
       expect(order.makerAssetData).eq('0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7')
-      expect(order.takerAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257')
+      expect(order.takerAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257'.toLowerCase())
       expect(order.takerAssetAmount).eq('100000000000000000')
       expect(order.takerAssetAddress).eq(WETH[chainId].toLowerCase())
       expect(order.takerAssetData).eq(`0xf47261b0000000000000000000000000${WETH[chainId].toLowerCase().slice(2)}`)
-      expect(order.senderAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257')
+      expect(order.senderAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257'.toLowerCase())
       expect(order.feeRecipientAddress).eq(userAddr)
       expect(order.exchangeAddress).eq('0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
       // The following fields are to be compatible `Order` struct.
@@ -351,7 +360,7 @@ describe('NewOrder', function () {
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
     })
 
-    it('should signed rfqv1 order by MMP', async () => {
+    it('Should sign rfqv1 order by MMP', async () => {
       const ethersNetwork = await ethers.provider.getNetwork()
       const chainId = ethersNetwork.chainId
       const usdtHolders = {
@@ -369,6 +378,7 @@ describe('NewOrder', function () {
       const privateKey = crypto.randomBytes(32)
       const user = new ethers.Wallet(privateKey, ethers.provider)
       const userAddr = user.address.toLowerCase()
+      console.log(`userAddr: ${userAddr}`)
       await ethHolder.sendTransaction({
         to: userAddr,
         value: ethers.utils.parseEther('10')
@@ -376,9 +386,11 @@ describe('NewOrder', function () {
       const mmpSigner = Wallet.createRandom()
       console.log(`mmpSigner: ${mmpSigner.address}`)
       const mmproxy: Contract = await (
-        await ethers.getContractFactory("MarketMakerProxy", deployer)
-      ).deploy(mmpSigner.address)
+        await ethers.getContractFactory("contracts/MMP.sol:MarketMakerProxy", deployer)
+      ).deploy()
+      await mmproxy.connect(deployer).setSigner(mmpSigner.address)
       await usdt.connect(usdtHolder).transfer(mmproxy.address, ethers.utils.parseUnits('1000', 6))
+      // @ts-ignore
       await mmproxy.connect(deployer).setAllowance([USDT[chainId]], AllowanceTarget[chainId])
       const mmproxyUsdtBalance = await usdt.balanceOf(mmproxy.address)
       const mmproxyUsdtAllowance = await usdt.allowance(mmproxy.address, AllowanceTarget[chainId])
@@ -395,17 +407,17 @@ describe('NewOrder', function () {
       const cacheResult = {
         mmId: 1,
         mmProxyContractAddress: mmproxy.address.toLowerCase(), // sign for v4 MMP contract
-        tokenlonExchangeContractAddress: '0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491',
-        exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
-        userProxyContractAddress: '0x25657705a6be20511687d483f2fccfb2d92f6033',
+        tokenlonExchangeContractAddress: Tokenlon[chainId].toLowerCase(),
+        exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b'.toLowerCase(),
+        userProxyContractAddress: UserProxy[chainId].toLowerCase(),
         wethContractAddress: WETH[chainId].toLowerCase(),
         orderExpirationSeconds: 600,
         feeFactor: 30,
         addressBookV5: {
-          Tokenlon: '0xF1eC89551112da48C3b43B5a167AF0b2a7Cc2614',
-          PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
-          AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
-          RFQ: '0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F',
+          Tokenlon: Tokenlon[chainId].toLowerCase(),
+          PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257'.toLowerCase(),
+          AMMWrapper: AMMWrapper[chainId].toLowerCase(),
+          RFQ: RFQ[chainId].toLowerCase(),
         },
       }
       mockMarkerMakerConfigUpdater.cacheResult = cacheResult
@@ -413,7 +425,7 @@ describe('NewOrder', function () {
 
       const signedOrderResp = await newOrder({
         signer: mmpSigner,
-        chainID: 1,
+        chainID: chainId,
         quoter: {
           getPrice: () => {
             return Promise.resolve({
@@ -447,13 +459,13 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(mmproxy.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
-      expect(order.makerAssetData).eq('0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT[chainId].toLowerCase())
+      expect(order.makerAssetData).eq(`0xf47261b0000000000000000000000000${USDT[chainId].toLowerCase().slice(2)}`)
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
       expect(order.takerAssetAddress).eq(WETH[chainId].toLowerCase())
       expect(order.takerAssetData).eq(`0xf47261b0000000000000000000000000${WETH[chainId].toLowerCase().slice(2)}`)
-      expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
+      expect(order.senderAddress).eq(Tokenlon[chainId].toLowerCase())
       expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
       expect(order.exchangeAddress).eq('0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
       // The following fields are to be compatible `Order` struct.
@@ -467,10 +479,11 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
       const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQ
-      const orderHash = getOrderSignDigest(toRFQOrder(signedOrderResp.order), 1, rfqAddr)
+      const orderSignDigest = getOrderSignDigest(toRFQOrder(signedOrderResp.order), chainId, rfqAddr)
+      console.log(`orderSignDigest: ${orderSignDigest}`)
       const message = ethUtils.bufferToHex(
         Buffer.concat([
-          ethUtils.toBuffer(orderHash),
+          ethUtils.toBuffer(orderSignDigest),
           ethUtils.toBuffer(userAddr.toLowerCase()),
           ethUtils.toBuffer(order.feeFactor > 255 ? order.feeFactor : [0, order.feeFactor]),
         ])
@@ -478,14 +491,29 @@ describe('NewOrder', function () {
       const v = utils.hexlify(sigBytes.slice(0, 1))
       const r = utils.hexlify(sigBytes.slice(1, 33))
       const s = utils.hexlify(sigBytes.slice(33, 65))
-      const recoved = utils.verifyMessage(
+      const recovered = utils.verifyMessage(
         utils.arrayify(message), {
           v: parseInt(v),
           r: r,
           s: s
         }
       )
-      expect(recoved.toLowerCase()).eq(mmpSigner.address.toLowerCase())
+      let sig = await mmpSigner.signMessage(utils.arrayify(message))
+      const vrs = await ethers.utils.splitSignature(sig)
+      sig = `0x${vrs.v.toString(16)}${vrs.r.slice(2)}${vrs.s.slice(2)}`
+      const walletSign = ethUtils.bufferToHex(
+        Buffer.concat([
+          ethUtils.toBuffer(utils.arrayify(sig)).slice(0, 65),
+          ethUtils.toBuffer(userAddr.toLowerCase()),
+          ethUtils.toBuffer(order.feeFactor > 255 ? order.feeFactor : [0, order.feeFactor]),
+          ethUtils.toBuffer(SignatureType.Wallet),
+        ])
+      )
+      console.log(`walletSign: ${walletSign}`)
+      expect(walletSign).eq(order.makerWalletSignature)
+      console.log(`recovered: ${recovered.toLowerCase()}`)
+      console.log(`mmpSigner: ${mmpSigner.address.toLowerCase()}`)
+      expect(recovered.toLowerCase()).eq(mmpSigner.address.toLowerCase())
 
       const tokenlonSigner = new TokenlonSigner(user)
       const signResult = await tokenlonSigner.signOrder(order, {
@@ -495,7 +523,11 @@ describe('NewOrder', function () {
       console.log(signResult)
       const userUsdtBalanceBefore = await usdt.balanceOf(user.address)
       const txRequest = await tokenlonSigner.getRawTransactionFromOrder(signResult, {
-        receiverAddress: user.address
+        receiverAddress: user.address,
+      }, {
+        gasLimit: '1000000',
+        maxFeePerGas: '100000000000',
+        maxPriorityFeePerGas: '5000000000',
       })
       console.log(txRequest)
       const tx = await tokenlonSigner.sendTransaction(txRequest)
@@ -506,11 +538,11 @@ describe('NewOrder', function () {
       expect(Number(userUsdtBalanceAfter.sub(userUsdtBalanceBefore))).gt(0)
     }).timeout(360000)
 
-    it('should signed rfqv1 order by EOA', async function () {
+    it('Should sign rfqv1 order by EOA', async function () {
       const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
         signer: signer,
-        chainID: 1,
+        chainID: chainId,
         quoter: {
           getPrice: () => {
             return Promise.resolve({
@@ -555,7 +587,7 @@ describe('NewOrder', function () {
         order.takerAssetData,
         `0xf47261b0000000000000000000000000${WETH[chainId].toLowerCase().slice(2)}`
       )
-      expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
+      expect(order.senderAddress).eq(Tokenlon[chainId].toLowerCase())
       expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
       expect(order.exchangeAddress).eq('0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
       // The following fields are to be compatible `Order` struct.
@@ -568,21 +600,22 @@ describe('NewOrder', function () {
       // verify signature
       const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQ
       const orderHash = getOrderSignDigest(toRFQOrder(signedOrderResp.order), 1, rfqAddr)
-      const recoved = utils.verifyMessage(
+      const recovered = utils.verifyMessage(
         utils.arrayify(orderHash),
         utils.hexlify(sigBytes.slice(0, 65)),
       )
-      expect(recoved.toLowerCase()).eq(signer.address.toLowerCase())
+      expect(recovered.toLowerCase()).eq(signer.address.toLowerCase())
       // verify random values
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
     })
   })
 
-  describe('handle token precision and decimals', () => {
-    it('should format taker asset amount', async function () {
+  describe('Handle token precision and decimals', () => {
+    it('Should format taker asset amount', async function () {
       const signedOrderResp = await newOrder({
         signer: Wallet.createRandom(),
+        chainID: chainId,
         quoter: {
           getPrice: () => {
             return Promise.resolve({
@@ -615,9 +648,10 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.makerAssetAmount).eq(utils.parseEther('0.1114').toString())
     })
 
-    it('should format maker asset amount', async function () {
+    it('Should format maker asset amount', async function () {
       const signedOrderResp = await newOrder({
         signer: Wallet.createRandom(),
+        chainID: chainId,
         quoter: {
           getPrice: () => {
             return Promise.resolve({
