@@ -19,10 +19,13 @@ const helper = (stack, token1, token2) => {
  * }
  */
 const _transferPairStrArrToTokenStack = (key: string, pairStrArr) => {
-  if (!key) {
-    return {}
-  }
   const stack = {}
+  if (!key) {
+    return stack
+  }
+  if (!Array.isArray(pairStrArr)) {
+    return stack
+  }
   pairStrArr.forEach((pairStr) => {
     const [tokenA, tokenB] = pairStr.split('/')
     helper(stack, tokenA, tokenB)
@@ -65,6 +68,12 @@ const mapTokens = memoize(_mapTokens)
 
 export const getSupportedTokens = (): SupportedToken[] => {
   const { tokenListFromImtokenUpdater, pairsFromMMUpdater } = updaterStack
+  if (
+    !Array.isArray(pairsFromMMUpdater.cacheResult) ||
+    !Array.isArray(tokenListFromImtokenUpdater.cacheResult)
+  ) {
+    return []
+  }
   const tokenStack = transferPairStrArrToTokenStack(
     JSON.stringify(pairsFromMMUpdater.cacheResult),
     pairsFromMMUpdater.cacheResult
