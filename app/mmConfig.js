@@ -1,3 +1,5 @@
+const SignatureType = require('../lib/signer/types')
+
 module.exports = {
   //
   // Tokenlon server address
@@ -27,4 +29,5 @@ module.exports = {
   SENTRY_DSN: '',
   NODE_ENV: 'PRODUCTION',
   QUOTER: null,
+  SIGNATURE_TYPE: SignatureType.Wallet,
 }

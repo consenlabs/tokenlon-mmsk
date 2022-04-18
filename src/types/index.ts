@@ -1,4 +1,5 @@
 import { Quoter } from '../request/marketMaker'
+import { SignatureType } from '../signer/types'
 
 export interface MarketMakerConfig {
   mmId: number
@@ -48,6 +49,7 @@ export interface ConfigForStart {
   HTTP_SERVER_ENDPOINT?: string
   ZERORPC_SERVER_ENDPOINT?: string
   EXTERNAL_QUOTER?: Quoter
+  SIGNATURE_TYPE: SignatureType
 }
 
 export interface DealOrder {
