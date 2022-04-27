@@ -18,7 +18,6 @@ module.exports = {
 
   //
   // MM backend config
-  USE_ZERORPC: false,
   HTTP_SERVER_ENDPOINT: process.env.HTTP_SERVER_ENDPOINT,
   // ZERORPC_SERVER_ENDPOINT: process.env.ZERORPC_SERVER_ENDPOINT,
 

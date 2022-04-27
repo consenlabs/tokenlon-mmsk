@@ -14,9 +14,7 @@ const config = {
   WALLET_KEYSTORE: null,
   MMSK_SERVER_PORT: null,
 
-  USE_ZERORPC: null,
   HTTP_SERVER_ENDPOINT: null,
-  ZERORPC_SERVER_ENDPOINT: null,
 
   NODE_ENV: 'DEVELOPMENT',
   SENTRY_DSN: null,

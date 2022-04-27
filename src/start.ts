@@ -34,10 +34,7 @@ const beforeStart = async (config: ConfigForStart, triedTimes?: number) => {
     if (config.EXTERNAL_QUOTER) {
       quoter = config.EXTERNAL_QUOTER
     } else {
-      quoter = new QuoteDispatcher(
-        config.ZERORPC_SERVER_ENDPOINT || config.HTTP_SERVER_ENDPOINT,
-        config.USE_ZERORPC ? QuoterProtocol.ZERORPC : QuoterProtocol.HTTP
-      )
+      quoter = new QuoteDispatcher(config.HTTP_SERVER_ENDPOINT, QuoterProtocol.HTTP)
     }
     await startUpdater(quoter, wallet)
     return quoter
