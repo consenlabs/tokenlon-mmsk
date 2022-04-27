@@ -12,16 +12,13 @@ import * as ethUtils from 'ethereumjs-util'
 import { Signer as TokenlonSigner, AllowanceTarget, USDT, ABI, WETH } from '@tokenlon/sdk'
 import * as crypto from 'crypto'
 import { expect } from 'chai'
-
 const usdtHolders = {
   1: '0x15abb66bA754F05cBC0165A64A11cDed1543dE48',
   5: '0x031BBFB9379c4e6E3F42fb93a9f09C060c7fA037',
 }
-
 describe('NewOrder', function () {
   const signer = Wallet.createRandom()
   let chainId: number
-
   before(async () => {
     const networkInfo = await ethers.provider.getNetwork()
     chainId = networkInfo.chainId
@@ -31,7 +28,6 @@ describe('NewOrder', function () {
       params: [usdtHolderAddr],
     })
   })
-
   beforeEach(function () {
     const mockMarkerMakerConfigUpdater = new Updater({
       name: 'mockMarkerMakerConfigUpdater',
@@ -98,7 +94,6 @@ describe('NewOrder', function () {
     updaterStack['markerMakerConfigUpdater'] = mockMarkerMakerConfigUpdater
     updaterStack['tokenConfigsFromImtokenUpdater'] = mockTokenConfigsFromImtokenUpdater
   })
-
   describe('dispatch to protocol signer', function () {
     it('should signed ammv1 order by uniswap', async function () {
       const ammAddr = '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
@@ -128,9 +123,7 @@ describe('NewOrder', function () {
           protocol: Protocol.AMMV1,
         },
       })
-
       expect(signedOrderResp).is.not.null
-
       // verify data object
       const order = signedOrderResp.order
       expect(order).is.not.null
@@ -160,7 +153,6 @@ describe('NewOrder', function () {
       expect(order.salt.length > 0).is.true
       expect(Number(order.expirationTimeSeconds) > 0).is.true
     })
-
     it('should signed ammv2 order by uniswap v2', async function () {
       const ammAddr = '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
       const payload = Buffer.from(
@@ -198,9 +190,7 @@ describe('NewOrder', function () {
           protocol: Protocol.AMMV2,
         },
       })
-
       expect(signedOrderResp).is.not.null
-
       // verify data object
       const order = signedOrderResp.order
       expect(order).is.not.null
@@ -231,7 +221,6 @@ describe('NewOrder', function () {
       expect(Number(order.expirationTimeSeconds) > 0).is.true
       expect(order.payload).eq(payload)
     })
-
     it('should raise error for pmmv4 order', async function () {
       expect(
         await newOrder({
@@ -262,7 +251,6 @@ describe('NewOrder', function () {
         'Unrecognized protocol: PMMV4'
       )
     })
-
     it('should signed pmmv5 order by MMP', async function () {
       const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
@@ -290,9 +278,7 @@ describe('NewOrder', function () {
           protocol: Protocol.PMMV5,
         },
       })
-
       expect(signedOrderResp).is.not.null
-
       // verify data object
       const order = signedOrderResp.order
       expect(order).is.not.null
@@ -322,7 +308,6 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
     })
-
     it('should signed pmmv5 order by EOA', async function () {
       const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
@@ -350,9 +335,7 @@ describe('NewOrder', function () {
           protocol: Protocol.PMMV5,
         },
       })
-
       expect(signedOrderResp).is.not.null
-
       // verify data object
       const order = signedOrderResp.order
       expect(order).is.not.null
@@ -382,7 +365,6 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
     })
-
     it('should signed rfqv1 order by MMP', async () => {
       const ethersNetwork = await ethers.provider.getNetwork()
       const chainId = ethersNetwork.chainId
@@ -433,7 +415,6 @@ describe('NewOrder', function () {
       }
       mockMarkerMakerConfigUpdater.cacheResult = cacheResult
       updaterStack['markerMakerConfigUpdater'] = mockMarkerMakerConfigUpdater
-
       const signedOrderResp = await newOrder({
         signatureType: SignatureType.Wallet,
         signer: mmpSigner,
@@ -460,9 +441,7 @@ describe('NewOrder', function () {
           protocol: Protocol.RFQV1,
         },
       })
-
       expect(signedOrderResp).is.not.null
-
       // verify data object
       const order = signedOrderResp.order
       console.log(order)
@@ -536,7 +515,6 @@ describe('NewOrder', function () {
       )
       expect(Number(userUsdtBalanceAfter.sub(userUsdtBalanceBefore))).gt(0)
     }).timeout(360000)
-
     it('should signed rfqv1 order by EOA', async function () {
       const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
@@ -565,9 +543,7 @@ describe('NewOrder', function () {
           protocol: Protocol.RFQV1,
         },
       })
-
       expect(signedOrderResp).is.not.null
-
       // verify data object
       const order = signedOrderResp.order
       expect(order).is.not.null
@@ -610,7 +586,6 @@ describe('NewOrder', function () {
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
     })
   })
-
   describe('handle token precision and decimals', () => {
     it('should format taker asset amount', async function () {
       const signedOrderResp = await newOrder({
@@ -639,7 +614,6 @@ describe('NewOrder', function () {
           protocol: Protocol.PMMV5,
         },
       })
-
       expect(signedOrderResp).is.not.null
       expect(signedOrderResp.order.quoteId).eq('1--echo-testing-8888')
       expect(signedOrderResp.order.makerWalletSignature.slice(-1)).eq('4')
@@ -649,7 +623,6 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.takerAssetAmount).eq(utils.parseUnits('0.122539', 6).toString())
       expect(signedOrderResp.order.makerAssetAmount).eq(utils.parseEther('0.1114').toString())
     })
-
     it('should format maker asset amount', async function () {
       const signedOrderResp = await newOrder({
         signatureType: SignatureType.Wallet,
@@ -676,7 +649,6 @@ describe('NewOrder', function () {
           protocol: Protocol.PMMV5,
         },
       })
-
       expect(signedOrderResp).is.not.null
       expect(signedOrderResp.order.quoteId).eq('1--echo-testing-8888')
       expect(signedOrderResp.order.makerWalletSignature.slice(-1)).eq('4')
@@ -684,7 +656,6 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.makerAssetAmount).eq(utils.parseUnits('0.12221', 6).toString())
     })
   })
-
   it('test get RFQ order hash', () => {
     const rfqAddr = '0x6b6D3C4EF634731E17d31d0D6017ba9DB4775955'
     const order = {

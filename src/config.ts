@@ -1,5 +1,4 @@
 import * as readlineSync from 'readline-sync'
-import * as keythereum from 'keythereum'
 import { ConfigForStart } from './types'
 import { Wallet } from 'ethers'
 
@@ -25,8 +24,8 @@ const setConfig = (conf: ConfigForStart) => {
     const KEYSTORE_PASSWORD = readlineSync.question("Please input your keystore's password: ", {
       hideEchoBack: true,
     })
-    const privateKeyBuf = keythereum.recover(KEYSTORE_PASSWORD, conf.WALLET_KEYSTORE)
-    conf.WALLET_PRIVATE_KEY = privateKeyBuf.toString('hex')
+    const wallet = Wallet.fromEncryptedJsonSync(conf.WALLET_KEYSTORE, KEYSTORE_PASSWORD)
+    conf.WALLET_PRIVATE_KEY = wallet.privateKey
   }
   return Object.assign(config, conf)
 }

@@ -38,7 +38,7 @@ export interface ConfigForStart {
   WALLET_ADDRESS: string
   USE_KEYSTORE?: boolean
   WALLET_PRIVATE_KEY?: string
-  WALLET_KEYSTORE?: object
+  WALLET_KEYSTORE?: string
   MMSK_SERVER_PORT?: string | number
 
   CHAIN_ID?: number

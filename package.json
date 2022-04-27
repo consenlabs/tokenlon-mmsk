@@ -73,13 +73,11 @@
     "ethereum-waffle": "3.4.0",
     "ethereumjs-util": "^7.0.4",
     "ethers": "^5.5.2",
-    "keythereum": "1.0.4",
     "koa": "2.5.3",
     "koa-bodyparser": "4.2.1",
     "koa-logger": "^3.2.1",
     "koa-router": "7.4.0",
     "lodash": ">=4.17.19",
-    "readline-sync": "1.4.9",
-    "scrypt": "github:barrysteyn/node-scrypt#fb60a8d3c158fe115a624b5ffa7480f3a24b03fb"
+    "readline-sync": "1.4.9"
   }
 }
