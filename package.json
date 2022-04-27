@@ -79,6 +79,7 @@
     "koa-logger": "^3.2.1",
     "koa-router": "7.4.0",
     "lodash": ">=4.17.19",
-    "readline-sync": "1.4.9"
+    "readline-sync": "1.4.9",
+    "scrypt": "github:barrysteyn/node-scrypt#fb60a8d3c158fe115a624b5ffa7480f3a24b03fb"
   }
 }
