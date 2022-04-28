@@ -22,6 +22,7 @@ import { startUpdater } from './worker'
 import { QuoteDispatcher, QuoterProtocol } from './request/marketMaker'
 import tracker from './utils/tracker'
 import { Quoter } from './request/marketMaker/types'
+import { SignatureType } from './signer/types'
 
 // FIXME: construct wallet(signer), quoter and worker separately
 // FIXME: better retry implementation
@@ -33,10 +34,7 @@ const beforeStart = async (config: ConfigForStart, triedTimes?: number) => {
     if (config.EXTERNAL_QUOTER) {
       quoter = config.EXTERNAL_QUOTER
     } else {
-      quoter = new QuoteDispatcher(
-        config.ZERORPC_SERVER_ENDPOINT || config.HTTP_SERVER_ENDPOINT,
-        config.USE_ZERORPC ? QuoterProtocol.ZERORPC : QuoterProtocol.HTTP
-      )
+      quoter = new QuoteDispatcher(config.HTTP_SERVER_ENDPOINT, QuoterProtocol.HTTP)
     }
     await startUpdater(quoter, wallet)
     return quoter
@@ -101,6 +99,7 @@ export const startMMSK = async (config: ConfigForStart) => {
     app.context.chainID = config.CHAIN_ID || 5
     app.context.quoter = quoter
     app.context.signer = wallet
+    app.context.signatureType = config.SIGNATURE_TYPE || SignatureType.Wallet
 
     app
       .use(async (ctx, next) => {

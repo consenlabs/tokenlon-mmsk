@@ -194,7 +194,7 @@ const _getBaseTokenByAddress = (baseTokenAddr, tokenList) => {
 const getBaseTokenByAddress = memoize(_getBaseTokenByAddress)
 
 export const newOrder = async (ctx) => {
-  const { quoter, signer, chainID } = ctx
+  const { quoter, signer, chainID, signatureType } = ctx
   const req: QueryInterface = {
     protocol: Protocol.PMMV5, // by default is v2 protocol
     ...ctx.query, // overwrite from request
@@ -260,7 +260,8 @@ export const newOrder = async (ctx) => {
           order,
           userAddr.toLowerCase(),
           chainID,
-          config.addressBookV5.RFQ
+          config.addressBookV5.RFQ,
+          signatureType
         )
         break
       default:

@@ -1,4 +1,5 @@
 import { Quoter } from '../request/marketMaker'
+import { SignatureType } from '../signer/types'
 
 export interface MarketMakerConfig {
   mmId: number
@@ -37,17 +38,16 @@ export interface ConfigForStart {
   WALLET_ADDRESS: string
   USE_KEYSTORE?: boolean
   WALLET_PRIVATE_KEY?: string
-  WALLET_KEYSTORE?: object
+  WALLET_KEYSTORE?: string
   MMSK_SERVER_PORT?: string | number
 
   CHAIN_ID?: number
   NODE_ENV?: 'DEVELOPMENT' | 'STAGING' | 'PRODUCTION'
   SENTRY_DSN?: string
 
-  USE_ZERORPC?: boolean
   HTTP_SERVER_ENDPOINT?: string
-  ZERORPC_SERVER_ENDPOINT?: string
   EXTERNAL_QUOTER?: Quoter
+  SIGNATURE_TYPE: SignatureType
 }
 
 export interface DealOrder {

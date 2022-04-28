@@ -26,9 +26,7 @@ const FORK_NETWORK_POOLS = {
     'https://eth-goerli.alchemyapi.io/v2/SApYz7Tg5O6AGUlynnxndybQ9DG7ymHt',
     'https://eth-goerli.alchemyapi.io/v2/m1Et8DBCaRQbPAb8bq3aJASO6PdfTbQi',
   ],
-  Mainnet: [
-    'https://eth-mainnet.alchemyapi.io/v2/cCsYHzvHm_fdKeGHo_PEeliRoAC4JKyp'
-  ]
+  Mainnet: ['https://eth-mainnet.alchemyapi.io/v2/cCsYHzvHm_fdKeGHo_PEeliRoAC4JKyp'],
 }
 
 const goerli = {
@@ -47,14 +45,15 @@ const mainnet = {
   gasPrice: 'auto',
   initialBaseFeePerGas: 1_000_000_000,
   forking: {
+    blockNumber: 14506930,
     url: FORK_NETWORK_POOLS.Mainnet[weekday % FORK_NETWORK_POOLS.Mainnet.length],
   },
 }
 
 const Network: Record<string, any> = {
   '1': mainnet,
-  'staging': mainnet,
-  '5': goerli
+  staging: mainnet,
+  '5': goerli,
 }
 
 const hardhat = Network[chainId]

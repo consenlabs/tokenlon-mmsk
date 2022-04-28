@@ -28,10 +28,7 @@ export const checkMMSK = async (config: ConfigForStart) => {
   if (config.EXTERNAL_QUOTER) {
     quoter = config.EXTERNAL_QUOTER
   } else {
-    quoter = new QuoteDispatcher(
-      config.ZERORPC_SERVER_ENDPOINT || config.HTTP_SERVER_ENDPOINT,
-      config.USE_ZERORPC ? QuoterProtocol.ZERORPC : QuoterProtocol.HTTP
-    )
+    quoter = new QuoteDispatcher(config.HTTP_SERVER_ENDPOINT, QuoterProtocol.HTTP)
   }
   const wallet = getWallet()
   await startUpdater(quoter, wallet)

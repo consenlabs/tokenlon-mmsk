@@ -1,3 +1,5 @@
+const SignatureType = require('../lib/signer/types')
+
 module.exports = {
   //
   // Tokenlon server address
@@ -16,7 +18,6 @@ module.exports = {
 
   //
   // MM backend config
-  USE_ZERORPC: false,
   HTTP_SERVER_ENDPOINT: process.env.HTTP_SERVER_ENDPOINT,
   // ZERORPC_SERVER_ENDPOINT: process.env.ZERORPC_SERVER_ENDPOINT,
 
@@ -27,4 +28,5 @@ module.exports = {
   SENTRY_DSN: '',
   NODE_ENV: 'PRODUCTION',
   QUOTER: null,
+  SIGNATURE_TYPE: SignatureType.Wallet,
 }
