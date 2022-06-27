@@ -22,7 +22,7 @@ import { startUpdater } from './worker'
 import { QuoteDispatcher, QuoterProtocol } from './request/marketMaker'
 import tracker from './utils/tracker'
 import { Quoter } from './request/marketMaker/types'
-import { SignatureOrder, SignatureType, WalletType } from './signer/types'
+import { WalletType } from './signer/types'
 
 // FIXME: construct wallet(signer), quoter and worker separately
 // FIXME: better retry implementation
