@@ -3,12 +3,10 @@ import {
   orderHashUtils,
   SignatureType,
   signatureUtils,
-  SignerType,
 } from '0x-v2-order-utils'
 import * as ethUtils from 'ethereumjs-util'
 import { utils, Wallet } from 'ethers'
 import { BigNumber, orderBNToString } from '../utils'
-import { ecSignOrderHash } from './ecsign'
 
 // changes of PMMV5
 // - taker address point to PMM contract
@@ -25,12 +23,12 @@ export const generateSaltWithFeeFactor = (feeFactor: number) => {
 // +------|---------|---------|---------|---------+
 // |  V   |    R    |    S    |userAddr |feeFactor|
 // +------|---------|---------|---------|---------+
-export function signWithUserAndFee(
+export async function signWithUserAndFee(
   signer: Wallet,
   orderHash: string,
   userAddr: string,
   feeFactor: number
-) {
+): Promise<string> {
   const hash = ethUtils.bufferToHex(
     Buffer.concat([
       ethUtils.toBuffer(orderHash),
@@ -39,16 +37,12 @@ export function signWithUserAndFee(
     ])
   )
 
-  const signature = ecSignOrderHash(
-    signer.privateKey.slice(2),
-    hash,
-    signer.address,
-    SignerType.Default
-  )
-
+  let signature = await signer.signMessage(utils.arrayify(hash))
+  const { v, r, s } = await utils.splitSignature(signature)
+  signature = `0x${v.toString(16)}${r.slice(2)}${s.slice(2)}`
   const walletSign = ethUtils.bufferToHex(
     Buffer.concat([
-      ethUtils.toBuffer(signature).slice(0, 65),
+      ethUtils.toBuffer(signature),
       ethUtils.toBuffer(userAddr.toLowerCase()),
       ethUtils.toBuffer(feeFactor > 255 ? feeFactor : [0, feeFactor]),
     ])
@@ -75,13 +69,13 @@ async function signByEOA(orderHash: string, wallet: Wallet): Promise<string> {
 // +------|---------|---------|---------|---------|---------+
 // |  V   |    R    |    S    |userAddr |feeFactor| type(4) |
 // +------|---------|---------|---------|---------|---------+
-function signByMMPSigner(
+async function signByMMPSigner(
   orderHash: string,
   userAddr: string,
   feeFactor: number,
   wallet: Wallet
-): string {
-  const walletSign = signWithUserAndFee(wallet, orderHash, userAddr, feeFactor)
+): Promise<string> {
+  const walletSign = await signWithUserAndFee(wallet, orderHash, userAddr, feeFactor)
   return signatureUtils.convertToSignatureWithType(walletSign, SignatureType.Wallet)
 }
 
@@ -101,7 +95,7 @@ export const buildSignedOrder = async (signer: Wallet, order, userAddr, pmm): Pr
   const makerWalletSignature =
     signer.address.toLowerCase() == o.makerAddress.toLowerCase()
       ? await signByEOA(orderHash, signer)
-      : signByMMPSigner(orderHash, userAddr, feeFactor, signer)
+      : await signByMMPSigner(orderHash, userAddr, feeFactor, signer)
 
   const signedOrder = {
     ...o,

@@ -5,8 +5,6 @@ import { getOrderSignDigest } from './orderHash'
 import { RFQOrder, WalletType } from './types'
 import * as ethUtils from 'ethereumjs-util'
 import { SignatureType } from './types'
-import { ecSignOrderHash } from './ecsign'
-import { SignerType } from '0x-v2-order-utils'
 
 // spec of RFQV1
 // - taker address point to userAddr
@@ -22,7 +20,7 @@ export async function signByEOA(orderHash: string, wallet: Wallet): Promise<stri
   // signature: R+S+V
   const hashArray = utils.arrayify(orderHash)
   let signature = await wallet.signMessage(hashArray)
-  var signatureBuffer = Buffer.concat([
+  const signatureBuffer = Buffer.concat([
     ethUtils.toBuffer(signature),
     ethUtils.toBuffer('0x' + '00'.repeat(32)),
     ethUtils.toBuffer(SignatureType.EthSign),
@@ -31,20 +29,20 @@ export async function signByEOA(orderHash: string, wallet: Wallet): Promise<stri
   return signature
 }
 
-export function signByMMPSigner(
+export async function signByMMPSigner(
   orderHash: string,
   userAddr: string,
   feeFactor: number,
   wallet: Wallet,
   walletType: WalletType
-): string {
+): Promise<string> {
   if (walletType === WalletType.MMP_VERSOIN_4) {
     // For V4 Maket Maker Proxy (MMP)
     // Signature:
     // +------|---------|---------|---------|---------|---------+
     // |  V   |    R    |    S    |userAddr |feeFactor| type(6) |
     // +------|---------|---------|---------|---------|---------+
-    let signature = signWithUserAndFee(wallet, orderHash, userAddr, feeFactor)
+    let signature = await signWithUserAndFee(wallet, orderHash, userAddr, feeFactor)
     const signatureBuffer = Buffer.concat([
       ethUtils.toBuffer(signature),
       ethUtils.toBuffer(SignatureType.Wallet),
@@ -56,14 +54,11 @@ export function signByMMPSigner(
     // +------|---------|---------|---------+
     // |  V   |    R    |    S    | type(6) |
     // +------|---------|---------|---------+
-    let signature = ecSignOrderHash(
-      wallet.privateKey.slice(2),
-      orderHash,
-      wallet.address,
-      SignerType.Default
-    )
+    let signature = await wallet.signMessage(utils.arrayify(orderHash))
+    const { v, r, s } = await utils.splitSignature(signature)
+    signature = `0x${v.toString(16)}${r.slice(2)}${s.slice(2)}`
     const signatureBuffer = Buffer.concat([
-      ethUtils.toBuffer(signature).slice(0, 65),
+      ethUtils.toBuffer(signature),
       ethUtils.toBuffer(SignatureType.Wallet),
     ])
     signature = '0x' + signatureBuffer.toString('hex')
@@ -73,26 +68,9 @@ export function signByMMPSigner(
     // +---------|---------|------|---------+
     // |    R    |    S    |  V   | type(5) |
     // +---------|---------|------|---------+
-    let signature = ecSignOrderHash(
-      wallet.privateKey.slice(2),
-      orderHash,
-      wallet.address,
-      SignerType.Default
-    )
-    console.log(`signature original: ${signature}`)
-    signature = signature.slice(2, -2)
-    console.log(`signature: ${signature}`)
-    const v = signature.slice(0, 2)
-    const r = signature.slice(2, 66)
-    const s = signature.slice(66, 134)
-
-    // const { v, r, s } = ethers.utils.splitSignature(ethers.utils.arrayify(signature))
-    console.log(v)
-    console.log(r)
-    console.log(s)
-    signature = `0x${r}${s}${v}`
+    let signature = await wallet.signMessage(utils.arrayify(orderHash))
     const signatureBuffer = Buffer.concat([
-      ethUtils.toBuffer(signature).slice(0, 65),
+      ethUtils.toBuffer(signature),
       ethUtils.toBuffer(SignatureType.WalletBytes32),
     ])
     signature = '0x' + signatureBuffer.toString('hex')
@@ -120,7 +98,7 @@ export const buildSignedOrder = async (
   const makerWalletSignature =
     signer.address.toLowerCase() == order.makerAddress.toLowerCase()
       ? await signByEOA(orderHash, signer)
-      : signByMMPSigner(orderHash, userAddr, feeFactor, signer, walletType)
+      : await signByMMPSigner(orderHash, userAddr, feeFactor, signer, walletType)
 
   const signedOrder = {
     ...order,
