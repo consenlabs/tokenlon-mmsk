@@ -95,10 +95,9 @@ describe('NewOrder', function () {
     updaterStack['tokenConfigsFromImtokenUpdater'] = mockTokenConfigsFromImtokenUpdater
   })
   describe('dispatch to protocol signer', function () {
-    it('should signed ammv1 order by uniswap', async function () {
+    it('should create ammv1 order by uniswap v2', async function () {
       const ammAddr = '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
       const signedOrderResp = await newOrder({
-        walletType: WalletType.MMP_VERSOIN_4,
         signer: signer,
         quoter: {
           getPrice: () => {
@@ -153,7 +152,7 @@ describe('NewOrder', function () {
       expect(order.salt.length > 0).is.true
       expect(Number(order.expirationTimeSeconds) > 0).is.true
     })
-    it('should signed ammv2 order by uniswap v2', async function () {
+    it('should create ammv2 order by uniswap v2', async function () {
       const ammAddr = '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
       const payload = Buffer.from(
         JSON.stringify({
@@ -164,7 +163,6 @@ describe('NewOrder', function () {
         })
       ).toString('base64')
       const signedOrderResp = await newOrder({
-        walletType: WalletType.MMP_VERSOIN_4,
         signer: signer,
         quoter: {
           getPrice: () => {
@@ -251,7 +249,7 @@ describe('NewOrder', function () {
         'Unrecognized protocol: PMMV4'
       )
     })
-    it('should signed pmmv5 order by MMP', async function () {
+    it('should sign pmmv5 order for MMPv4', async function () {
       const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
         walletType: WalletType.MMP_VERSOIN_4,
@@ -308,10 +306,10 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
     })
-    it('should signed pmmv5 order by EOA', async function () {
+    it('should sign pmmv5 order by EOA', async function () {
       const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
-        walletType: WalletType.MMP_VERSOIN_4,
+        walletType: WalletType.EOA,
         signer: signer,
         quoter: {
           getPrice: () => {
@@ -365,7 +363,7 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
     })
-    it('should signed rfqv1 order by MMP', async () => {
+    it('should sign rfqv1 order for MMPv4', async () => {
       const ethersNetwork = await ethers.provider.getNetwork()
       const chainId = ethersNetwork.chainId
       const usdtHolder = await ethers.provider.getSigner(usdtHolders[chainId])
@@ -515,7 +513,7 @@ describe('NewOrder', function () {
       )
       expect(Number(userUsdtBalanceAfter.sub(userUsdtBalanceBefore))).gt(0)
     }).timeout(360000)
-    it('should signed rfqv1 order by standard ERC1271 MMP', async () => {
+    it('should sign rfqv1 order for a standard ERC1271 MMP contract', async () => {
       const ethersNetwork = await ethers.provider.getNetwork()
       const chainId = ethersNetwork.chainId
       const usdtHolder = await ethers.provider.getSigner(usdtHolders[chainId])
@@ -640,10 +638,10 @@ describe('NewOrder', function () {
       console.log(`recovered.toLowerCase(): ${recovered.toLowerCase()}`)
       console.log(`mmpSigner.address.toLowerCase(): ${mmpSigner.address.toLowerCase()}`)
     }).timeout(360000)
-    it('should signed rfqv1 order by EOA', async function () {
+    it('should sign rfqv1 order by EOA', async function () {
       const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
-        walletType: WalletType.MMP_VERSOIN_4,
+        walletType: WalletType.EOA,
         signer: signer,
         chainID: 1,
         quoter: {
@@ -700,9 +698,9 @@ describe('NewOrder', function () {
       expect(sigBytes[97]).eq(SignatureType.EthSign)
       // verify signature
       const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQ
-      const orderHash = getOrderSignDigest(toRFQOrder(signedOrderResp.order), 1, rfqAddr)
+      const orderSignDigest = getOrderSignDigest(toRFQOrder(signedOrderResp.order), 1, rfqAddr)
       const recovered = utils.verifyMessage(
-        utils.arrayify(orderHash),
+        utils.arrayify(orderSignDigest),
         utils.hexlify(sigBytes.slice(0, 65))
       )
       expect(recovered.toLowerCase()).eq(signer.address.toLowerCase())
