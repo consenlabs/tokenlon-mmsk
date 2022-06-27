@@ -1,12 +1,32 @@
 import {
+  eip712Utils,
   generatePseudoRandomSalt,
   orderHashUtils,
   SignatureType,
   signatureUtils,
+  EIP712Types,
 } from '0x-v2-order-utils'
 import * as ethUtils from 'ethereumjs-util'
 import { utils, Wallet } from 'ethers'
 import { BigNumber, orderBNToString } from '../utils'
+
+const EIP712_ORDER_SCHEMA = {
+  name: 'Order',
+  parameters: [
+    { name: 'makerAddress', type: EIP712Types.Address },
+    { name: 'takerAddress', type: EIP712Types.Address },
+    { name: 'feeRecipientAddress', type: EIP712Types.Address },
+    { name: 'senderAddress', type: EIP712Types.Address },
+    { name: 'makerAssetAmount', type: EIP712Types.Uint256 },
+    { name: 'takerAssetAmount', type: EIP712Types.Uint256 },
+    { name: 'makerFee', type: EIP712Types.Uint256 },
+    { name: 'takerFee', type: EIP712Types.Uint256 },
+    { name: 'expirationTimeSeconds', type: EIP712Types.Uint256 },
+    { name: 'salt', type: EIP712Types.Uint256 },
+    { name: 'makerAssetData', type: EIP712Types.Bytes },
+    { name: 'takerAssetData', type: EIP712Types.Bytes },
+  ],
+}
 
 // changes of PMMV5
 // - taker address point to PMM contract
@@ -25,13 +45,13 @@ export const generateSaltWithFeeFactor = (feeFactor: number) => {
 // +------|---------|---------|---------|---------+
 export async function signWithUserAndFee(
   signer: Wallet,
-  orderHash: string,
+  orderSignDigest: string,
   userAddr: string,
   feeFactor: number
 ): Promise<string> {
   const hash = ethUtils.bufferToHex(
     Buffer.concat([
-      ethUtils.toBuffer(orderHash),
+      ethUtils.toBuffer(orderSignDigest),
       ethUtils.toBuffer(userAddr.toLowerCase()),
       ethUtils.toBuffer(feeFactor > 255 ? feeFactor : [0, feeFactor]),
     ])
@@ -54,8 +74,8 @@ export async function signWithUserAndFee(
 // +------|---------|---------|---------+
 // |  v   |    R    |    S    | type(3) |
 // +------|---------|---------|---------+
-async function signByEOA(orderHash: string, wallet: Wallet): Promise<string> {
-  const hashArray = utils.arrayify(orderHash)
+async function signByEOA(orderSignDigest: string, wallet: Wallet): Promise<string> {
+  const hashArray = utils.arrayify(orderSignDigest)
   let signature = await wallet.signMessage(hashArray)
   signature = signature.slice(2)
   const v = signature.slice(signature.length - 2, signature.length)
@@ -70,12 +90,12 @@ async function signByEOA(orderHash: string, wallet: Wallet): Promise<string> {
 // |  V   |    R    |    S    |userAddr |feeFactor| type(4) |
 // +------|---------|---------|---------|---------|---------+
 async function signByMMPSigner(
-  orderHash: string,
+  orderSignDigest: string,
   userAddr: string,
   feeFactor: number,
   wallet: Wallet
 ): Promise<string> {
-  const walletSign = await signWithUserAndFee(wallet, orderHash, userAddr, feeFactor)
+  const walletSign = await signWithUserAndFee(wallet, orderSignDigest, userAddr, feeFactor)
   return signatureUtils.convertToSignatureWithType(walletSign, SignatureType.Wallet)
 }
 
@@ -91,11 +111,15 @@ export const buildSignedOrder = async (signer: Wallet, order, userAddr, pmm): Pr
     ...order,
     salt: generateSaltWithFeeFactor(feeFactor),
   }
-  const orderHash = orderHashUtils.getOrderHashHex(o)
+  const orderHashBuffer = eip712Utils.structHash(EIP712_ORDER_SCHEMA, o)
+  const orderHash = '0x' + orderHashBuffer.toString('hex')
+  console.log(`orderHash: ${orderHash}`)
+  const orderSignDigest = orderHashUtils.getOrderHashHex(o)
+  console.log(`orderSignDigest: ${orderSignDigest}`)
   const makerWalletSignature =
     signer.address.toLowerCase() == o.makerAddress.toLowerCase()
-      ? await signByEOA(orderHash, signer)
-      : await signByMMPSigner(orderHash, userAddr, feeFactor, signer)
+      ? await signByEOA(orderSignDigest, signer)
+      : await signByMMPSigner(orderSignDigest, userAddr, feeFactor, signer)
 
   const signedOrder = {
     ...o,

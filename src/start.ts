@@ -23,6 +23,7 @@ import { QuoteDispatcher, QuoterProtocol } from './request/marketMaker'
 import tracker from './utils/tracker'
 import { Quoter } from './request/marketMaker/types'
 import { WalletType } from './signer/types'
+import { VERSION } from './handler/version'
 
 // FIXME: construct wallet(signer), quoter and worker separately
 // FIXME: better retry implementation
@@ -77,6 +78,15 @@ export const startMMSK = async (config: ConfigForStart) => {
         config.USE_KEYSTORE ? 'keystore' : 'privateKey'
       }(${config.WALLET_ADDRESS}) not matched`
     }
+
+    console.log({
+      version: VERSION,
+      signerAddress: wallet.address,
+      mmpAddress: config.WALLET_ADDRESS,
+      mmpType: config.WALLET_TYPE || WalletType.MMP_VERSOIN_4,
+      chainId: config.CHAIN_ID,
+      exchangeUrl: config.EXCHANGE_URL,
+    })
 
     // init sentry
     tracker.init({ SENTRY_DSN: config.SENTRY_DSN, NODE_ENV: config.NODE_ENV })
