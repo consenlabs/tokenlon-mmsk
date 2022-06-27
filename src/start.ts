@@ -22,7 +22,7 @@ import { startUpdater } from './worker'
 import { QuoteDispatcher, QuoterProtocol } from './request/marketMaker'
 import tracker from './utils/tracker'
 import { Quoter } from './request/marketMaker/types'
-import { SignatureType } from './signer/types'
+import { SignatureOrder, SignatureType, WalletType } from './signer/types'
 
 // FIXME: construct wallet(signer), quoter and worker separately
 // FIXME: better retry implementation
@@ -99,7 +99,7 @@ export const startMMSK = async (config: ConfigForStart) => {
     app.context.chainID = config.CHAIN_ID || 5
     app.context.quoter = quoter
     app.context.signer = wallet
-    app.context.signatureType = config.SIGNATURE_TYPE || SignatureType.Wallet
+    app.context.walletType = config.WALLET_TYPE || WalletType.MMP_VERSOIN_4
 
     app
       .use(async (ctx, next) => {
