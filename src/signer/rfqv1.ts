@@ -1,8 +1,8 @@
 import { Wallet, utils } from 'ethers'
 import { orderBNToString, BigNumber } from '../utils'
 import { generateSaltWithFeeFactor, signWithUserAndFee } from './pmmv5'
-import { getOrderSignDigest } from './orderHash'
-import { RFQOrder } from './types'
+import { getOrderHash, getOrderSignDigest } from './orderHash'
+import { RFQOrder, WalletType } from './types'
 import * as ethUtils from 'ethereumjs-util'
 import { SignatureType } from './types'
 
@@ -16,11 +16,11 @@ import { SignatureType } from './types'
 // +------|---------|---------|-------------------|---------+
 // |  R   |    S    |    V    | reserved 32 bytes | type(3) |
 // +------|---------|---------|-------------------|---------+
-export async function signByEOA(orderHash: string, wallet: Wallet): Promise<string> {
+export async function signByEOA(orderSignDigest: string, wallet: Wallet): Promise<string> {
   // signature: R+S+V
-  const hashArray = utils.arrayify(orderHash)
+  const hashArray = utils.arrayify(orderSignDigest)
   let signature = await wallet.signMessage(hashArray)
-  var signatureBuffer = Buffer.concat([
+  const signatureBuffer = Buffer.concat([
     ethUtils.toBuffer(signature),
     ethUtils.toBuffer('0x' + '00'.repeat(32)),
     ethUtils.toBuffer(SignatureType.EthSign),
@@ -29,25 +29,55 @@ export async function signByEOA(orderHash: string, wallet: Wallet): Promise<stri
   return signature
 }
 
-// For V4 Maket Maker Proxy (MMP)
-// Signature:
-// +------|---------|---------|---------|---------|---------+
-// |  V   |    R    |    S    |userAddr |feeFactor| type(6) |
-// +------|---------|---------|---------|---------|---------+
-export function signByMMPSigner(
-  orderHash: string,
+export async function signByMMPSigner(
+  orderSignDigest: string,
   userAddr: string,
   feeFactor: number,
   wallet: Wallet,
-  signatureType: SignatureType
-): string {
-  let signature = signWithUserAndFee(wallet, orderHash, userAddr, feeFactor)
-  const signatureBuffer = Buffer.concat([
-    ethUtils.toBuffer(signature),
-    ethUtils.toBuffer(signatureType),
-  ])
-  signature = '0x' + signatureBuffer.toString('hex')
-  return signature
+  walletType: WalletType
+): Promise<string> {
+  if (walletType === WalletType.MMP_VERSOIN_4) {
+    // For V4 Maket Maker Proxy (MMP)
+    // Signature:
+    // +------|---------|---------|---------|---------|---------+
+    // |  V   |    R    |    S    |userAddr |feeFactor| type(6) |
+    // +------|---------|---------|---------|---------|---------+
+    let signature = await signWithUserAndFee(wallet, orderSignDigest, userAddr, feeFactor)
+    const signatureBuffer = Buffer.concat([
+      ethUtils.toBuffer(signature),
+      ethUtils.toBuffer(SignatureType.Wallet),
+    ])
+    signature = '0x' + signatureBuffer.toString('hex')
+    return signature
+  } else if (walletType === WalletType.MMP_VERSION_5) {
+    // |1 byte| 32 byte | 32 byte | 1 byte  |
+    // +------|---------|---------|---------+
+    // |  V   |    R    |    S    | type(6) |
+    // +------|---------|---------|---------+
+    let signature = await wallet.signMessage(utils.arrayify(orderSignDigest))
+    const { v, r, s } = await utils.splitSignature(signature)
+    signature = `0x${v.toString(16)}${r.slice(2)}${s.slice(2)}`
+    const signatureBuffer = Buffer.concat([
+      ethUtils.toBuffer(signature),
+      ethUtils.toBuffer(SignatureType.Wallet),
+    ])
+    signature = '0x' + signatureBuffer.toString('hex')
+    return signature
+  } else if (walletType === WalletType.ERC1271) {
+    // | 32 byte | 32 byte |1 byte| 1 bytes |
+    // +---------|---------|------|---------+
+    // |    R    |    S    |  V   | type(5) |
+    // +---------|---------|------|---------+
+    let signature = await wallet.signMessage(utils.arrayify(orderSignDigest))
+    const signatureBuffer = Buffer.concat([
+      ethUtils.toBuffer(signature),
+      ethUtils.toBuffer(SignatureType.WalletBytes32),
+    ])
+    signature = '0x' + signatureBuffer.toString('hex')
+    return signature
+  } else {
+    throw new Error('Unsupported wallet contract')
+  }
 }
 
 export const buildSignedOrder = async (
@@ -56,7 +86,7 @@ export const buildSignedOrder = async (
   userAddr: string,
   chainId: number,
   rfqAddr: string,
-  signatureType: SignatureType
+  walletType: WalletType
 ): Promise<any> => {
   // inject fee factor to salt
   const feeFactor = order.feeFactor
@@ -64,11 +94,14 @@ export const buildSignedOrder = async (
   order.salt = generateSaltWithFeeFactor(feeFactor)
 
   const rfqOrer = toRFQOrder(order)
-  const orderHash = getOrderSignDigest(rfqOrer, chainId, rfqAddr)
+  const orderHash = getOrderHash(rfqOrer)
+  console.log(`orderHash: ${orderHash}`)
+  const orderSignDigest = getOrderSignDigest(rfqOrer, chainId, rfqAddr)
+  console.log(`orderSignDigest: ${orderSignDigest}`)
   const makerWalletSignature =
     signer.address.toLowerCase() == order.makerAddress.toLowerCase()
-      ? await signByEOA(orderHash, signer)
-      : signByMMPSigner(orderHash, userAddr, feeFactor, signer, signatureType)
+      ? await signByEOA(orderSignDigest, signer)
+      : await signByMMPSigner(orderSignDigest, userAddr, feeFactor, signer, walletType)
 
   const signedOrder = {
     ...order,

@@ -4,7 +4,7 @@ import { RFQOrder } from './types'
 const EIP712_DOMAIN_NAME = 'Tokenlon'
 const EIP712_DOMAIN_VERSION = 'v5'
 
-var RFQ_ORDER_SCHEMA = {
+const RFQ_ORDER_SCHEMA = {
   Order: [
     { name: 'takerAddr', type: 'address' },
     { name: 'makerAddr', type: 'address' },
@@ -34,4 +34,16 @@ export function getOrderSignDigest(order: RFQOrder, chainId: number, address: st
   }
 
   return utils._TypedDataEncoder.hash(domain, RFQ_ORDER_SCHEMA, value)
+}
+
+export function getOrderHash(order: RFQOrder): string {
+  // The data to sign
+  const value = {
+    ...order,
+    takerAssetAmount: order.takerAssetAmount.toString(),
+    makerAssetAmount: order.makerAssetAmount.toString(),
+    salt: order.salt.toString(),
+  }
+
+  return utils._TypedDataEncoder.hashStruct('Order', RFQ_ORDER_SCHEMA, value)
 }

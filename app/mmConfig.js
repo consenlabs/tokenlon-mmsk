@@ -1,4 +1,4 @@
-const SignatureType = require('../lib/signer/types')
+const WalletType = require('../lib/signer/types')
 
 module.exports = {
   //
@@ -9,6 +9,7 @@ module.exports = {
   //
   // Wallet
   WALLET_ADDRESS: process.env.WALLET_ADDRESS,
+  WALLET_TYPE: WalletType.ERC1271,
   USE_KEYSTORE: false,
   WALLET_KEYSTORE: {},
   WALLET_PRIVATE_KEY: process.env.WALLET_PRIVATE_KEY,
@@ -28,5 +29,4 @@ module.exports = {
   SENTRY_DSN: '',
   NODE_ENV: 'PRODUCTION',
   QUOTER: null,
-  SIGNATURE_TYPE: SignatureType.Wallet,
 }

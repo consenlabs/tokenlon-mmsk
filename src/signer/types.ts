@@ -43,3 +43,10 @@ export enum SignatureType {
   Wallet = 6, // 0x06  0x wallet type for signature compatibility
   NSignatureTypes = 7, // 0x07, number of signature types. Always leave at end.
 }
+
+export enum WalletType {
+  EOA = 0,
+  MMP_VERSOIN_4 = 1, // https://gist.github.com/NIC619/a3db1a743175bf592f2db983f17680dd#file-mmpv4-sol-L1236
+  MMP_VERSION_5 = 2, // https://github.com/consenlabs/tokenlon-contracts/blob/e2edf7581b69bc8a40e61ff7fc1cd29674ae4887/contracts/MarketMakerProxy.sol#L19
+  ERC1271 = 3, // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/utils/cryptography/SignatureChecker.sol#L36
+}
