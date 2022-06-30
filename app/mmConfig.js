@@ -1,4 +1,4 @@
-const WalletType = require('../lib/signer/types')
+const types = require('../lib/signer/types')
 
 module.exports = {
   //
@@ -9,7 +9,7 @@ module.exports = {
   //
   // Wallet
   WALLET_ADDRESS: process.env.WALLET_ADDRESS,
-  WALLET_TYPE: WalletType.ERC1271,
+  WALLET_TYPE: types.WalletType.ERC1271,
   USE_KEYSTORE: false,
   WALLET_KEYSTORE: {},
   WALLET_PRIVATE_KEY: process.env.WALLET_PRIVATE_KEY,
