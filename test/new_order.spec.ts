@@ -796,7 +796,7 @@ describe('NewOrder', function () {
     expect(orderHash).eq('0x8d70993864d87daa0b2bae0c2be1c56067f45363680d0dca8657e1e51d1d6a40')
   })
   it('Should forward unsigned orders to signing service', async () => {
-    const url = `http://localhost:3000`
+    // const url = `http://localhost:3000`
     const rfqAddr = '0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F'
     const order = {
       takerAddress: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
@@ -815,8 +815,8 @@ describe('NewOrder', function () {
       Wallet.createRandom().address.toLowerCase(),
       chainId,
       rfqAddr,
-      WalletType.MMP_VERSOIN_4,
-      url
+      WalletType.MMP_VERSOIN_4
+      // url
     )
     console.log(signature)
     expect(signature).not.null
