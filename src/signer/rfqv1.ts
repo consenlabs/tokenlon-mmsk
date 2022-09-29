@@ -5,6 +5,7 @@ import { getOrderHash, getOrderSignDigest } from './orderHash'
 import { RFQOrder, WalletType } from './types'
 import * as ethUtils from 'ethereumjs-util'
 import { SignatureType } from './types'
+import axios from 'axios'
 
 // spec of RFQV1
 // - taker address point to userAddr
@@ -80,13 +81,24 @@ export async function signByMMPSigner(
   }
 }
 
+export const forwardUnsignedOrder = async (signingUrl: string, orderInfo: any): Promise<string> => {
+  const resp = await axios.post(signingUrl, orderInfo)
+  const body = resp.data
+  if (body.signature) {
+    return body.signature
+  } else {
+    throw new Error('Invalid signature')
+  }
+}
+
 export const buildSignedOrder = async (
   signer: Wallet,
   order,
   userAddr: string,
   chainId: number,
   rfqAddr: string,
-  walletType: WalletType
+  walletType: WalletType,
+  signingUrl?: string
 ): Promise<any> => {
   // inject fee factor to salt
   const feeFactor = order.feeFactor
@@ -98,10 +110,21 @@ export const buildSignedOrder = async (
   console.log(`orderHash: ${orderHash}`)
   const orderSignDigest = getOrderSignDigest(rfqOrer, chainId, rfqAddr)
   console.log(`orderSignDigest: ${orderSignDigest}`)
-  const makerWalletSignature =
-    signer.address.toLowerCase() == order.makerAddress.toLowerCase()
-      ? await signByEOA(orderSignDigest, signer)
-      : await signByMMPSigner(orderSignDigest, userAddr, feeFactor, signer, walletType)
+  let makerWalletSignature
+  if (!signingUrl) {
+    makerWalletSignature =
+      signer.address.toLowerCase() == order.makerAddress.toLowerCase()
+        ? await signByEOA(orderSignDigest, signer)
+        : await signByMMPSigner(orderSignDigest, userAddr, feeFactor, signer, walletType)
+  } else {
+    makerWalletSignature = await forwardUnsignedOrder(signingUrl, {
+      rfqOrer: rfqOrer,
+      userAddr: userAddr,
+      signer: signer.address,
+      chainId: chainId,
+      rfqAddr: rfqAddr,
+    })
+  }
 
   const signedOrder = {
     ...order,

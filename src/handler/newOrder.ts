@@ -186,15 +186,13 @@ function getOrderAndFeeFactor(query: QueryInterface, rate, tokenList, tokenConfi
 }
 
 const _getBaseTokenByAddress = (baseTokenAddr, tokenList) => {
-  return tokenList.find(
-    (token) => token.contractAddress.toLowerCase() === baseTokenAddr
-  )
+  return tokenList.find((token) => token.contractAddress.toLowerCase() === baseTokenAddr)
 }
 
 const getBaseTokenByAddress = memoize(_getBaseTokenByAddress)
 
 export const newOrder = async (ctx) => {
-  const { quoter, signer, chainID, walletType } = ctx
+  const { quoter, signer, chainID, walletType, signingUrl } = ctx
   const req: QueryInterface = {
     protocol: Protocol.PMMV5, // by default is v2 protocol
     ...ctx.query, // overwrite from request
@@ -261,7 +259,8 @@ export const newOrder = async (ctx) => {
           userAddr.toLowerCase(),
           chainID,
           config.addressBookV5.RFQ,
-          walletType
+          walletType,
+          signingUrl
         )
         break
       default:

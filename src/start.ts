@@ -82,7 +82,6 @@ export const startMMSK = async (config: ConfigForStart) => {
     console.log({
       version: VERSION,
       signerAddress: wallet.address,
-      mmpAddress: config.WALLET_ADDRESS,
       mmpType: config.WALLET_TYPE || WalletType.MMP_VERSOIN_4,
       chainId: config.CHAIN_ID,
       exchangeUrl: config.EXCHANGE_URL,
@@ -109,6 +108,7 @@ export const startMMSK = async (config: ConfigForStart) => {
     app.context.chainID = config.CHAIN_ID || 5
     app.context.quoter = quoter
     app.context.signer = wallet
+    app.context.signingUrl = config.SIGNING_URL
     app.context.walletType = config.WALLET_TYPE || WalletType.MMP_VERSOIN_4
 
     app
