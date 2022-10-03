@@ -5,16 +5,22 @@ module.exports = {
   EXCHANGE_URL: process.env.EXCHANGE_URL,
   PROVIDER_URL: process.env.PROVIDER_URL,
 
-  // Signing service
+  // Signing
+  /**
+   * If you wanna sign orders in your own service instead of the mmsk,
+   * please set the SIGNING_URL to your service endpoint.
+   * the mmsk would post every unsigned orders to your service.
+   * Remember to set the WALLET_ADDRESS as well.
+   */
   SIGNING_URL: process.env.SIGNING_URL,
-
-  // Static token list
-
-  // Wallet
   WALLET_ADDRESS: process.env.WALLET_ADDRESS,
-  WALLET_TYPE: types.WalletType.ERC1271,
+  WALLET_TYPE: types.WalletType.MMP_VERSION_4,
   USE_KEYSTORE: false,
   WALLET_KEYSTORE: {},
+  /**
+   * If you set the SIGNING_URL and WALLET_ADDRESS, it's unnecessary to set the WALLET_PRIVATE_KEY.
+   * It would forward evey unsigned order to SIGNING_URL instead of signing orders with WALLET_PRIVATE_KEY
+   */
   WALLET_PRIVATE_KEY: process.env.WALLET_PRIVATE_KEY,
 
   // AMM

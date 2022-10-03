@@ -222,7 +222,7 @@ describe('NewOrder', function () {
     it('should raise error for pmmv4 order', async function () {
       expect(
         await newOrder({
-          walletType: WalletType.MMP_VERSOIN_4,
+          walletType: WalletType.MMP_VERSION_4,
           signer: signer,
           quoter: {
             getPrice: () => {
@@ -252,7 +252,7 @@ describe('NewOrder', function () {
     it('should sign pmmv5 order for MMPv4', async function () {
       const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
-        walletType: WalletType.MMP_VERSOIN_4,
+        walletType: WalletType.MMP_VERSION_4,
         signer: Wallet.createRandom(),
         quoter: {
           getPrice: () => {
@@ -414,7 +414,7 @@ describe('NewOrder', function () {
       mockMarkerMakerConfigUpdater.cacheResult = cacheResult
       updaterStack['markerMakerConfigUpdater'] = mockMarkerMakerConfigUpdater
       const signedOrderResp = await newOrder({
-        walletType: WalletType.MMP_VERSOIN_4,
+        walletType: WalletType.MMP_VERSION_4,
         signer: mmpSigner,
         chainID: 1,
         quoter: {
@@ -712,7 +712,7 @@ describe('NewOrder', function () {
   describe('handle token precision and decimals', () => {
     it('should format taker asset amount', async function () {
       const signedOrderResp = await newOrder({
-        walletType: WalletType.MMP_VERSOIN_4,
+        walletType: WalletType.MMP_VERSION_4,
         signer: Wallet.createRandom(),
         quoter: {
           getPrice: () => {
@@ -748,7 +748,7 @@ describe('NewOrder', function () {
     })
     it('should format maker asset amount', async function () {
       const signedOrderResp = await newOrder({
-        walletType: WalletType.MMP_VERSOIN_4,
+        walletType: WalletType.MMP_VERSION_4,
         signer: Wallet.createRandom(),
         quoter: {
           getPrice: () => {
@@ -815,7 +815,7 @@ describe('NewOrder', function () {
       Wallet.createRandom().address.toLowerCase(),
       chainId,
       rfqAddr,
-      WalletType.MMP_VERSOIN_4
+      WalletType.MMP_VERSION_4
       // url
     )
     console.log(signature)

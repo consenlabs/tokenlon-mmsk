@@ -1,7 +1,7 @@
 import { getMarketMakerConfig, getTokenList, getTokenConfigsForMM } from '../request/imToken'
 import { Quoter } from '../request/marketMaker'
 import Updater from './updater'
-import { Wallet } from '../types'
+import { utils } from 'ethers'
 
 const updaterStack = {
   markerMakerConfigUpdater: null as Updater,
@@ -10,11 +10,14 @@ const updaterStack = {
   pairsFromMMUpdater: null as Updater,
 }
 
-const startUpdater = async (quoter: Quoter, wallet: Wallet) => {
+const startUpdater = async (quoter: Quoter, walletAddress: string) => {
+  if (!utils.isAddress(utils.getAddress(walletAddress))) {
+    throw new Error('WALLET_ADDRESS is not valid')
+  }
   updaterStack.markerMakerConfigUpdater = new Updater({
     name: 'markerMakerConfig',
     updater() {
-      return getMarketMakerConfig(wallet.address)
+      return getMarketMakerConfig(walletAddress)
     },
   })
 
@@ -28,7 +31,7 @@ const startUpdater = async (quoter: Quoter, wallet: Wallet) => {
   updaterStack.tokenConfigsFromImtokenUpdater = new Updater({
     name: 'tokenConfigsFromImtoken',
     updater() {
-      return getTokenConfigsForMM(wallet.address)
+      return getTokenConfigsForMM(walletAddress)
     },
   })
 

@@ -6,7 +6,7 @@ See [docs](https://docs.token.im/tokenlon-mmsk/)
 
 ## Setup
 
-Require Node.JS v10 as runtime.
+Require Node.JS v12 as runtime.
 
 Program setup,
 - Create a wallet as order signer, and save it as keystore or private key
@@ -20,8 +20,15 @@ Program setup,
     - PROVIDER_URL, point to ethereum node, like your infura endpoint
     - WALLET_ADDRESS, as your signer wallet address
     - WALLET_PRIVATE_KEY, private key of above wallet, or use WALLET_KEYSTORE
+    - WALLET_TYPE, a market maker's wallet smart contract.
+        - types.WalletType.MMP_VERSION_4 (compatible with PMM protocol, see [example contract](https://gist.github.com/NIC619/a3db1a743175bf592f2db983f17680dd#file-mmpv4-sol-L1236))
+        - types.WalletType.MMP_VERSION_5
+        - types.WalletType.ERC1271
+        - types.WalletType.EOA
+    - SIGNING_URL, If you wanna sign orders in your own service instead of the mmsk,
+   please set the SIGNING_URL to your service endpoint. the mmsk would post every unsigned RFQ orders to your service. Remember to set the WALLET_ADDRESS as well.
     - HTTP_SERVER_ENDPOINT, your backend http server
-    - CHAIN_ID, 1 for mainnet, 42 for testnet(kovan)
+    - CHAIN_ID, 1 for mainnet, 5 for testnet(Goerli)
 - Testing with `node app/check.js`
 - Register contract address & signer address & MMSK server url to Tokenlon team
 

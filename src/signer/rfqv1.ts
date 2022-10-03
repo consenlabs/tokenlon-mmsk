@@ -37,7 +37,7 @@ export async function signByMMPSigner(
   wallet: Wallet,
   walletType: WalletType
 ): Promise<string> {
-  if (walletType === WalletType.MMP_VERSOIN_4) {
+  if (walletType === WalletType.MMP_VERSION_4) {
     // For V4 Maket Maker Proxy (MMP)
     // Signature:
     // +------|---------|---------|---------|---------|---------+
