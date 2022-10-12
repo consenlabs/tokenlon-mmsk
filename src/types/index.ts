@@ -96,6 +96,7 @@ export interface QueryInterface {
   uniqId?: number | string
   userAddr?: string
   protocol?: Protocol
+  salt?: string
 }
 
 export enum Protocol {

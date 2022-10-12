@@ -12,6 +12,7 @@ import * as ethUtils from 'ethereumjs-util'
 import { Signer as TokenlonSigner, AllowanceTarget, USDT, ABI, WETH } from '@tokenlon/sdk'
 import * as crypto from 'crypto'
 import { expect } from 'chai'
+import { generateSaltWithFeeFactor } from '../src/signer/pmmv5'
 const usdtHolders = {
   1: '0x15abb66bA754F05cBC0165A64A11cDed1543dE48',
   5: '0x031BBFB9379c4e6E3F42fb93a9f09C060c7fA037',
@@ -809,16 +810,26 @@ describe('NewOrder', function () {
       expirationTimeSeconds: 1620444917,
       feeFactor: 30,
     }
-    const signature = await buildSignedOrder(
+    const signedOrder = await buildSignedOrder(
       signer,
       order,
       Wallet.createRandom().address.toLowerCase(),
       chainId,
       rfqAddr,
-      WalletType.MMP_VERSION_4
-      // url
+      WalletType.MMP_VERSION_4,
+      {
+        salt: '0x11111111111111111111111111111111',
+      }
     )
-    console.log(signature)
-    expect(signature).not.null
+    console.log(signedOrder)
+    expect(signedOrder).not.null
+  })
+  it('Should generate correct salt', async () => {
+    const givenPrefixSalt = generateSaltWithFeeFactor(30, '0x11111111111111111111111111111111')
+    const salt = generateSaltWithFeeFactor(30)
+    console.log(givenPrefixSalt.toString(16))
+    console.log(salt.toString(16))
+    expect(givenPrefixSalt.toString(16).length).is.eq(64)
+    expect(salt.toString(16).length).is.eq(64)
   })
 })

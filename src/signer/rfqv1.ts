@@ -98,12 +98,17 @@ export const buildSignedOrder = async (
   chainId: number,
   rfqAddr: string,
   walletType: WalletType,
-  signingUrl?: string
+  options?: {
+    signingUrl?: string
+    salt?: string
+  }
 ): Promise<any> => {
   // inject fee factor to salt
   const feeFactor = order.feeFactor
   order.takerAddress = userAddr.toLowerCase()
-  order.salt = generateSaltWithFeeFactor(feeFactor)
+  const salt = options ? options.salt : undefined
+  const signingUrl = options ? options.signingUrl : undefined
+  order.salt = generateSaltWithFeeFactor(feeFactor, salt)
 
   const rfqOrer = toRFQOrder(order)
   const orderHash = getOrderHash(rfqOrer)

@@ -211,9 +211,8 @@ export const newOrder = async (ctx) => {
     const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
     const tokenList = getSupportedTokens()
 
-    const { rate, minAmount, maxAmount, quoteId } = rateBody
+    const { rate, minAmount, maxAmount, quoteId, salt } = rateBody
     const order = getOrderAndFeeFactor(query, rate, tokenList, tokenConfigs, config)
-
     const resp: Response = {
       rate,
       minAmount,
@@ -260,7 +259,10 @@ export const newOrder = async (ctx) => {
           chainID,
           config.addressBookV5.RFQ,
           walletType,
-          signingUrl
+          {
+            signingUrl,
+            salt,
+          }
         )
         break
       default:
