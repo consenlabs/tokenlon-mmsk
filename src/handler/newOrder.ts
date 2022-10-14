@@ -104,12 +104,12 @@ function extractAssetAmounts(
       makerToken.decimal
     )
     takerAssetAmount = fromUnitToDecimalBN(
-      amountBN.dividedBy(rate).toFixed(findSuitablePrecision(takerToken.decimal)),
+      amountBN.dividedBy(rate.toString()).toFixed(findSuitablePrecision(takerToken.decimal)),
       takerToken.decimal
     )
   } else {
     makerAssetAmount = fromUnitToDecimalBN(
-      amountBN.times(rate).toFixed(findSuitablePrecision(makerToken.decimal)),
+      amountBN.times(rate.toString()).toFixed(findSuitablePrecision(makerToken.decimal)),
       makerToken.decimal
     )
     takerAssetAmount = fromUnitToDecimalBN(

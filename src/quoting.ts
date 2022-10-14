@@ -5,7 +5,7 @@ import { BackendError } from './handler/errors'
 import { updaterStack } from './worker'
 import { truncateAmount, toBN, getSupportedTokens } from './utils'
 
-const DISPLAY_PRECEISION = 8
+const DISPLAY_PRECEISION = 16
 
 const getPrefix = (): string => `${updaterStack.markerMakerConfigUpdater.cacheResult.mmId}--`
 
@@ -30,7 +30,7 @@ export const constructQuoteResponse = (indicativePrice: IndicativePriceApiResult
     salt,
     minAmount,
     maxAmount,
-    rate: toBN((+rate).toFixed(DISPLAY_PRECEISION)).toNumber(),
+    rate: (+rate).toFixed(DISPLAY_PRECEISION),
     makerAddress,
   }
 }
