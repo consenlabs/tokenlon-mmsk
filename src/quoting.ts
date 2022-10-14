@@ -18,7 +18,7 @@ export const removeQuoteIdPrefix = (quoteId: string): string => {
 }
 
 export const constructQuoteResponse = (indicativePrice: IndicativePriceApiResult, side: SIDE) => {
-  const { minAmount, maxAmount, message, makerAddress } = indicativePrice
+  const { minAmount, maxAmount, message, makerAddress, salt } = indicativePrice
   if (indicativePrice.exchangeable === false || !indicativePrice.price) {
     throw new BackendError(
       message || `Can't support this trade: ${JSON.stringify(indicativePrice)}`
@@ -27,6 +27,7 @@ export const constructQuoteResponse = (indicativePrice: IndicativePriceApiResult
 
   const rate = side === 'BUY' ? 1 / indicativePrice.price : indicativePrice.price
   return {
+    salt,
     minAmount,
     maxAmount,
     rate: toBN((+rate).toFixed(DISPLAY_PRECEISION)).toNumber(),

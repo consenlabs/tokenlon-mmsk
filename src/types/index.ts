@@ -34,6 +34,7 @@ export interface Wallet {
 export interface ConfigForStart {
   EXCHANGE_URL: string
   PROVIDER_URL: string
+  SIGNING_URL: string
 
   WALLET_ADDRESS: string
   WALLET_TYPE: WalletType
@@ -95,6 +96,7 @@ export interface QueryInterface {
   uniqId?: number | string
   userAddr?: string
   protocol?: Protocol
+  salt?: string
 }
 
 export enum Protocol {

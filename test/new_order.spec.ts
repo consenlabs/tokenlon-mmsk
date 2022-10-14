@@ -4,7 +4,7 @@ import { newOrder } from '../src/handler'
 import { updaterStack, Updater } from '../src/worker'
 import { NULL_ADDRESS } from '../src/constants'
 import { Protocol } from '../src/types'
-import { toRFQOrder } from '../src/signer/rfqv1'
+import { buildSignedOrder, toRFQOrder } from '../src/signer/rfqv1'
 import { SignatureType, WalletType } from '../src/signer/types'
 import { getOrderSignDigest } from '../src/signer/orderHash'
 import { BigNumber } from '../src/utils'
@@ -12,6 +12,7 @@ import * as ethUtils from 'ethereumjs-util'
 import { Signer as TokenlonSigner, AllowanceTarget, USDT, ABI, WETH } from '@tokenlon/sdk'
 import * as crypto from 'crypto'
 import { expect } from 'chai'
+import { generateSaltWithFeeFactor } from '../src/signer/pmmv5'
 const usdtHolders = {
   1: '0x15abb66bA754F05cBC0165A64A11cDed1543dE48',
   5: '0x031BBFB9379c4e6E3F42fb93a9f09C060c7fA037',
@@ -222,7 +223,7 @@ describe('NewOrder', function () {
     it('should raise error for pmmv4 order', async function () {
       expect(
         await newOrder({
-          walletType: WalletType.MMP_VERSOIN_4,
+          walletType: WalletType.MMP_VERSION_4,
           signer: signer,
           quoter: {
             getPrice: () => {
@@ -252,7 +253,7 @@ describe('NewOrder', function () {
     it('should sign pmmv5 order for MMPv4', async function () {
       const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
-        walletType: WalletType.MMP_VERSOIN_4,
+        walletType: WalletType.MMP_VERSION_4,
         signer: Wallet.createRandom(),
         quoter: {
           getPrice: () => {
@@ -414,7 +415,7 @@ describe('NewOrder', function () {
       mockMarkerMakerConfigUpdater.cacheResult = cacheResult
       updaterStack['markerMakerConfigUpdater'] = mockMarkerMakerConfigUpdater
       const signedOrderResp = await newOrder({
-        walletType: WalletType.MMP_VERSOIN_4,
+        walletType: WalletType.MMP_VERSION_4,
         signer: mmpSigner,
         chainID: 1,
         quoter: {
@@ -712,7 +713,7 @@ describe('NewOrder', function () {
   describe('handle token precision and decimals', () => {
     it('should format taker asset amount', async function () {
       const signedOrderResp = await newOrder({
-        walletType: WalletType.MMP_VERSOIN_4,
+        walletType: WalletType.MMP_VERSION_4,
         signer: Wallet.createRandom(),
         quoter: {
           getPrice: () => {
@@ -748,7 +749,7 @@ describe('NewOrder', function () {
     })
     it('should format maker asset amount', async function () {
       const signedOrderResp = await newOrder({
-        walletType: WalletType.MMP_VERSOIN_4,
+        walletType: WalletType.MMP_VERSION_4,
         signer: Wallet.createRandom(),
         quoter: {
           getPrice: () => {
@@ -794,5 +795,41 @@ describe('NewOrder', function () {
     }
     const orderHash = getOrderSignDigest(order, 1, rfqAddr)
     expect(orderHash).eq('0x8d70993864d87daa0b2bae0c2be1c56067f45363680d0dca8657e1e51d1d6a40')
+  })
+  it('Should forward unsigned orders to signing service', async () => {
+    // const url = `http://localhost:3000`
+    const rfqAddr = '0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F'
+    const order = {
+      takerAddress: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
+      makerAddress: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64',
+      takerAssetAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+      makerAssetAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+      takerAssetAmount: new BigNumber('0x0de0b6b3a7640000'),
+      makerAssetAmount: new BigNumber('0x05f5e100'),
+      salt: new BigNumber('0x44df74b1c54e9792989c61fedcef6f94b534b58933cde70bc456ec74cf4d3610'),
+      expirationTimeSeconds: 1620444917,
+      feeFactor: 30,
+    }
+    const signedOrder = await buildSignedOrder(
+      signer,
+      order,
+      Wallet.createRandom().address.toLowerCase(),
+      chainId,
+      rfqAddr,
+      WalletType.MMP_VERSION_4,
+      {
+        salt: '0x11111111111111111111111111111111',
+      }
+    )
+    console.log(signedOrder)
+    expect(signedOrder).not.null
+  })
+  it('Should generate correct salt', async () => {
+    const givenPrefixSalt = generateSaltWithFeeFactor(30, '0x11111111111111111111111111111111')
+    const salt = generateSaltWithFeeFactor(30)
+    console.log(givenPrefixSalt.toString(16))
+    console.log(salt.toString(16))
+    expect(givenPrefixSalt.toString(16).length).is.eq(64)
+    expect(salt.toString(16).length).is.eq(64)
   })
 })

@@ -29,6 +29,7 @@ export interface IndicativePriceApiResult {
   price: number
   makerAddress?: string
   message?: string
+  salt?: string
 }
 
 export interface PriceApiParams extends IndicativePriceApiParams {

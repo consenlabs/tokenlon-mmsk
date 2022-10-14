@@ -33,10 +33,24 @@ const EIP712_ORDER_SCHEMA = {
 // - fee factor from salt
 // - user address from fee recipient
 
-export const generateSaltWithFeeFactor = (feeFactor: number) => {
-  const feeHex = utils.hexZeroPad('0x' + feeFactor.toString(16), 2)
+export const generateSaltWithFeeFactor = (feeFactor: number, prefixSalt?: string) => {
   // append 001e = 30 (fee factor to salt)
-  return new BigNumber(generatePseudoRandomSalt().toString(16).slice(0, -4) + feeHex.slice(2), 16)
+  const feeHex = utils.hexZeroPad('0x' + feeFactor.toString(16), 2)
+  if (prefixSalt) {
+    if (!(prefixSalt.toString().length === 32 || prefixSalt.toString().length === 34)) {
+      throw new Error('Invalid salt from market maker')
+    }
+    if (prefixSalt.toString().startsWith('0x')) {
+      prefixSalt = prefixSalt.toString().slice(2)
+    }
+    const postfixSalt = `${generatePseudoRandomSalt()
+      .toString(16)
+      .slice(0, 32)
+      .slice(0, -4)}${feeHex.slice(2)}`
+    return new BigNumber(`${prefixSalt}${postfixSalt}`, 16)
+  } else {
+    return new BigNumber(generatePseudoRandomSalt().toString(16).slice(0, -4) + feeHex.slice(2), 16)
+  }
 }
 
 // Signature:

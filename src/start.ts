@@ -28,7 +28,7 @@ import { VERSION } from './handler/version'
 // FIXME: construct wallet(signer), quoter and worker separately
 // FIXME: better retry implementation
 const beforeStart = async (config: ConfigForStart, triedTimes?: number) => {
-  const wallet = getWallet()
+  // const wallet = getWallet()
   triedTimes = triedTimes || 0
   try {
     let quoter: Quoter
@@ -37,7 +37,7 @@ const beforeStart = async (config: ConfigForStart, triedTimes?: number) => {
     } else {
       quoter = new QuoteDispatcher(config.HTTP_SERVER_ENDPOINT, QuoterProtocol.HTTP)
     }
-    await startUpdater(quoter, wallet)
+    await startUpdater(quoter, config.WALLET_ADDRESS)
     return quoter
   } catch (e) {
     triedTimes += 1
@@ -69,21 +69,25 @@ export const startMMSK = async (config: ConfigForStart) => {
   const app = new Koa()
   const router = new Router()
   const MMSK_SERVER_PORT = config.MMSK_SERVER_PORT || 80
-
+  let wallet
   setConfig(config)
   try {
-    const wallet = getWallet()
-    if (wallet.address.toLowerCase() != config.WALLET_ADDRESS.toLowerCase()) {
-      throw `wallet's address${wallet.address} and ${
-        config.USE_KEYSTORE ? 'keystore' : 'privateKey'
-      }(${config.WALLET_ADDRESS}) not matched`
+    console.log(config.SIGNING_URL)
+    if (!config.SIGNING_URL) {
+      wallet = getWallet()
+      if (!wallet) {
+        throw new Error(`Please set either WALLET_PRIVATE_KEY or SIGNING_URL`)
+      }
+      if (wallet.address.toLowerCase() != config.WALLET_ADDRESS.toLowerCase()) {
+        throw `wallet's address${wallet.address} and ${
+          config.USE_KEYSTORE ? 'keystore' : 'privateKey'
+        }(${config.WALLET_ADDRESS}) not matched`
+      }
     }
-
     console.log({
       version: VERSION,
-      signerAddress: wallet.address,
-      mmpAddress: config.WALLET_ADDRESS,
-      mmpType: config.WALLET_TYPE || WalletType.MMP_VERSOIN_4,
+      signerAddress: config.WALLET_ADDRESS,
+      mmpType: config.WALLET_TYPE || WalletType.MMP_VERSION_4,
       chainId: config.CHAIN_ID,
       exchangeUrl: config.EXCHANGE_URL,
     })
@@ -108,8 +112,13 @@ export const startMMSK = async (config: ConfigForStart) => {
 
     app.context.chainID = config.CHAIN_ID || 5
     app.context.quoter = quoter
-    app.context.signer = wallet
-    app.context.walletType = config.WALLET_TYPE || WalletType.MMP_VERSOIN_4
+    if (wallet) {
+      app.context.signer = wallet
+    }
+    if (config.SIGNING_URL) {
+      app.context.signingUrl = config.SIGNING_URL
+    }
+    app.context.walletType = config.WALLET_TYPE || WalletType.MMP_VERSION_4
 
     app
       .use(async (ctx, next) => {
