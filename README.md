@@ -39,11 +39,11 @@ Program setup,
         deadline: 1620444917,
         feeFactor: 30,
         salt: '54987026777386128963216107663301166813737035846370728350988439404382800511006'
-    },
-    userAddr: '0x87fca7135c1c54876a62dc4922da3ce45f38debf',
-    signer: '0xb5419119e04498C3eC43A9468D6480aF0DAE3A0c',
-    chainId: 1,
-    rfqAddr: '0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F'
+      },
+      userAddr: '0x87fca7135c1c54876a62dc4922da3ce45f38debf',
+      signer: '0xb5419119e04498C3eC43A9468D6480aF0DAE3A0c',
+      chainId: 1,
+      rfqAddr: '0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F'
     }
     ```
     An example response the signing service should return
