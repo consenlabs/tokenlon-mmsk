@@ -26,8 +26,33 @@ Program setup,
         - types.WalletType.ERC1271
         - types.WalletType.EOA
     - SIGNING_URL, If you wanna sign orders in your own service instead of the mmsk,
-   please set the SIGNING_URL to your service endpoint. the mmsk would post every unsigned RFQ orders to your service. Remember to set the WALLET_ADDRESS as well.
-    - HTTP_SERVER_ENDPOINT, your backend http server
+   please set the SIGNING_URL to your service endpoint. the mmsk would post every unsigned RFQ orders to your service. Remember to set the WALLET_ADDRESS as well. An example request is shown below:
+    ```
+    {
+      rfqOrer: {
+        takerAddr: '0x87fca7135c1c54876a62dc4922da3ce45f38debf',
+        makerAddr: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64',
+        takerAssetAddr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+        makerAssetAddr: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        takerAssetAmount: '1000000000000000000',
+        makerAssetAmount: '100000000',
+        deadline: 1620444917,
+        feeFactor: 30,
+        salt: '54987026777386128963216107663301166813737035846370728350988439404382800511006'
+    },
+    userAddr: '0x87fca7135c1c54876a62dc4922da3ce45f38debf',
+    signer: '0xb5419119e04498C3eC43A9468D6480aF0DAE3A0c',
+    chainId: 1,
+    rfqAddr: '0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F'
+    }
+    ```
+    An example response the signing service should return
+    ```
+    {
+      signature: "0x122344..."
+    }
+    ```
+    - HTTP_SERVER_ENDPOINT, your backend http quoting server
     - CHAIN_ID, 1 for mainnet, 5 for testnet(Goerli)
 - Testing with `node app/check.js`
 - Register contract address & signer address & MMSK server url to Tokenlon team
