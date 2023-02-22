@@ -1,4 +1,4 @@
-import { Wallet, utils, Signer } from 'ethers'
+import { Wallet, utils } from 'ethers'
 import { orderBNToString, BigNumber } from '../utils'
 import { generateSaltWithFeeFactor, signWithUserAndFee } from './pmmv5'
 import { getOrderHash, getOrderSignDigest } from './orderHash'
