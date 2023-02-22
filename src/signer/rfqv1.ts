@@ -126,18 +126,21 @@ export const signRFQTx = async (
     makerAddr: signedOrder.makerAddr,
     takerAssetAddr: signedOrder.takerAssetAddr,
     makerAssetAddr: signedOrder.makerAssetAddr,
-    takerAssetAmount: signedOrder.takerAssetAmount,
-    makerAssetAmount: signedOrder.makerAssetAmount,
+    takerAssetAmount: signedOrder.takerAssetAmount.toString(),
+    makerAssetAmount: signedOrder.makerAssetAmount.toString(),
     takerAddr: signedOrder.takerAddr,
     receiverAddr: receiverAddr,
-    salt: signedOrder.salt,
-    deadline: signedOrder.deadline,
-    feeFactor: signedOrder.feeFactor,
+    salt: signedOrder.salt.toString(),
+    deadline: signedOrder.deadline.toString(),
+    feeFactor: signedOrder.feeFactor.toString(),
   }
 
   const signatureTypedData = await user._signTypedData(domain, types, value)
-  const eip712sig = signatureTypedData + signatureType
-
+  const signature = Buffer.concat([
+    ethUtils.toBuffer(signatureTypedData),
+    ethUtils.toBuffer(signatureType),
+  ])
+  const eip712sig = '0x' + signature.toString('hex')
   return eip712sig
 }
 

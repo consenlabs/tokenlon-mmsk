@@ -670,6 +670,7 @@ describe('NewOrder', function () {
       expect(signedOrderResp).is.not.null
       // verify data object
       const order = signedOrderResp.order
+      console.log(order)
       expect(order).is.not.null
       expect(order.protocol).eq(Protocol.RFQV1)
       expect(order.quoteId).eq('1--echo-testing-8888')
@@ -695,14 +696,49 @@ describe('NewOrder', function () {
       expect(order.takerFee).eq('0')
       // verify signature type
       const sigBytes = utils.arrayify(signedOrderResp.order.makerWalletSignature)
-      expect(sigBytes.length).eq(98)
-      expect(sigBytes[97]).eq(SignatureType.EthSign)
+      expect(sigBytes.length).eq(66)
+      expect(sigBytes[65]).eq(SignatureType.EIP712)
       // verify signature
       const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQ
-      const orderSignDigest = getOrderSignDigest(toRFQOrder(signedOrderResp.order), 1, rfqAddr)
-      const recovered = utils.verifyMessage(
-        utils.arrayify(orderSignDigest),
-        utils.hexlify(sigBytes.slice(0, 65))
+      const signedOrder = toRFQOrder(signedOrderResp.order)
+      const domain = {
+        name: 'Tokenlon',
+        version: 'v5',
+        chainId: chainId,
+        verifyingContract: rfqAddr,
+      }
+      const types = {
+        fillWithPermit: [
+          { name: 'makerAddr', type: 'address' },
+          { name: 'takerAssetAddr', type: 'address' },
+          { name: 'makerAssetAddr', type: 'address' },
+          { name: 'takerAssetAmount', type: 'uint256' },
+          { name: 'makerAssetAmount', type: 'uint256' },
+          { name: 'takerAddr', type: 'address' },
+          { name: 'receiverAddr', type: 'address' },
+          { name: 'salt', type: 'uint256' },
+          { name: 'deadline', type: 'uint256' },
+          { name: 'feeFactor', type: 'uint256' },
+        ],
+      }
+      // The data to sign
+      const value = {
+        makerAddr: signedOrder.makerAddr,
+        takerAssetAddr: signedOrder.takerAssetAddr,
+        makerAssetAddr: signedOrder.makerAssetAddr,
+        takerAssetAmount: signedOrder.takerAssetAmount,
+        makerAssetAmount: signedOrder.makerAssetAmount,
+        takerAddr: signedOrder.takerAddr,
+        receiverAddr: signedOrder.makerAddr,
+        salt: signedOrder.salt,
+        deadline: signedOrder.deadline,
+        feeFactor: signedOrder.feeFactor,
+      }
+      const recovered = ethers.utils.verifyTypedData(
+        domain,
+        types,
+        value,
+        signedOrderResp.order.makerWalletSignature.slice(0, -2)
       )
       expect(recovered.toLowerCase()).eq(signer.address.toLowerCase())
       // verify random values
