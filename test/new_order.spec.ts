@@ -565,7 +565,7 @@ describe('NewOrder', function () {
       mockMarkerMakerConfigUpdater.cacheResult = cacheResult
       updaterStack['markerMakerConfigUpdater'] = mockMarkerMakerConfigUpdater
       const signedOrderResp = await newOrder({
-        walletType: WalletType.ERC1271,
+        walletType: WalletType.ERC1271_EIP712_EIP191,
         signer: mmpSigner,
         chainID: 1,
         quoter: {
