@@ -707,15 +707,15 @@ describe('NewOrder', function () {
         chainId: chainId,
         verifyingContract: rfqAddr,
       }
+      // The named list of all type definitions
       const types = {
-        fillWithPermit: [
+        Order: [
+          { name: 'takerAddr', type: 'address' },
           { name: 'makerAddr', type: 'address' },
           { name: 'takerAssetAddr', type: 'address' },
           { name: 'makerAssetAddr', type: 'address' },
           { name: 'takerAssetAmount', type: 'uint256' },
           { name: 'makerAssetAmount', type: 'uint256' },
-          { name: 'takerAddr', type: 'address' },
-          { name: 'receiverAddr', type: 'address' },
           { name: 'salt', type: 'uint256' },
           { name: 'deadline', type: 'uint256' },
           { name: 'feeFactor', type: 'uint256' },
@@ -723,16 +723,15 @@ describe('NewOrder', function () {
       }
       // The data to sign
       const value = {
+        takerAddr: signedOrder.takerAddr,
         makerAddr: signedOrder.makerAddr,
         takerAssetAddr: signedOrder.takerAssetAddr,
         makerAssetAddr: signedOrder.makerAssetAddr,
-        takerAssetAmount: signedOrder.takerAssetAmount,
-        makerAssetAmount: signedOrder.makerAssetAmount,
-        takerAddr: signedOrder.takerAddr,
-        receiverAddr: signedOrder.makerAddr,
-        salt: signedOrder.salt,
-        deadline: signedOrder.deadline,
-        feeFactor: signedOrder.feeFactor,
+        takerAssetAmount: signedOrder.takerAssetAmount.toString(),
+        makerAssetAmount: signedOrder.makerAssetAmount.toString(),
+        salt: signedOrder.salt.toString(),
+        deadline: signedOrder.deadline.toString(),
+        feeFactor: signedOrder.feeFactor.toString(),
       }
       const recovered = ethers.utils.verifyTypedData(
         domain,

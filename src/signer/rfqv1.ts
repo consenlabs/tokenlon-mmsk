@@ -91,12 +91,12 @@ export const forwardUnsignedOrder = async (signingUrl: string, orderInfo: any): 
   }
 }
 
-export const signRFQTx = async (
+export const signRFQOrder = async (
   chainId: number,
   rfqAddr: string,
-  signedOrder: any,
-  user: Wallet,
-  receiverAddr: string,
+  order: any,
+  maker: Wallet,
+  feeFactor = 30,
   signatureType = SignatureType.EIP712
 ) => {
   const domain = {
@@ -106,15 +106,15 @@ export const signRFQTx = async (
     verifyingContract: rfqAddr,
   }
 
+  // The named list of all type definitions
   const types = {
-    fillWithPermit: [
+    Order: [
+      { name: 'takerAddr', type: 'address' },
       { name: 'makerAddr', type: 'address' },
       { name: 'takerAssetAddr', type: 'address' },
       { name: 'makerAssetAddr', type: 'address' },
       { name: 'takerAssetAmount', type: 'uint256' },
       { name: 'makerAssetAmount', type: 'uint256' },
-      { name: 'takerAddr', type: 'address' },
-      { name: 'receiverAddr', type: 'address' },
       { name: 'salt', type: 'uint256' },
       { name: 'deadline', type: 'uint256' },
       { name: 'feeFactor', type: 'uint256' },
@@ -123,24 +123,24 @@ export const signRFQTx = async (
 
   // The data to sign
   const value = {
-    makerAddr: signedOrder.makerAddr,
-    takerAssetAddr: signedOrder.takerAssetAddr,
-    makerAssetAddr: signedOrder.makerAssetAddr,
-    takerAssetAmount: signedOrder.takerAssetAmount.toString(),
-    makerAssetAmount: signedOrder.makerAssetAmount.toString(),
-    takerAddr: signedOrder.takerAddr,
-    receiverAddr: receiverAddr,
-    salt: signedOrder.salt.toString(),
-    deadline: signedOrder.deadline.toString(),
-    feeFactor: signedOrder.feeFactor.toString(),
+    takerAddr: order.takerAddr,
+    makerAddr: order.makerAddr,
+    takerAssetAddr: order.takerAssetAddr,
+    makerAssetAddr: order.makerAssetAddr,
+    takerAssetAmount: order.takerAssetAmount.toString(),
+    makerAssetAmount: order.makerAssetAmount.toString(),
+    salt: order.salt.toString(),
+    deadline: order.deadline.toString(),
+    feeFactor: feeFactor.toString(),
   }
 
-  const signatureTypedData = await user._signTypedData(domain, types, value)
+  const signatureTypedData = await maker._signTypedData(domain, types, value)
   const signature = Buffer.concat([
     ethUtils.toBuffer(signatureTypedData),
     ethUtils.toBuffer(signatureType),
   ])
   const eip712sig = '0x' + signature.toString('hex')
+
   return eip712sig
 }
 
@@ -172,22 +172,22 @@ export const buildSignedOrder = async (
   let makerWalletSignature
   if (!signingUrl) {
     if (signer.address.toLowerCase() == order.makerAddress.toLowerCase()) {
-      makerWalletSignature = await signRFQTx(
+      makerWalletSignature = await signRFQOrder(
         chainId,
         rfqAddr,
         rfqOrer,
         signer,
-        rfqOrer.makerAddr,
+        rfqOrer.feeFactor,
         SignatureType.EIP712
       )
     } else if (walletType === WalletType.ERC1271_EIP712) {
       // standard ERC1271 + ERC712 signature
-      makerWalletSignature = await signRFQTx(
+      makerWalletSignature = await signRFQOrder(
         chainId,
         rfqAddr,
         rfqOrer,
         signer,
-        rfqOrer.makerAddr,
+        rfqOrer.feeFactor,
         SignatureType.WalletBytes32
       )
     } else {
