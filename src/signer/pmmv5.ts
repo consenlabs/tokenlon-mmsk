@@ -167,7 +167,7 @@ export const buildSignedOrder = async (
       userAddr: userAddr,
       signer: signer.address,
       chainId: chainId,
-      rfqAddr: pmm,
+      pmmAddr: pmm,
     })
   }
 
