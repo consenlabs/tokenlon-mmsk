@@ -248,7 +248,12 @@ export const newOrder = async (ctx) => {
           signer,
           order,
           userAddr.toLowerCase(),
-          config.addressBookV5.PMM
+          chainID,
+          config.addressBookV5.PMM,
+          {
+            signingUrl,
+            salt,
+          }
         )
         break
       case Protocol.RFQV1:
