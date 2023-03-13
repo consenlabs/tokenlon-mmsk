@@ -32,7 +32,7 @@
   "devDependencies": {
     "@0x/typescript-typings": "^5.1.1",
     "@nomiclabs/hardhat-ethers": "2.0.2",
-    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.5",
     "@tokenlon/sdk": "^5.2.0-lo.alpha.5",
     "@types/chai": "^4.2.11",
     "@types/lodash": "^4.14.175",
@@ -56,7 +56,7 @@
   },
   "dependencies": {
     "@0x/contract-addresses": "^4.11.0",
-    "@0x/subproviders": "6.0.8",
+    "@0x/subproviders": "7.0.1",
     "@babel/runtime": "7.3.1",
     "@ethereumjs/tx": "^3.5.0",
     "@koalex/koa-json-rpc": "^1.0.3",
@@ -70,7 +70,7 @@
     "binance-api-node": "0.8.18",
     "crypto-random-string": "^3.3.0",
     "dotenv": "^8.2.0",
-    "ethereum-waffle": "3.4.0",
+    "ethereum-waffle": "4.0.10",
     "ethereumjs-util": "^7.0.4",
     "ethers": "^5.5.2",
     "koa": "2.5.3",
