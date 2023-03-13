@@ -8,6 +8,7 @@ import {
 } from '0x-v2-order-utils'
 import * as ethUtils from 'ethereumjs-util'
 import { utils, Wallet } from 'ethers'
+import axios from 'axios'
 import { BigNumber, orderBNToString } from '../utils'
 
 const EIP712_ORDER_SCHEMA = {
@@ -113,8 +114,29 @@ async function signByMMPSigner(
   return signatureUtils.convertToSignatureWithType(walletSign, SignatureType.Wallet)
 }
 
+export const forwardUnsignedOrder = async (signingUrl: string, orderInfo: any): Promise<string> => {
+  const resp = await axios.post(signingUrl, orderInfo)
+  const body = resp.data
+  if (body.signature) {
+    return body.signature
+  } else {
+    throw new Error('Invalid signature')
+  }
+}
+
 // Move fee factor to salt field
-export const buildSignedOrder = async (signer: Wallet, order, userAddr, pmm): Promise<any> => {
+export const buildSignedOrder = async (
+  signer: Wallet,
+  order,
+  userAddr,
+  chainId,
+  pmm,
+  options?: {
+    signingUrl?: string
+    salt?: string
+  }
+): Promise<any> => {
+  const signingUrl = options ? options.signingUrl : undefined
   const feeFactor = order.feeFactor
   order.takerAddress = pmm.toLowerCase()
   order.senderAddress = pmm.toLowerCase()
@@ -130,10 +152,24 @@ export const buildSignedOrder = async (signer: Wallet, order, userAddr, pmm): Pr
   console.log(`orderHash: ${orderHash}`)
   const orderSignDigest = orderHashUtils.getOrderHashHex(o)
   console.log(`orderSignDigest: ${orderSignDigest}`)
-  const makerWalletSignature =
-    signer.address.toLowerCase() == o.makerAddress.toLowerCase()
-      ? await signByEOA(orderSignDigest, signer)
-      : await signByMMPSigner(orderSignDigest, userAddr, feeFactor, signer)
+  let makerWalletSignature
+  if (!signingUrl) {
+    makerWalletSignature =
+      signer.address.toLowerCase() == o.makerAddress.toLowerCase()
+        ? await signByEOA(orderSignDigest, signer)
+        : await signByMMPSigner(orderSignDigest, userAddr, feeFactor, signer)
+  } else {
+    makerWalletSignature = await forwardUnsignedOrder(signingUrl, {
+      pmmOrder: o,
+      feeFactor: feeFactor,
+      orderHash: orderHash,
+      orderSignDigest: orderSignDigest,
+      userAddr: userAddr,
+      signer: signer.address,
+      chainId: chainId,
+      rfqAddr: pmm,
+    })
+  }
 
   const signedOrder = {
     ...o,
