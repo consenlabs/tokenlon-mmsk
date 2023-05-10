@@ -50,20 +50,6 @@ export async function signByMMPSigner(
     ])
     signature = '0x' + signatureBuffer.toString('hex')
     return signature
-  } else if (walletType === WalletType.MMP_VERSION_5) {
-    // |1 byte| 32 byte | 32 byte | 1 byte  |
-    // +------|---------|---------|---------+
-    // |  V   |    R    |    S    | type(6) |
-    // +------|---------|---------|---------+
-    let signature = await wallet.signMessage(utils.arrayify(orderSignDigest))
-    const { v, r, s } = await utils.splitSignature(signature)
-    signature = `0x${v.toString(16)}${r.slice(2)}${s.slice(2)}`
-    const signatureBuffer = Buffer.concat([
-      ethUtils.toBuffer(signature),
-      ethUtils.toBuffer(SignatureType.Wallet),
-    ])
-    signature = '0x' + signatureBuffer.toString('hex')
-    return signature
   } else if (walletType === WalletType.ERC1271_EIP712_EIP191) {
     // | 32 byte | 32 byte |1 byte| 1 bytes |
     // +---------|---------|------|---------+

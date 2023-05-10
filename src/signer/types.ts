@@ -46,7 +46,7 @@ export enum SignatureType {
 
 export enum WalletType {
   MMP_VERSION_4 = 1, // https://gist.github.com/NIC619/a3db1a743175bf592f2db983f17680dd#file-mmpv4-sol-L1236
-  MMP_VERSION_5 = 2, // https://github.com/consenlabs/tokenlon-contracts/blob/e2edf7581b69bc8a40e61ff7fc1cd29674ae4887/contracts/MarketMakerProxy.sol#L19
+  MMP_VERSION_5 = 2, // DEPRECATED
   ERC1271_EIP712_EIP191 = 3, // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/utils/cryptography/SignatureChecker.sol#L36
   EOA = 4, // less security for market makers
   ERC1271_EIP712 = 5,
