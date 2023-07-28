@@ -33,6 +33,23 @@ export interface RFQOrder {
   feeFactor: number
 }
 
+export interface Offer {
+  taker: string
+  maker: string
+  takerToken: string
+  takerTokenAmount: BigNumber
+  makerToken: string
+  makerTokenAmount: BigNumber
+  expiry: number
+  salt: BigNumber | string
+}
+
+export interface RFQV2Order {
+  offer: Offer
+  recipient: string
+  feeFactor: number
+}
+
 export enum SignatureType {
   Illegal = 0, // 0x00, default value
   Invalid = 1, // 0x01

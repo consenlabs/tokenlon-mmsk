@@ -8,6 +8,7 @@ import { addQuoteIdPrefix, constructQuoteResponse, preprocessQuote } from '../qu
 
 import { assetDataUtils } from '0x-v2-order-utils'
 import { buildSignedOrder as buildRFQV1SignedOrder } from '../signer/rfqv1'
+import { buildSignedOrder as buildRFQV2SignedOrder } from '../signer/rfqv2'
 import { buildSignedOrder } from '../signer/pmmv5'
 import { buildSignedOrder as buildAMMV1Order } from '../signer/ammv1'
 import { buildSignedOrder as buildAMMV2Order } from '../signer/ammv2'
@@ -263,6 +264,20 @@ export const newOrder = async (ctx) => {
           userAddr.toLowerCase(),
           chainID,
           config.addressBookV5.RFQ,
+          walletType,
+          {
+            signingUrl,
+            salt,
+          }
+        )
+        break
+      case Protocol.RFQV2:
+        resp.order = await buildRFQV2SignedOrder(
+          signer,
+          order,
+          userAddr.toLowerCase(),
+          chainID,
+          config.addressBookV5.RFQV2,
           walletType,
           {
             signingUrl,

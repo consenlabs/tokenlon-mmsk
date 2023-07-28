@@ -104,4 +104,5 @@ export enum Protocol {
   AMMV2 = 'AMMV2',
   PMMV5 = 'PMMV5',
   RFQV1 = 'RFQV1',
+  RFQV2 = 'RFQV2',
 }
