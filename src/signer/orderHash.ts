@@ -1,5 +1,5 @@
 import { utils } from 'ethers'
-import { RFQOrder, RFQV2Order } from './types'
+import { Offer, RFQOrder } from './types'
 
 const EIP712_DOMAIN_NAME = 'Tokenlon'
 const EIP712_DOMAIN_VERSION = 'v5'
@@ -19,11 +19,6 @@ const RFQ_ORDER_SCHEMA = {
 }
 
 const RFQ_V2_ORDER_SCHEMA = {
-  RFQOrder: [
-    { name: 'offer', type: 'Offer' },
-    { name: 'recipient', type: 'address' },
-    { name: 'feeFactor', type: 'uint256' },
-  ],
   Offer: [
     { name: 'taker', type: 'address' },
     { name: 'maker', type: 'address' },
@@ -54,11 +49,7 @@ export function getOrderSignDigest(order: RFQOrder, chainId: number, address: st
   return utils._TypedDataEncoder.hash(domain, RFQ_ORDER_SCHEMA, value)
 }
 
-export function getRFQV2OrderSignDigest(
-  order: RFQV2Order,
-  chainId: number,
-  address: string
-): string {
+export function getOfferSignDigest(order: Offer, chainId: number, address: string): string {
   const domain = {
     name: EIP712_DOMAIN_NAME,
     version: EIP712_DOMAIN_VERSION,
@@ -81,6 +72,6 @@ export function getOrderHash(order: RFQOrder): string {
   return utils._TypedDataEncoder.hashStruct('Order', RFQ_ORDER_SCHEMA, value)
 }
 
-export function getRFQV2OrderHash(order: RFQV2Order): string {
-  return utils._TypedDataEncoder.hashStruct('RFQOrder', RFQ_V2_ORDER_SCHEMA, order)
+export function getOfferHash(order: Offer): string {
+  return utils._TypedDataEncoder.hashStruct('Offer', RFQ_V2_ORDER_SCHEMA, order)
 }

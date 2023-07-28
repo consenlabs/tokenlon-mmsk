@@ -6,14 +6,14 @@ import { NULL_ADDRESS } from '../src/constants'
 import { Protocol } from '../src/types'
 import { buildSignedOrder, toRFQOrder } from '../src/signer/rfqv1'
 import { SignatureType, WalletType } from '../src/signer/types'
-import { getOrderSignDigest, getRFQV2OrderSignDigest } from '../src/signer/orderHash'
+import { getOrderSignDigest, getOfferSignDigest } from '../src/signer/orderHash'
 import { BigNumber } from '../src/utils'
 import * as ethUtils from 'ethereumjs-util'
 import { AllowanceTarget, USDT, ABI, WETH } from '@tokenlon/sdk'
 import * as crypto from 'crypto'
 import { expect } from 'chai'
 import { generateSaltWithFeeFactor } from '../src/signer/pmmv5'
-import { toRFQV2Order } from '../src/signer/rfqv2'
+import { toOffer } from '../src/signer/rfqv2'
 const usdtHolders = {
   1: '0x15abb66bA754F05cBC0165A64A11cDed1543dE48',
   5: '0x031BBFB9379c4e6E3F42fb93a9f09C060c7fA037',
@@ -476,7 +476,7 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
       const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQV2
-      const orderHash = getRFQV2OrderSignDigest(toRFQV2Order(signedOrderResp.order), chainId, rfqAddr)
+      const orderHash = getOfferSignDigest(toOffer(signedOrderResp.order), chainId, rfqAddr)
       const message = ethUtils.bufferToHex(
         Buffer.concat([
           ethUtils.toBuffer(orderHash),
@@ -605,7 +605,7 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
       const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQV2
-      const orderSignDigest = getRFQV2OrderSignDigest(toRFQV2Order(signedOrderResp.order), chainId, rfqAddr)
+      const orderSignDigest = getOfferSignDigest(toOffer(signedOrderResp.order), chainId, rfqAddr)
       const r = utils.hexlify(sigBytes.slice(0, 32))
       const s = utils.hexlify(sigBytes.slice(32, 64))
       const v = utils.hexlify(sigBytes.slice(64, 65))
@@ -682,7 +682,7 @@ describe('NewOrder', function () {
       expect(sigBytes[65]).eq(SignatureType.EIP712)
       // verify signature
       const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQV2
-      const signedOrder = toRFQV2Order(signedOrderResp.order)
+      const signedOrder = toOffer(signedOrderResp.order)
       const domain = {
         name: 'Tokenlon',
         version: 'v5',
@@ -691,11 +691,6 @@ describe('NewOrder', function () {
       }
       // The named list of all type definitions
       const types = {
-        RFQOrder: [
-          { name: 'offer', type: 'Offer' },
-          { name: 'recipient', type: 'address' },
-          { name: 'feeFactor', type: 'uint256' },
-        ],
         Offer: [
           { name: 'taker', type: 'address' },
           { name: 'maker', type: 'address' },
@@ -709,18 +704,14 @@ describe('NewOrder', function () {
       }
       // The data to sign
       const value = {
-        offer: {
-          taker: signedOrder.offer.taker,
-          maker: signedOrder.offer.maker,
-          takerToken: signedOrder.offer.takerToken,
-          takerTokenAmount: signedOrder.offer.takerTokenAmount.toString(),
-          makerToken: signedOrder.offer.makerToken,
-          makerTokenAmount: signedOrder.offer.makerTokenAmount.toString(),
-          expiry: signedOrder.offer.expiry.toString(),
-          salt: signedOrder.offer.salt.toString(),
-        },
-        recipient: signedOrder.recipient,
-        feeFactor: signedOrder.feeFactor,
+        taker: signedOrder.taker,
+        maker: signedOrder.maker,
+        takerToken: signedOrder.takerToken,
+        takerTokenAmount: signedOrder.takerTokenAmount.toString(),
+        makerToken: signedOrder.makerToken,
+        makerTokenAmount: signedOrder.makerTokenAmount.toString(),
+        expiry: signedOrder.expiry.toString(),
+        salt: signedOrder.salt.toString(),
       }
       const recovered = ethers.utils.verifyTypedData(
         domain,

@@ -1,7 +1,7 @@
 import { Wallet, utils } from 'ethers'
 import { orderBNToString } from '../utils'
-import { getRFQV2OrderHash, getRFQV2OrderSignDigest } from './orderHash'
-import { RFQV2Order, WalletType } from './types'
+import { getOfferHash, getOfferSignDigest } from './orderHash'
+import { Offer, WalletType } from './types'
 import * as ethUtils from 'ethereumjs-util'
 import { SignatureType } from './types'
 import axios from 'axios'
@@ -78,10 +78,10 @@ export const forwardUnsignedOrder = async (signingUrl: string, orderInfo: any): 
   }
 }
 
-export const signRFQV2Order = async (
+export const signOffer = async (
   chainId: number,
   rfqAddr: string,
-  order: RFQV2Order,
+  order: Offer,
   maker: Wallet,
   signatureType = SignatureType.EIP712
 ): Promise<string> => {
@@ -94,11 +94,6 @@ export const signRFQV2Order = async (
 
   // The named list of all type definitions
   const types = {
-    RFQOrder: [
-      { name: 'offer', type: 'Offer' },
-      { name: 'recipient', type: 'address' },
-      { name: 'feeFactor', type: 'uint256' },
-    ],
     Offer: [
       { name: 'taker', type: 'address' },
       { name: 'maker', type: 'address' },
@@ -139,17 +134,17 @@ export const buildSignedOrder = async (
   order.salt = salt ? salt : generatePseudoRandomSalt()
 
   const signingUrl = options ? options.signingUrl : undefined
-  const rfqOrer = toRFQV2Order(order)
+  const rfqOrer = toOffer(order)
   console.log(`rfqOrer`)
   console.log(rfqOrer)
-  const orderHash = getRFQV2OrderHash(rfqOrer)
+  const orderHash = getOfferHash(rfqOrer)
   console.log(`orderHash: ${orderHash}`)
-  const orderSignDigest = getRFQV2OrderSignDigest(rfqOrer, chainId, rfqAddr)
+  const orderSignDigest = getOfferSignDigest(rfqOrer, chainId, rfqAddr)
   console.log(`orderSignDigest: ${orderSignDigest}`)
   let makerWalletSignature
   if (!signingUrl) {
     if (signer.address.toLowerCase() == order.makerAddress.toLowerCase()) {
-      makerWalletSignature = await signRFQV2Order(
+      makerWalletSignature = await signOffer(
         chainId,
         rfqAddr,
         rfqOrer,
@@ -158,7 +153,7 @@ export const buildSignedOrder = async (
       )
     } else if (walletType === WalletType.ERC1271_EIP712) {
       // standard ERC1271 + ERC712 signature
-      makerWalletSignature = await signRFQV2Order(
+      makerWalletSignature = await signOffer(
         chainId,
         rfqAddr,
         rfqOrer,
@@ -193,19 +188,15 @@ export const buildSignedOrder = async (
   return orderBNToString(signedOrder)
 }
 
-export function toRFQV2Order(order): RFQV2Order {
+export function toOffer(order): Offer {
   return {
-    offer: {
-      taker: order.takerAddress,
-      maker: order.makerAddress,
-      takerToken: order.takerAssetAddress,
-      takerTokenAmount: order.takerAssetAmount.toString(),
-      makerToken: order.makerAssetAddress,
-      makerTokenAmount: order.makerAssetAmount.toString(),
-      expiry: order.expirationTimeSeconds.toString(),
-      salt: order.salt.toString(),
-    },
-    recipient: order.takerAddress,
-    feeFactor: order.feeFactor,
+    taker: order.takerAddress,
+    maker: order.makerAddress,
+    takerToken: order.takerAssetAddress,
+    takerTokenAmount: order.takerAssetAmount.toString(),
+    makerToken: order.makerAssetAddress,
+    makerTokenAmount: order.makerAssetAmount.toString(),
+    expiry: order.expirationTimeSeconds.toString(),
+    salt: order.salt.toString(),
   }
 }
