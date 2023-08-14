@@ -1,9 +1,8 @@
-import { Wallet, utils } from 'ethers'
+import { utils, Wallet } from 'ethers'
 import { orderBNToString } from '../utils'
 import { getOfferHash, getOfferSignDigest } from './orderHash'
-import { Offer, WalletType } from './types'
+import { Offer, SignatureType, WalletType } from './types'
 import * as ethUtils from 'ethereumjs-util'
-import { SignatureType } from './types'
 import axios from 'axios'
 import { generatePseudoRandomSalt } from '0x-v2-order-utils'
 import { signWithUserAndFee } from './pmmv5'
@@ -101,6 +100,7 @@ export const signOffer = async (
       { name: 'takerTokenAmount', type: 'uint256' },
       { name: 'makerToken', type: 'address' },
       { name: 'makerTokenAmount', type: 'uint256' },
+      { name: 'feeFactor', type: 'uint256' },
       { name: 'expiry', type: 'uint256' },
       { name: 'salt', type: 'uint256' },
     ],
@@ -134,20 +134,24 @@ export const buildSignedOrder = async (
   order.salt = salt ? salt : generatePseudoRandomSalt()
 
   const signingUrl = options ? options.signingUrl : undefined
-  const rfqOrer = toOffer(order)
-  console.log(`rfqOrer`)
-  console.log(rfqOrer)
-  const orderHash = getOfferHash(rfqOrer)
+  const rfqOrder = toOffer(order)
+  console.log(`rfqOrder`)
+  console.log(rfqOrder)
+  const orderHash = getOfferHash(rfqOrder)
   console.log(`orderHash: ${orderHash}`)
-  const orderSignDigest = getOfferSignDigest(rfqOrer, chainId, rfqAddr)
+  const orderSignDigest = getOfferSignDigest(rfqOrder, chainId, rfqAddr)
+  console.log(`chainId: ${chainId}`)
+  console.log(`rfqAddr: ${rfqAddr}`)
   console.log(`orderSignDigest: ${orderSignDigest}`)
   let makerWalletSignature
   if (!signingUrl) {
-    if (signer.address.toLowerCase() == order.makerAddress.toLowerCase()) {
+    if (walletType === WalletType.EOA) {
+      makerWalletSignature = await signByEOA(orderSignDigest, signer)
+    } else if (signer.address.toLowerCase() == order.makerAddress.toLowerCase()) {
       makerWalletSignature = await signOffer(
         chainId,
         rfqAddr,
-        rfqOrer,
+        rfqOrder,
         signer,
         SignatureType.EIP712
       )
@@ -156,7 +160,7 @@ export const buildSignedOrder = async (
       makerWalletSignature = await signOffer(
         chainId,
         rfqAddr,
-        rfqOrer,
+        rfqOrder,
         signer,
         SignatureType.WalletBytes32
       )
@@ -172,7 +176,7 @@ export const buildSignedOrder = async (
     }
   } else {
     makerWalletSignature = await forwardUnsignedOrder(signingUrl, {
-      rfqOrer: rfqOrer,
+      rfqOrder: rfqOrder,
       userAddr: userAddr,
       signer: signer.address,
       chainId: chainId,
@@ -196,6 +200,7 @@ export function toOffer(order): Offer {
     takerTokenAmount: order.takerAssetAmount.toString(),
     makerToken: order.makerAssetAddress,
     makerTokenAmount: order.makerAssetAmount.toString(),
+    feeFactor: order.feeFactor.toString(),
     expiry: order.expirationTimeSeconds.toString(),
     salt: order.salt.toString(),
   }

@@ -26,6 +26,7 @@ const RFQ_V2_ORDER_SCHEMA = {
     { name: 'takerTokenAmount', type: 'uint256' },
     { name: 'makerToken', type: 'address' },
     { name: 'makerTokenAmount', type: 'uint256' },
+    { name: 'feeFactor', type: 'uint256' },
     { name: 'expiry', type: 'uint256' },
     { name: 'salt', type: 'uint256' },
   ],

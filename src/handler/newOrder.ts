@@ -159,11 +159,10 @@ function getOrderAndFeeFactor(query: QueryInterface, rate, tokenList, tokenConfi
     config.wethContractAddress
   )
   // ETH -> WETH
-  const takerAssetAddress = getWethAddrIfIsEth(
-    takerToken.contractAddress,
-    config.wethContractAddress
-  )
-
+  let takerAssetAddress = getWethAddrIfIsEth(takerToken.contractAddress, config.wethContractAddress)
+  if (Protocol.RFQV2 === query.protocol) {
+    takerAssetAddress = takerToken.contractAddress
+  }
   return {
     makerAddress: config.mmProxyContractAddress.toLowerCase(),
     makerAssetAmount,

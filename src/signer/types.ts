@@ -40,6 +40,7 @@ export interface Offer {
   takerTokenAmount: BigNumber
   makerToken: string
   makerTokenAmount: BigNumber
+  feeFactor: number
   expiry: number
   salt: BigNumber | string
 }
@@ -47,7 +48,6 @@ export interface Offer {
 export interface RFQV2Order {
   offer: Offer
   recipient: string
-  feeFactor: number
 }
 
 export enum SignatureType {
