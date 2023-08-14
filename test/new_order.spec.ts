@@ -9,7 +9,7 @@ import { SignatureType, WalletType } from '../src/signer/types'
 import { getOrderSignDigest, getOfferSignDigest } from '../src/signer/orderHash'
 import { BigNumber } from '../src/utils'
 import * as ethUtils from 'ethereumjs-util'
-import { AllowanceTarget, USDT, ABI, WETH } from '@tokenlon/sdk'
+import { AllowanceTarget, USDT, ABI, WETH, ZERO } from '@tokenlon/sdk'
 import * as crypto from 'crypto'
 import { expect } from 'chai'
 import { generateSaltWithFeeFactor } from '../src/signer/pmmv5'
@@ -51,7 +51,7 @@ describe('NewOrder', function () {
         PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
         AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
         RFQ: '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0',
-        RFQV2: '0xd406D237E087D0a76ca737e7949CfD502ddE8f4E',
+        RFQV2: '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7',
       },
     }
     const mockTokenConfigsFromImtokenUpdater = new Updater({
@@ -412,7 +412,7 @@ describe('NewOrder', function () {
           PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
           AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
           RFQ: '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0',
-          RFQV2: '0xd406D237E087D0a76ca737e7949CfD502ddE8f4E',
+          RFQV2: '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7',
         },
       }
       mockMarkerMakerConfigUpdater.cacheResult = cacheResult
@@ -458,9 +458,9 @@ describe('NewOrder', function () {
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
-      expect(order.takerAssetAddress).eq(WETH[chainId].toLowerCase())
+      expect(order.takerAssetAddress).eq(ZERO[chainId].toLowerCase())
       expect(order.takerAssetData).eq(
-        `0xf47261b0000000000000000000000000${WETH[chainId].toLowerCase().slice(2)}`
+        `0xf47261b0000000000000000000000000${ZERO[chainId].toLowerCase().slice(2)}`
       )
       expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
       expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
@@ -541,7 +541,7 @@ describe('NewOrder', function () {
           PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
           AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
           RFQ: '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0',
-          RFQV2: '0xd406D237E087D0a76ca737e7949CfD502ddE8f4E',
+          RFQV2: '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7',
         },
       }
       mockMarkerMakerConfigUpdater.cacheResult = cacheResult
@@ -587,9 +587,9 @@ describe('NewOrder', function () {
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
-      expect(order.takerAssetAddress).eq(WETH[chainId].toLowerCase())
+      expect(order.takerAssetAddress).eq(ZERO[chainId].toLowerCase())
       expect(order.takerAssetData).eq(
-        `0xf47261b0000000000000000000000000${WETH[chainId].toLowerCase().slice(2)}`
+        `0xf47261b0000000000000000000000000${ZERO[chainId].toLowerCase().slice(2)}`
       )
       expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
       expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
@@ -665,10 +665,10 @@ describe('NewOrder', function () {
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
-      expect(order.takerAssetAddress).eq(WETH[chainId].toLowerCase())
+      expect(order.takerAssetAddress).eq(ZERO[chainId].toLowerCase())
       expect(
         order.takerAssetData,
-        `0xf47261b0000000000000000000000000${WETH[chainId].toLowerCase().slice(2)}`
+        `0xf47261b0000000000000000000000000${ZERO[chainId].toLowerCase().slice(2)}`
       )
       expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
       expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
@@ -698,6 +698,7 @@ describe('NewOrder', function () {
           { name: 'takerTokenAmount', type: 'uint256' },
           { name: 'makerToken', type: 'address' },
           { name: 'makerTokenAmount', type: 'uint256' },
+          { name: 'feeFactor', type: 'uint256' },
           { name: 'expiry', type: 'uint256' },
           { name: 'salt', type: 'uint256' },
         ],
@@ -710,6 +711,7 @@ describe('NewOrder', function () {
         takerTokenAmount: signedOrder.takerTokenAmount.toString(),
         makerToken: signedOrder.makerToken,
         makerTokenAmount: signedOrder.makerTokenAmount.toString(),
+        feeFactor: signedOrder.feeFactor.toString(),
         expiry: signedOrder.expiry.toString(),
         salt: signedOrder.salt.toString(),
       }
@@ -770,7 +772,7 @@ describe('NewOrder', function () {
           PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
           AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
           RFQ: '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0',
-          RFQV2: '0xd406D237E087D0a76ca737e7949CfD502ddE8f4E',
+          RFQV2: '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7',
         },
       }
       mockMarkerMakerConfigUpdater.cacheResult = cacheResult
@@ -900,7 +902,7 @@ describe('NewOrder', function () {
           PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
           AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
           RFQ: '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0',
-          RFQV2: '0xd406D237E087D0a76ca737e7949CfD502ddE8f4E',
+          RFQV2: '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7',
         },
       }
       mockMarkerMakerConfigUpdater.cacheResult = cacheResult

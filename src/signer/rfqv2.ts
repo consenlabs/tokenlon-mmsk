@@ -145,9 +145,7 @@ export const buildSignedOrder = async (
   console.log(`orderSignDigest: ${orderSignDigest}`)
   let makerWalletSignature
   if (!signingUrl) {
-    if (walletType === WalletType.EOA) {
-      makerWalletSignature = await signByEOA(orderSignDigest, signer)
-    } else if (signer.address.toLowerCase() == order.makerAddress.toLowerCase()) {
+    if (signer.address.toLowerCase() == order.makerAddress.toLowerCase()) {
       makerWalletSignature = await signOffer(
         chainId,
         rfqAddr,
