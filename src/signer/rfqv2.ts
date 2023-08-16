@@ -1,7 +1,7 @@
 import { utils, Wallet } from 'ethers'
 import { orderBNToString } from '../utils'
 import { getOfferHash, getOfferSignDigest } from './orderHash'
-import { Offer, SignatureType, WalletType } from './types'
+import { Offer, PermitType, WalletType, SignatureType } from './types'
 import * as ethUtils from 'ethereumjs-util'
 import axios from 'axios'
 import { generatePseudoRandomSalt } from '0x-v2-order-utils'
@@ -122,6 +122,7 @@ export const buildSignedOrder = async (
   chainId: number,
   rfqAddr: string,
   walletType: WalletType,
+  permitType: PermitType,
   options?: {
     signingUrl?: string
     salt?: string
@@ -184,6 +185,7 @@ export const buildSignedOrder = async (
 
   const signedOrder = {
     ...order,
+    payload: Buffer.from(JSON.stringify({ makerTokenPermit: permitType })).toString('base64'),
     makerWalletSignature,
   }
 

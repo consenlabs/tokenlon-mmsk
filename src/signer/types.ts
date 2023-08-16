@@ -68,3 +68,8 @@ export enum WalletType {
   EOA = 4, // less security for market makers
   ERC1271_EIP712 = 5,
 }
+
+export enum PermitType {
+  ALLOWANCE_TARGET = '0x00',
+  APPROVE_RFQV2 = '0x01',
+}

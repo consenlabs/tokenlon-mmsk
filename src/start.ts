@@ -22,7 +22,7 @@ import { startUpdater } from './worker'
 import { QuoteDispatcher, QuoterProtocol } from './request/marketMaker'
 import tracker from './utils/tracker'
 import { Quoter } from './request/marketMaker/types'
-import { WalletType } from './signer/types'
+import { PermitType, WalletType } from './signer/types'
 import { VERSION } from './handler/version'
 
 // FIXME: construct wallet(signer), quoter and worker separately
@@ -119,6 +119,7 @@ export const startMMSK = async (config: ConfigForStart) => {
       app.context.signingUrl = config.SIGNING_URL
     }
     app.context.walletType = config.WALLET_TYPE || WalletType.MMP_VERSION_4
+    app.context.permitType = config.PERMIT_TYPE || PermitType.ALLOWANCE_TARGET
 
     app
       .use(async (ctx, next) => {
