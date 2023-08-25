@@ -149,11 +149,11 @@ export const buildSignedOrder = async (
   const signingUrl = options ? options.signingUrl : undefined
   order.salt = generateSaltWithFeeFactor(feeFactor, salt)
 
-  const rfqOrer = toRFQOrder(order)
+  const rfqOrder = toRFQOrder(order)
 
-  const orderHash = getOrderHash(rfqOrer)
+  const orderHash = getOrderHash(rfqOrder)
   console.log(`orderHash: ${orderHash}`)
-  const orderSignDigest = getOrderSignDigest(rfqOrer, chainId, rfqAddr)
+  const orderSignDigest = getOrderSignDigest(rfqOrder, chainId, rfqAddr)
   console.log(`orderSignDigest: ${orderSignDigest}`)
   let makerWalletSignature
   if (!signingUrl) {
@@ -161,9 +161,9 @@ export const buildSignedOrder = async (
       makerWalletSignature = await signRFQOrder(
         chainId,
         rfqAddr,
-        rfqOrer,
+        rfqOrder,
         signer,
-        rfqOrer.feeFactor,
+        rfqOrder.feeFactor,
         SignatureType.EIP712
       )
     } else if (walletType === WalletType.ERC1271_EIP712) {
@@ -171,9 +171,9 @@ export const buildSignedOrder = async (
       makerWalletSignature = await signRFQOrder(
         chainId,
         rfqAddr,
-        rfqOrer,
+        rfqOrder,
         signer,
-        rfqOrer.feeFactor,
+        rfqOrder.feeFactor,
         SignatureType.WalletBytes32
       )
     } else {
@@ -188,7 +188,7 @@ export const buildSignedOrder = async (
     }
   } else {
     makerWalletSignature = await forwardUnsignedOrder(signingUrl, {
-      rfqOrer: rfqOrer,
+      rfqOrder: rfqOrder,
       userAddr: userAddr,
       signer: signer.address,
       chainId: chainId,
