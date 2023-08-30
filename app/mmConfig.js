@@ -4,6 +4,7 @@ module.exports = {
   // Tokenlon server address
   EXCHANGE_URL: process.env.EXCHANGE_URL,
   PROVIDER_URL: process.env.PROVIDER_URL,
+  PERMIT_TYPE: types.PermitType.APPROVE_RFQV2,
 
   // Signing
   /**

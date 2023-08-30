@@ -1,13 +1,13 @@
-import { Wallet, utils } from 'ethers'
-import { orderBNToString, BigNumber } from '../utils'
-import { generateSaltWithFeeFactor, signWithUserAndFee } from './pmmv5'
-import { getOrderHash, getOrderSignDigest } from './orderHash'
-import { RFQOrder, WalletType } from './types'
+import { utils, Wallet } from 'ethers'
+import { orderBNToString } from '../utils'
+import { getOfferHash, getOfferSignDigest } from './orderHash'
+import { Offer, PermitType, WalletType, SignatureType } from './types'
 import * as ethUtils from 'ethereumjs-util'
-import { SignatureType } from './types'
 import axios from 'axios'
+import { generatePseudoRandomSalt } from '0x-v2-order-utils'
+import { signWithUserAndFee } from './pmmv5'
 
-// spec of RFQV1
+// spec of RFQV2
 // - taker address point to userAddr
 // - fee factor from salt
 // - SignatureType EthSign for EOA address
@@ -77,14 +77,13 @@ export const forwardUnsignedOrder = async (signingUrl: string, orderInfo: any): 
   }
 }
 
-export const signRFQOrder = async (
+export const signOffer = async (
   chainId: number,
   rfqAddr: string,
-  order: any,
+  order: Offer,
   maker: Wallet,
-  feeFactor = 30,
   signatureType = SignatureType.EIP712
-) => {
+): Promise<string> => {
   const domain = {
     name: 'Tokenlon',
     version: 'v5',
@@ -94,33 +93,19 @@ export const signRFQOrder = async (
 
   // The named list of all type definitions
   const types = {
-    Order: [
-      { name: 'takerAddr', type: 'address' },
-      { name: 'makerAddr', type: 'address' },
-      { name: 'takerAssetAddr', type: 'address' },
-      { name: 'makerAssetAddr', type: 'address' },
-      { name: 'takerAssetAmount', type: 'uint256' },
-      { name: 'makerAssetAmount', type: 'uint256' },
-      { name: 'salt', type: 'uint256' },
-      { name: 'deadline', type: 'uint256' },
+    Offer: [
+      { name: 'taker', type: 'address' },
+      { name: 'maker', type: 'address' },
+      { name: 'takerToken', type: 'address' },
+      { name: 'takerTokenAmount', type: 'uint256' },
+      { name: 'makerToken', type: 'address' },
+      { name: 'makerTokenAmount', type: 'uint256' },
       { name: 'feeFactor', type: 'uint256' },
+      { name: 'expiry', type: 'uint256' },
+      { name: 'salt', type: 'uint256' },
     ],
   }
-
-  // The data to sign
-  const value = {
-    takerAddr: order.takerAddr,
-    makerAddr: order.makerAddr,
-    takerAssetAddr: order.takerAssetAddr,
-    makerAssetAddr: order.makerAssetAddr,
-    takerAssetAmount: order.takerAssetAmount.toString(),
-    makerAssetAmount: order.makerAssetAmount.toString(),
-    salt: order.salt.toString(),
-    deadline: order.deadline.toString(),
-    feeFactor: feeFactor.toString(),
-  }
-
-  const signatureTypedData = await maker._signTypedData(domain, types, value)
+  const signatureTypedData = await maker._signTypedData(domain, types, order)
   const signature = Buffer.concat([
     ethUtils.toBuffer(signatureTypedData),
     ethUtils.toBuffer(signatureType),
@@ -137,6 +122,7 @@ export const buildSignedOrder = async (
   chainId: number,
   rfqAddr: string,
   walletType: WalletType,
+  permitType: PermitType,
   options?: {
     signingUrl?: string
     salt?: string
@@ -146,34 +132,35 @@ export const buildSignedOrder = async (
   const feeFactor = order.feeFactor
   order.takerAddress = userAddr.toLowerCase()
   const salt = options ? options.salt : undefined
+  order.salt = salt ? salt : generatePseudoRandomSalt()
+
   const signingUrl = options ? options.signingUrl : undefined
-  order.salt = generateSaltWithFeeFactor(feeFactor, salt)
-
-  const rfqOrder = toRFQOrder(order)
-
-  const orderHash = getOrderHash(rfqOrder)
+  const rfqOrder = toOffer(order)
+  console.log(`rfqOrder`)
+  console.log(rfqOrder)
+  const orderHash = getOfferHash(rfqOrder)
   console.log(`orderHash: ${orderHash}`)
-  const orderSignDigest = getOrderSignDigest(rfqOrder, chainId, rfqAddr)
+  const orderSignDigest = getOfferSignDigest(rfqOrder, chainId, rfqAddr)
+  console.log(`chainId: ${chainId}`)
+  console.log(`rfqAddr: ${rfqAddr}`)
   console.log(`orderSignDigest: ${orderSignDigest}`)
   let makerWalletSignature
   if (!signingUrl) {
     if (signer.address.toLowerCase() == order.makerAddress.toLowerCase()) {
-      makerWalletSignature = await signRFQOrder(
+      makerWalletSignature = await signOffer(
         chainId,
         rfqAddr,
         rfqOrder,
         signer,
-        rfqOrder.feeFactor,
         SignatureType.EIP712
       )
     } else if (walletType === WalletType.ERC1271_EIP712) {
       // standard ERC1271 + ERC712 signature
-      makerWalletSignature = await signRFQOrder(
+      makerWalletSignature = await signOffer(
         chainId,
         rfqAddr,
         rfqOrder,
         signer,
-        rfqOrder.feeFactor,
         SignatureType.WalletBytes32
       )
     } else {
@@ -198,24 +185,23 @@ export const buildSignedOrder = async (
 
   const signedOrder = {
     ...order,
+    payload: Buffer.from(JSON.stringify({ makerTokenPermit: permitType })).toString('base64'),
     makerWalletSignature,
   }
 
   return orderBNToString(signedOrder)
 }
 
-const toNumber = (obj: BigNumber | string): number => new BigNumber(obj).toNumber()
-
-export function toRFQOrder(order): RFQOrder {
+export function toOffer(order): Offer {
   return {
-    takerAddr: order.takerAddress,
-    makerAddr: order.makerAddress,
-    takerAssetAddr: order.takerAssetAddress,
-    makerAssetAddr: order.makerAssetAddress,
-    takerAssetAmount: order.takerAssetAmount,
-    makerAssetAmount: order.makerAssetAmount,
-    deadline: toNumber(order.expirationTimeSeconds),
-    feeFactor: order.feeFactor,
-    salt: order.salt,
+    taker: order.takerAddress,
+    maker: order.makerAddress,
+    takerToken: order.takerAssetAddress,
+    takerTokenAmount: order.takerAssetAmount.toString(),
+    makerToken: order.makerAssetAddress,
+    makerTokenAmount: order.makerAssetAmount.toString(),
+    feeFactor: order.feeFactor.toString(),
+    expiry: order.expirationTimeSeconds.toString(),
+    salt: order.salt.toString(),
   }
 }

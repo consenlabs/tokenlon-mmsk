@@ -18,6 +18,7 @@ Program setup,
 - Modify the options in `app/mmConfig.js`, including,
     - EXCHANGE_URL, point to tokenlon exchange server
     - PROVIDER_URL, point to ethereum node, like your infura endpoint
+    - PERMIT_TYPE, approve tokens to `RFQv2` contract directly or approve tokens to `AllowanceTarget` contract.
     - WALLET_ADDRESS, as your signer wallet address
     - WALLET_PRIVATE_KEY, private key of above wallet, or use WALLET_KEYSTORE
     - WALLET_TYPE, a market maker's wallet smart contract.
@@ -26,10 +27,10 @@ Program setup,
         - types.WalletType.ERC1271
         - types.WalletType.EOA
     - SIGNING_URL, If you wanna sign orders in your own service instead of the mmsk,
-   please set the SIGNING_URL to your service endpoint. the mmsk would post every unsigned RFQ orders to your service. Remember to set the WALLET_ADDRESS as well. An example request is shown below:
+   please set the SIGNING_URL to your service endpoint. the mmsk would post every unsigned PMM/RFQV1/RFQV2 orders to your service. Remember to set the WALLET_ADDRESS as well. An example RFQV1 request is shown below:
     ```
     {
-      rfqOrer: {
+      rfqOrder: {
         takerAddr: '0x87fca7135c1c54876a62dc4922da3ce45f38debf',
         makerAddr: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64',
         takerAssetAddr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -55,7 +56,7 @@ Program setup,
     - HTTP_SERVER_ENDPOINT, your backend http quoting server
     - CHAIN_ID, 1 for mainnet, 5 for testnet(Goerli)
 - Testing with `node app/check.js`
-- Register contract address & signer address & MMSK server url to Tokenlon team
+- Register contract address, signer address and MMSK server url to Tokenlon team
 
 ## Version Release
 

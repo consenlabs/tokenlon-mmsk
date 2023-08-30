@@ -33,6 +33,23 @@ export interface RFQOrder {
   feeFactor: number
 }
 
+export interface Offer {
+  taker: string
+  maker: string
+  takerToken: string
+  takerTokenAmount: BigNumber
+  makerToken: string
+  makerTokenAmount: BigNumber
+  feeFactor: number
+  expiry: number
+  salt: BigNumber | string
+}
+
+export interface RFQV2Order {
+  offer: Offer
+  recipient: string
+}
+
 export enum SignatureType {
   Illegal = 0, // 0x00, default value
   Invalid = 1, // 0x01
@@ -50,4 +67,9 @@ export enum WalletType {
   ERC1271_EIP712_EIP191 = 3, // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/utils/cryptography/SignatureChecker.sol#L36
   EOA = 4, // less security for market makers
   ERC1271_EIP712 = 5,
+}
+
+export enum PermitType {
+  ALLOWANCE_TARGET = '0x00',
+  APPROVE_RFQV2 = '0x01',
 }

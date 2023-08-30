@@ -8,6 +8,7 @@ import { addQuoteIdPrefix, constructQuoteResponse, preprocessQuote } from '../qu
 
 import { assetDataUtils } from '0x-v2-order-utils'
 import { buildSignedOrder as buildRFQV1SignedOrder } from '../signer/rfqv1'
+import { buildSignedOrder as buildRFQV2SignedOrder } from '../signer/rfqv2'
 import { buildSignedOrder } from '../signer/pmmv5'
 import { buildSignedOrder as buildAMMV1Order } from '../signer/ammv1'
 import { buildSignedOrder as buildAMMV2Order } from '../signer/ammv2'
@@ -158,11 +159,10 @@ function getOrderAndFeeFactor(query: QueryInterface, rate, tokenList, tokenConfi
     config.wethContractAddress
   )
   // ETH -> WETH
-  const takerAssetAddress = getWethAddrIfIsEth(
-    takerToken.contractAddress,
-    config.wethContractAddress
-  )
-
+  let takerAssetAddress = getWethAddrIfIsEth(takerToken.contractAddress, config.wethContractAddress)
+  if (Protocol.RFQV2 === query.protocol) {
+    takerAssetAddress = takerToken.contractAddress
+  }
   return {
     makerAddress: config.mmProxyContractAddress.toLowerCase(),
     makerAssetAmount,
@@ -192,7 +192,7 @@ const _getBaseTokenByAddress = (baseTokenAddr, tokenList) => {
 const getBaseTokenByAddress = memoize(_getBaseTokenByAddress)
 
 export const newOrder = async (ctx) => {
-  const { quoter, signer, chainID, walletType, signingUrl } = ctx
+  const { quoter, signer, chainID, walletType, signingUrl, permitType } = ctx
   const req: QueryInterface = {
     protocol: Protocol.PMMV5, // by default is v2 protocol
     ...ctx.query, // overwrite from request
@@ -264,6 +264,21 @@ export const newOrder = async (ctx) => {
           chainID,
           config.addressBookV5.RFQ,
           walletType,
+          {
+            signingUrl,
+            salt,
+          }
+        )
+        break
+      case Protocol.RFQV2:
+        resp.order = await buildRFQV2SignedOrder(
+          signer,
+          order,
+          userAddr.toLowerCase(),
+          chainID,
+          config.addressBookV5.RFQV2,
+          walletType,
+          permitType,
           {
             signingUrl,
             salt,
