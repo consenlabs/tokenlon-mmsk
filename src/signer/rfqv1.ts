@@ -6,6 +6,7 @@ import { RFQOrder, WalletType } from './types'
 import * as ethUtils from 'ethereumjs-util'
 import { SignatureType } from './types'
 import axios from 'axios'
+import { Protocol } from '../types'
 
 // spec of RFQV1
 // - taker address point to userAddr
@@ -188,9 +189,9 @@ export const buildSignedOrder = async (
     }
   } else {
     makerWalletSignature = await forwardUnsignedOrder(signingUrl, {
+      protocol: Protocol.RFQV1,
       rfqOrder: rfqOrder,
       userAddr: userAddr,
-      signer: signer.address,
       chainId: chainId,
       rfqAddr: rfqAddr,
     })
