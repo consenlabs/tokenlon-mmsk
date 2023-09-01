@@ -10,6 +10,7 @@ import * as ethUtils from 'ethereumjs-util'
 import { utils, Wallet } from 'ethers'
 import axios from 'axios'
 import { BigNumber, orderBNToString } from '../utils'
+import { Protocol } from '../types'
 
 const EIP712_ORDER_SCHEMA = {
   name: 'Order',
@@ -160,12 +161,12 @@ export const buildSignedOrder = async (
         : await signByMMPSigner(orderSignDigest, userAddr, feeFactor, signer)
   } else {
     makerWalletSignature = await forwardUnsignedOrder(signingUrl, {
+      protocol: Protocol.PMMV5,
       pmmOrder: o,
       feeFactor: feeFactor,
       orderHash: orderHash,
       orderSignDigest: orderSignDigest,
       userAddr: userAddr,
-      signer: signer.address,
       chainId: chainId,
       pmmAddr: pmm,
     })

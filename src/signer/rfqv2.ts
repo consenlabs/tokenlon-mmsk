@@ -6,6 +6,7 @@ import * as ethUtils from 'ethereumjs-util'
 import axios from 'axios'
 import { generatePseudoRandomSalt } from '0x-v2-order-utils'
 import { signWithUserAndFee } from './pmmv5'
+import { Protocol } from '../types'
 
 // spec of RFQV2
 // - taker address point to userAddr
@@ -175,9 +176,9 @@ export const buildSignedOrder = async (
     }
   } else {
     makerWalletSignature = await forwardUnsignedOrder(signingUrl, {
+      protocol: Protocol.RFQV2,
       rfqOrder: rfqOrder,
       userAddr: userAddr,
-      signer: signer.address,
       chainId: chainId,
       rfqAddr: rfqAddr,
     })

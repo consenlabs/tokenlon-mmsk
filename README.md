@@ -30,6 +30,7 @@ Program setup,
    please set the SIGNING_URL to your service endpoint. the mmsk would post every unsigned PMM/RFQV1/RFQV2 orders to your service. Remember to set the WALLET_ADDRESS as well. An example RFQV1 request is shown below:
     ```
     {
+      protocol: 'RFQV1',
       rfqOrder: {
         takerAddr: '0x87fca7135c1c54876a62dc4922da3ce45f38debf',
         makerAddr: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64',
@@ -42,7 +43,6 @@ Program setup,
         salt: '54987026777386128963216107663301166813737035846370728350988439404382800511006'
       },
       userAddr: '0x87fca7135c1c54876a62dc4922da3ce45f38debf',
-      signer: '0xb5419119e04498C3eC43A9468D6480aF0DAE3A0c',
       chainId: 1,
       rfqAddr: '0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F'
     }
