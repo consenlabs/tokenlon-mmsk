@@ -5,8 +5,8 @@ import { updaterStack, Updater } from '../src/worker'
 import { NULL_ADDRESS } from '../src/constants'
 import { Protocol } from '../src/types'
 import { toRFQOrder } from '../src/signer/rfqv1'
-// import { buildSignedOrder as buildPMMV5SignedOrder } from '../src/signer/pmmv5'
-// import { buildSignedOrder as buildRFQV1SignedOrder } from '../src/signer/rfqv1'
+import { buildSignedOrder as buildPMMV5SignedOrder } from '../src/signer/pmmv5'
+import { buildSignedOrder as buildRFQV1SignedOrder } from '../src/signer/rfqv1'
 import { buildSignedOrder as buildRFQV2SignedOrder } from '../src/signer/rfqv2'
 import { ExtendedZXOrder, PermitType, SignatureType, WalletType } from '../src/signer/types'
 import { getOrderSignDigest, getOfferSignDigest } from '../src/signer/orderHash'
@@ -1180,9 +1180,114 @@ describe('NewOrder', function () {
     const orderHash = getOrderSignDigest(order, 1, rfqAddr)
     expect(orderHash).eq('0x8d70993864d87daa0b2bae0c2be1c56067f45363680d0dca8657e1e51d1d6a40')
   })
-  it('Should forward unsigned orders to signing service', async () => {
+  it('Should forward unsigned PMMV5 orders to signing service', async () => {
+    const url = `http://localhost:3000`
+    const pmm = '0x7bd7d025D4231aAD1233967b527FFd7416410257'
+    const order: ExtendedZXOrder = {
+      protocol: Protocol.PMMV5,
+      quoteId: `0x123`,
+      exchangeAddress: `0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64`.toLowerCase(),
+      feeRecipientAddress: `0x45352`,
+      senderAddress: `0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64`,
+      takerAddress: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
+      makerAddress: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64'.toLowerCase(),
+      takerAssetData: assetDataUtils.encodeERC20AssetData(
+        '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+      ),
+      makerAssetData: assetDataUtils.encodeERC20AssetData(
+        '0xdac17f958d2ee523a2206206994597c13d831ec7'
+      ),
+      takerFee: toBN(0),
+      makerFee: toBN(0),
+      takerAssetAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+      makerAssetAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+      takerAssetAmount: new BigNumber('0x0de0b6b3a7640000'),
+      makerAssetAmount: new BigNumber('0x05f5e100'),
+      salt: new BigNumber('0x44df74b1c54e9792989c61fedcef6f94b534b58933cde70bc456ec74cf4d3610'),
+      expirationTimeSeconds: toBN(1620444917),
+      feeFactor: 30,
+    }
+    const scope = nock(url)
+      .post('/')
+      .reply(200, (_, requestBody) => {
+        console.log(`requestBody: `)
+        console.log(requestBody)
+        return {
+          signature: `0x12345677777777777777777`,
+        }
+      })
+    const signedOrder = await buildPMMV5SignedOrder(
+      signer,
+      order,
+      Wallet.createRandom().address.toLowerCase(),
+      chainId,
+      pmm,
+      {
+        signingUrl: url,
+        salt: '0x11111111111111111111111111111111',
+      }
+    )
+    scope.done()
+    console.log(signedOrder)
+    expect(signedOrder).not.null
+    expect(signedOrder.makerWalletSignature).not.null
+  })
+  it('Should forward unsigned RFQV1 orders to signing service', async () => {
     const url = `http://localhost:3000`
     const rfqAddr = '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0'
+    const order: ExtendedZXOrder = {
+      protocol: Protocol.RFQV1,
+      quoteId: `0x123`,
+      exchangeAddress: `0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64`.toLowerCase(),
+      feeRecipientAddress: `0x45352`,
+      senderAddress: `0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64`,
+      takerAddress: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
+      makerAddress: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64'.toLowerCase(),
+      takerAssetData: assetDataUtils.encodeERC20AssetData(
+        '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+      ),
+      makerAssetData: assetDataUtils.encodeERC20AssetData(
+        '0xdac17f958d2ee523a2206206994597c13d831ec7'
+      ),
+      takerFee: toBN(0),
+      makerFee: toBN(0),
+      takerAssetAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+      makerAssetAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+      takerAssetAmount: new BigNumber('0x0de0b6b3a7640000'),
+      makerAssetAmount: new BigNumber('0x05f5e100'),
+      salt: new BigNumber('0x44df74b1c54e9792989c61fedcef6f94b534b58933cde70bc456ec74cf4d3610'),
+      expirationTimeSeconds: toBN(1620444917),
+      feeFactor: 30,
+    }
+    const scope = nock(url)
+      .post('/')
+      .reply(200, (_, requestBody) => {
+        console.log(`requestBody: `)
+        console.log(requestBody)
+        return {
+          signature: `0x12345677777777777777777`,
+        }
+      })
+    const signedOrder = await buildRFQV1SignedOrder(
+      signer,
+      order,
+      Wallet.createRandom().address.toLowerCase(),
+      chainId,
+      rfqAddr,
+      WalletType.MMP_VERSION_4,
+      {
+        signingUrl: url,
+        salt: '0x11111111111111111111111111111111',
+      }
+    )
+    scope.done()
+    console.log(signedOrder)
+    expect(signedOrder).not.null
+    expect(signedOrder.makerWalletSignature).not.null
+  })
+  it('Should forward unsigned RFQV2 orders to signing service', async () => {
+    const url = `http://localhost:3000`
+    const rfqV2Addr = '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7'
     const order: ExtendedZXOrder = {
       protocol: Protocol.RFQV2,
       quoteId: `0x123`,
@@ -1221,7 +1326,7 @@ describe('NewOrder', function () {
       order,
       Wallet.createRandom().address.toLowerCase(),
       chainId,
-      rfqAddr,
+      rfqV2Addr,
       WalletType.MMP_VERSION_4,
       PermitType.ALLOWANCE_TARGET,
       {
@@ -1232,6 +1337,7 @@ describe('NewOrder', function () {
     scope.done()
     console.log(signedOrder)
     expect(signedOrder).not.null
+    expect(signedOrder.makerWalletSignature).not.null
   })
   it('Should generate correct salt', async () => {
     const givenPrefixSalt = generateSaltWithFeeFactor(30, '0x11111111111111111111111111111111')
