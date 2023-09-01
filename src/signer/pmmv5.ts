@@ -11,6 +11,8 @@ import { utils, Wallet } from 'ethers'
 import axios from 'axios'
 import { BigNumber, orderBNToString } from '../utils'
 import { Protocol } from '../types'
+import { ExtendedZXOrder, RemoteSigningPMMV5Request } from './types'
+import { Order as ZXOrder } from '0x-v2-order-utils'
 
 const EIP712_ORDER_SCHEMA = {
   name: 'Order',
@@ -115,7 +117,10 @@ async function signByMMPSigner(
   return signatureUtils.convertToSignatureWithType(walletSign, SignatureType.Wallet)
 }
 
-export const forwardUnsignedOrder = async (signingUrl: string, orderInfo: any): Promise<string> => {
+export const forwardUnsignedOrder = async (
+  signingUrl: string,
+  orderInfo: RemoteSigningPMMV5Request
+): Promise<string> => {
   const resp = await axios.post(signingUrl, orderInfo)
   const body = resp.data
   if (body.signature) {
@@ -128,25 +133,37 @@ export const forwardUnsignedOrder = async (signingUrl: string, orderInfo: any): 
 // Move fee factor to salt field
 export const buildSignedOrder = async (
   signer: Wallet,
-  order,
-  userAddr,
-  chainId,
-  pmm,
+  order: ExtendedZXOrder,
+  userAddr: string,
+  chainId: number,
+  pmm: string,
   options?: {
     signingUrl?: string
     salt?: string
   }
-): Promise<any> => {
+): Promise<ExtendedZXOrder> => {
   const signingUrl = options ? options.signingUrl : undefined
   const feeFactor = order.feeFactor
   order.takerAddress = pmm.toLowerCase()
   order.senderAddress = pmm.toLowerCase()
   order.feeRecipientAddress = userAddr
-
+  const salt = options ? options.salt : undefined
+  order.salt = salt ? new BigNumber(salt) : generateSaltWithFeeFactor(feeFactor)
   // inject fee factor to salt
-  const o = {
-    ...order,
-    salt: generateSaltWithFeeFactor(feeFactor),
+  const o: ZXOrder = {
+    makerAddress: order.makerAddress,
+    makerAssetAmount: order.makerAssetAmount as BigNumber,
+    makerAssetData: order.makerAssetData,
+    makerFee: order.makerFee as BigNumber,
+    takerAddress: order.takerAddress,
+    takerAssetAmount: order.takerAssetAmount as BigNumber,
+    takerAssetData: order.takerAssetData,
+    takerFee: order.takerFee as BigNumber,
+    senderAddress: order.senderAddress,
+    feeRecipientAddress: order.feeRecipientAddress,
+    expirationTimeSeconds: order.expirationTimeSeconds as BigNumber,
+    exchangeAddress: order.exchangeAddress,
+    salt: order.salt,
   }
   const orderHashBuffer = eip712Utils.structHash(EIP712_ORDER_SCHEMA, o)
   const orderHash = '0x' + orderHashBuffer.toString('hex')
@@ -162,7 +179,7 @@ export const buildSignedOrder = async (
   } else {
     makerWalletSignature = await forwardUnsignedOrder(signingUrl, {
       protocol: Protocol.PMMV5,
-      pmmOrder: o,
+      pmmOrder: orderBNToString(order),
       feeFactor: feeFactor,
       orderHash: orderHash,
       orderSignDigest: orderSignDigest,
@@ -173,7 +190,7 @@ export const buildSignedOrder = async (
   }
 
   const signedOrder = {
-    ...o,
+    ...order,
     makerWalletSignature,
   }
 

@@ -22,27 +22,28 @@ import {
   getWethAddrIfIsEth,
   getTimestamp,
 } from '../utils'
+import { ExtendedZXOrder } from 'src/signer/types'
 
 type NumberOrString = number | string
 
-interface Order {
+export interface Order {
   // quoteId is from market maker backend quoter.
-  quoteId: string
+  quoteId: string | number
   // protocol represents the order type as enum, [PMMV4, PMMV5, AMMV1, RFQV1, AMMV2].
   protocol: Protocol
 
   // Common fields
   makerAddress: string
-  makerAssetAmount: string
+  makerAssetAmount: string | BigNumber
   makerAssetAddress: string
   takerAddress: string
-  takerAssetAmount: string
+  takerAssetAmount: string | BigNumber
   takerAssetAddress: string
-  expirationTimeSeconds: string
+  expirationTimeSeconds: BigNumber | string
   // feeFactor is tokenlon protocol field, works like BPS, should <= 10000.
   feeFactor: number
   // salt represents the uniqueness of order, is to prevent replay attack.
-  salt: string
+  salt?: BigNumber | string
 
   // 0x protocol specific fields
   makerAssetData: string
@@ -53,14 +54,14 @@ interface Order {
   exchangeAddress: string
 
   // makerFee and takerFee are not used, but keep to make 0x order signature.
-  makerFee: string
-  takerFee: string
+  makerFee: BigNumber | string
+  takerFee: BigNumber | string
 
   // PMM/RFQ market maker signature
-  makerWalletSignature: string
+  makerWalletSignature?: string
 
   // Extra data
-  payload: string
+  payload?: string
 }
 
 interface Response {
@@ -97,7 +98,10 @@ function extractAssetAmounts(
   side,
   rate: number | string,
   amountBN: BigNumber
-) {
+): {
+  makerAssetAmount: BigNumber
+  takerAssetAmount: BigNumber
+} {
   let makerAssetAmount, takerAssetAmount
   if (side === 'BUY') {
     makerAssetAmount = fromUnitToDecimalBN(
@@ -121,7 +125,13 @@ function extractAssetAmounts(
   return { makerAssetAmount, takerAssetAmount }
 }
 
-function getOrderAndFeeFactor(query: QueryInterface, rate, tokenList, tokenConfigs, config) {
+function getOrderAndFeeFactor(
+  query: QueryInterface,
+  rate,
+  tokenList,
+  tokenConfigs,
+  config
+): ExtendedZXOrder {
   const { side, amount, feefactor } = query
   const baseToken = getTokenByAddress(tokenList, query.baseAddress)
   const quoteToken = getTokenByAddress(tokenList, query.quoteAddress)
@@ -129,7 +139,7 @@ function getOrderAndFeeFactor(query: QueryInterface, rate, tokenList, tokenConfi
   const takerToken = side === 'BUY' ? quoteToken : baseToken
   const foundTokenConfig = tokenConfigs.find((t) => t.symbol === makerToken.symbol)
 
-  let fFactor = config.feeFactor || 10
+  let fFactor: number = Number(config.feeFactor) || 10
   if (foundTokenConfig?.feeFactor) {
     // console.log('set fee factor from token config', { factor: foundTokenConfig.feeFactor })
     fFactor = foundTokenConfig.feeFactor
@@ -154,32 +164,37 @@ function getOrderAndFeeFactor(query: QueryInterface, rate, tokenList, tokenConfi
   )
 
   // ETH -> WETH
-  const makerAssetAddress = getWethAddrIfIsEth(
+  const makerAssetAddress: string = getWethAddrIfIsEth(
     makerToken.contractAddress,
     config.wethContractAddress
   )
   // ETH -> WETH
-  let takerAssetAddress = getWethAddrIfIsEth(takerToken.contractAddress, config.wethContractAddress)
+  let takerAssetAddress: string = getWethAddrIfIsEth(
+    takerToken.contractAddress,
+    config.wethContractAddress
+  )
   if (Protocol.RFQV2 === query.protocol) {
     takerAssetAddress = takerToken.contractAddress
   }
   return {
+    protocol: query.protocol,
+    quoteId: query.uniqId,
     makerAddress: config.mmProxyContractAddress.toLowerCase(),
     makerAssetAmount,
     makerAssetAddress: makerAssetAddress,
     makerAssetData: assetDataUtils.encodeERC20AssetData(makerAssetAddress),
     makerFee: toBN(0),
 
-    takerAddress: config.userProxyContractAddress,
+    takerAddress: config.userProxyContractAddress as string,
     takerAssetAmount,
     takerAssetAddress: takerAssetAddress,
     takerAssetData: assetDataUtils.encodeERC20AssetData(takerAssetAddress),
     takerFee: toBN(0),
 
     senderAddress: config.tokenlonExchangeContractAddress.toLowerCase(),
-    feeRecipientAddress: FEE_RECIPIENT_ADDRESS,
+    feeRecipientAddress: FEE_RECIPIENT_ADDRESS.toLowerCase(),
     expirationTimeSeconds: toBN(getTimestamp() + +config.orderExpirationSeconds),
-    exchangeAddress: config.exchangeContractAddress,
+    exchangeAddress: config.exchangeContractAddress.toLowerCase() as string,
 
     feeFactor: fFactor,
   }
