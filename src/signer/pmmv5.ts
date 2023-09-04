@@ -137,7 +137,7 @@ export const forwardUnsignedOrder = async (
 
 // Move fee factor to salt field
 export const buildSignedOrder = async (
-  signer: Wallet,
+  signer: Wallet | undefined,
   order: ExtendedZXOrder,
   userAddr: string,
   chainId: number,

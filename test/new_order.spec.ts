@@ -1218,7 +1218,7 @@ describe('NewOrder', function () {
         }
       })
     const signedOrder = await buildPMMV5SignedOrder(
-      signer,
+      undefined,
       order,
       Wallet.createRandom().address.toLowerCase(),
       chainId,
@@ -1272,7 +1272,7 @@ describe('NewOrder', function () {
         }
       })
     const signedOrder = await buildRFQV1SignedOrder(
-      signer,
+      undefined,
       order,
       Wallet.createRandom().address.toLowerCase(),
       chainId,
@@ -1327,7 +1327,7 @@ describe('NewOrder', function () {
         }
       })
     const signedOrder = await buildRFQV2SignedOrder(
-      signer,
+      undefined,
       order,
       Wallet.createRandom().address.toLowerCase(),
       chainId,

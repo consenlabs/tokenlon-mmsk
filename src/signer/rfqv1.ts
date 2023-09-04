@@ -140,7 +140,7 @@ export const signRFQOrder = async (
 }
 
 export const buildSignedOrder = async (
-  signer: Wallet,
+  signer: Wallet | undefined,
   order: ExtendedZXOrder,
   userAddr: string,
   chainId: number,
