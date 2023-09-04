@@ -170,6 +170,8 @@ export const buildSignedOrder = async (
     exchangeAddress: order.exchangeAddress,
     salt: order.salt,
   }
+  console.log(`ZXOrder:`)
+  console.log(orderBNToString(o))
   const orderHashBuffer = eip712Utils.structHash(EIP712_ORDER_SCHEMA, o)
   const orderHash = '0x' + orderHashBuffer.toString('hex')
   console.log(`orderHash: ${orderHash}`)

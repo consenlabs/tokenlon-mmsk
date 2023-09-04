@@ -158,7 +158,11 @@ export const buildSignedOrder = async (
   const signingUrl = options ? options.signingUrl : undefined
   order.salt = generateSaltWithFeeFactor(feeFactor, salt)
 
+  console.log(`rfqV1Order:`)
+  console.log(orderBNToString(order))
   const rfqOrder = toRFQOrder(order)
+  console.log(`rfqOrder:`)
+  console.log(orderBNToString(rfqOrder))
 
   const orderHash = getOrderHash(rfqOrder)
   console.log(`orderHash: ${orderHash}`)
@@ -219,7 +223,7 @@ export const buildSignedOrder = async (
 
 const toNumber = (obj: BigNumber | string): number => new BigNumber(obj).toNumber()
 
-export function toRFQOrder(order): RFQOrder {
+export function toRFQOrder(order: ExtendedZXOrder): RFQOrder {
   return {
     takerAddr: order.takerAddress,
     makerAddr: order.makerAddress,

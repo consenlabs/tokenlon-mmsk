@@ -1340,7 +1340,6 @@ describe('NewOrder', function () {
       }
     )
     scope.done()
-    console.log(signedOrder)
     expect(signedOrder).not.null
     expect(signedOrder.makerWalletSignature).not.null
     expect(signedOrder.makerWalletSignature).eq(defaultSignature)

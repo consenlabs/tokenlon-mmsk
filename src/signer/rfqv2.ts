@@ -14,6 +14,7 @@ import axios from 'axios'
 import { generatePseudoRandomSalt } from '0x-v2-order-utils'
 import { signWithUserAndFee } from './pmmv5'
 import { Protocol } from '../types'
+import { BigNumber } from '0x-v2-utils'
 
 // spec of RFQV2
 // - taker address point to userAddr
@@ -153,10 +154,12 @@ export const buildSignedOrder = async (
     salt: salt ? salt : generatePseudoRandomSalt(),
   }
 
+  console.log(`rfqV2Order:`)
+  console.log(orderBNToString(rfqV2Order))
   const signingUrl = options ? options.signingUrl : undefined
   const rfqOrder = toOffer(rfqV2Order)
-  console.log(`rfqOrder`)
-  console.log(rfqOrder)
+  console.log(`offer:`)
+  console.log(orderBNToString(rfqOrder))
   const orderHash = getOfferHash(rfqOrder)
   console.log(`orderHash: ${orderHash}`)
   const orderSignDigest = getOfferSignDigest(rfqOrder, chainId, rfqAddr)
@@ -215,7 +218,9 @@ export const buildSignedOrder = async (
   return orderBNToString(signedOrder)
 }
 
-export function toOffer(order): Offer {
+const toNumber = (obj: BigNumber | string): number => new BigNumber(obj).toNumber()
+
+export function toOffer(order: ExtendedZXOrder): Offer {
   return {
     taker: order.takerAddress,
     maker: order.makerAddress,
@@ -223,8 +228,8 @@ export function toOffer(order): Offer {
     takerTokenAmount: order.takerAssetAmount.toString(),
     makerToken: order.makerAssetAddress,
     makerTokenAmount: order.makerAssetAmount.toString(),
-    feeFactor: order.feeFactor.toString(),
-    expiry: order.expirationTimeSeconds.toString(),
+    feeFactor: order.feeFactor,
+    expiry: toNumber(order.expirationTimeSeconds),
     salt: order.salt.toString(),
   }
 }
