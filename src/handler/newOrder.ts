@@ -5,7 +5,6 @@ import { Protocol, QueryInterface } from '../types'
 import { validateNewOrderRequest, validateRequest } from '../validations'
 import { ValidationError } from './errors'
 import { addQuoteIdPrefix, constructQuoteResponse, preprocessQuote } from '../quoting'
-
 import { assetDataUtils } from '0x-v2-order-utils'
 import { buildSignedOrder as buildRFQV1SignedOrder } from '../signer/rfqv1'
 import { buildSignedOrder as buildRFQV2SignedOrder } from '../signer/rfqv2'
@@ -22,7 +21,7 @@ import {
   getWethAddrIfIsEth,
   getTimestamp,
 } from '../utils'
-import { ExtendedZXOrder } from 'src/signer/types'
+import { ExtendedZXOrder } from '../signer/types'
 
 type NumberOrString = number | string
 

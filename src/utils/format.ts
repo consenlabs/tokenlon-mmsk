@@ -1,6 +1,6 @@
 import { reduce } from 'lodash'
 import { BigNumber } from '@0xproject/utils'
-import { ExtendedZXOrder, Offer, RFQOrder } from 'src/signer/types'
+import { ExtendedZXOrder, Offer, RFQOrder } from '../signer/types'
 import { Order as ZXOrder } from '0x-v2-order-utils'
 
 BigNumber.config({
