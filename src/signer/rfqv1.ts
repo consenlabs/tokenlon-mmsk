@@ -72,8 +72,13 @@ export const forwardUnsignedOrder = async (
   signingUrl: string,
   orderInfo: RemoteSigningRFQV1Request
 ): Promise<string> => {
+  console.log(`Signing url: ${signingUrl}`)
+  console.log(`RFQV1 order:`)
+  console.log(orderInfo)
   const resp = await axios.post(signingUrl, orderInfo)
   const body = resp.data
+  console.log(`response:`)
+  console.log(body)
   if (body.signature) {
     return body.signature
   } else {

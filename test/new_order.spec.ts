@@ -1207,13 +1207,14 @@ describe('NewOrder', function () {
       expirationTimeSeconds: toBN(1620444917),
       feeFactor: 30,
     }
+    const defaultSignature = `0x12345677777777777777777`
     const scope = nock(url)
       .post('/')
       .reply(200, (_, requestBody) => {
         console.log(`requestBody: `)
         console.log(requestBody)
         return {
-          signature: `0x12345677777777777777777`,
+          signature: defaultSignature,
         }
       })
     const signedOrder = await buildPMMV5SignedOrder(
@@ -1231,6 +1232,7 @@ describe('NewOrder', function () {
     console.log(signedOrder)
     expect(signedOrder).not.null
     expect(signedOrder.makerWalletSignature).not.null
+    expect(signedOrder.makerWalletSignature).eq(defaultSignature)
   })
   it('Should forward unsigned RFQV1 orders to signing service', async () => {
     const url = `http://localhost:3000`
@@ -1259,13 +1261,14 @@ describe('NewOrder', function () {
       expirationTimeSeconds: toBN(1620444917),
       feeFactor: 30,
     }
+    const defaultSignature = `0x12345677777777777777777`
     const scope = nock(url)
       .post('/')
       .reply(200, (_, requestBody) => {
         console.log(`requestBody: `)
         console.log(requestBody)
         return {
-          signature: `0x12345677777777777777777`,
+          signature: defaultSignature,
         }
       })
     const signedOrder = await buildRFQV1SignedOrder(
@@ -1284,6 +1287,7 @@ describe('NewOrder', function () {
     console.log(signedOrder)
     expect(signedOrder).not.null
     expect(signedOrder.makerWalletSignature).not.null
+    expect(signedOrder.makerWalletSignature).eq(defaultSignature)
   })
   it('Should forward unsigned RFQV2 orders to signing service', async () => {
     const url = `http://localhost:3000`
@@ -1312,13 +1316,14 @@ describe('NewOrder', function () {
       expirationTimeSeconds: toBN(1620444917),
       feeFactor: 30,
     }
+    const defaultSignature = `0x12345677777777777777777`
     const scope = nock(url)
       .post('/')
       .reply(200, (_, requestBody) => {
         console.log(`requestBody: `)
         console.log(requestBody)
         return {
-          signature: `0x12345677777777777777777`,
+          signature: defaultSignature,
         }
       })
     const signedOrder = await buildRFQV2SignedOrder(
@@ -1338,13 +1343,15 @@ describe('NewOrder', function () {
     console.log(signedOrder)
     expect(signedOrder).not.null
     expect(signedOrder.makerWalletSignature).not.null
+    expect(signedOrder.makerWalletSignature).eq(defaultSignature)
   })
   it('Should generate correct salt', async () => {
     const givenPrefixSalt = generateSaltWithFeeFactor(30, '0x11111111111111111111111111111111')
     const salt = generateSaltWithFeeFactor(30)
     console.log(givenPrefixSalt.toString(16))
+    console.log(ethUtils.toBuffer('0x' + salt.toString(16)).length)
     console.log(salt.toString(16))
-    expect(givenPrefixSalt.toString(16).length).is.eq(64)
-    expect(salt.toString(16).length).is.eq(64)
+    expect(ethUtils.toBuffer('0x' + givenPrefixSalt.toString(16)).length).is.eq(32)
+    expect(ethUtils.toBuffer('0x' + salt.toString(16)).length).is.eq(32)
   })
 })
