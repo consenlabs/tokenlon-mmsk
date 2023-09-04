@@ -1,5 +1,6 @@
 import { BigNumber } from '../utils'
 import { MarketMakerConfig, Protocol, Token, TokenConfig } from '../types'
+import { Order as ZXOrder } from '0x-v2-order-utils'
 
 export interface SimpleOrder {
   side: string
@@ -69,8 +70,9 @@ export interface ExtendedZXOrder {
 }
 
 export interface RemoteSigningPMMV5Request {
+  quoteId: number | string
   protocol: Protocol
-  pmmOrder: ExtendedZXOrder
+  pmmOrder: ZXOrder
   feeFactor: number
   orderHash: string
   orderSignDigest: string
@@ -80,6 +82,7 @@ export interface RemoteSigningPMMV5Request {
 }
 
 export interface RemoteSigningRFQV1Request {
+  quoteId: number | string
   protocol: Protocol
   rfqOrder: RFQOrder
   feeFactor: number
@@ -91,6 +94,7 @@ export interface RemoteSigningRFQV1Request {
 }
 
 export interface RemoteSigningRFQV2Request {
+  quoteId: number | string
   protocol: Protocol
   rfqOrder: Offer
   feeFactor: number

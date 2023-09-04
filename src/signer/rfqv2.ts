@@ -194,6 +194,7 @@ export const buildSignedOrder = async (
     }
   } else {
     makerWalletSignature = await forwardUnsignedOrder(signingUrl, {
+      quoteId: order.quoteId,
       protocol: Protocol.RFQV2,
       rfqOrder: orderBNToString(rfqOrder),
       feeFactor: feeFactor,

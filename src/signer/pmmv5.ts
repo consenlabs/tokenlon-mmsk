@@ -183,8 +183,9 @@ export const buildSignedOrder = async (
         : await signByMMPSigner(orderSignDigest, userAddr, feeFactor, signer)
   } else {
     makerWalletSignature = await forwardUnsignedOrder(signingUrl, {
+      quoteId: order.quoteId,
       protocol: Protocol.PMMV5,
-      pmmOrder: orderBNToString(order),
+      pmmOrder: orderBNToString(o),
       feeFactor: feeFactor,
       orderHash: orderHash,
       orderSignDigest: orderSignDigest,

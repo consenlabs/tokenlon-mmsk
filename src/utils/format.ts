@@ -1,6 +1,7 @@
 import { reduce } from 'lodash'
 import { BigNumber } from '@0xproject/utils'
 import { ExtendedZXOrder, Offer, RFQOrder } from 'src/signer/types'
+import { Order as ZXOrder } from '0x-v2-order-utils'
 
 BigNumber.config({
   ROUNDING_MODE: BigNumber.ROUND_FLOOR,
@@ -28,7 +29,9 @@ export const isBigNumber = (v: any): boolean => {
   )
 }
 
-export function orderBNToString<T extends ExtendedZXOrder | Offer | RFQOrder>(order: T): T {
+export function orderBNToString<T extends ZXOrder | ExtendedZXOrder | Offer | RFQOrder>(
+  order: T
+): T {
   return reduce(
     order,
     (acc, v, key) => {
