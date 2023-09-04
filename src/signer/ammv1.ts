@@ -1,6 +1,6 @@
 // sign order from custom quoter no need to put it in MMSK
 import { assetDataUtils, generatePseudoRandomSalt } from '0x-v2-order-utils'
-import cryptoRandomString from 'crypto-random-string'
+import * as cryptoRandomString from 'crypto-random-string'
 import { orderBNToString } from '../utils'
 import { NULL_ADDRESS } from '../constants'
 

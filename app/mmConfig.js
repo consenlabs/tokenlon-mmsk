@@ -1,4 +1,6 @@
 const types = require('../lib/signer/types')
+const dotenv = require('dotenv')
+dotenv.config()
 
 module.exports = {
   // Tokenlon server address

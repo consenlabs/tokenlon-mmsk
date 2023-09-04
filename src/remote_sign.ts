@@ -1,17 +1,18 @@
-import Koa from 'koa'
-import Router from 'koa-router'
-import Bodyparser from 'koa-bodyparser'
-import { Protocol } from './src/types'
-import { buildSignedOrder as buildPMMV5SignedOrder } from './src/signer/pmmv5'
-import { buildSignedOrder as buildRFQV1SignedOrder } from './src/signer/rfqv1'
-import { buildSignedOrder as buildRFQV2SignedOrder } from './src/signer/rfqv2'
+import * as Koa from 'koa'
+import * as Router from 'koa-router'
+import * as Bodyparser from 'koa-bodyparser'
+import { Protocol } from './types'
+import { buildSignedOrder as buildPMMV5SignedOrder } from './signer/pmmv5'
+import { signByMMPSigner as signRFQV1ByMMPSigner } from './signer/rfqv1'
+import { signOffer, signByMMPSigner as signRFQV2ByMMPSigner } from './signer/rfqv2'
 import * as ethers from 'ethers'
-import dotenv from 'dotenv'
-import { PermitType, WalletType } from './src/signer/types'
-dotenv.config()
+import { SignatureType, WalletType } from './signer/types'
+import * as config from '../app/mmConfig.js'
 
-const privateKey = process.env.WALLET_PRIVATE_KEY as string
+const privateKey = config.WALLET_PRIVATE_KEY as string
 const signer = new ethers.Wallet(privateKey)
+
+const walletType = WalletType.MMP_VERSION_4
 
 const port = 3000
 
@@ -31,31 +32,39 @@ const signPMMV5 = async (signRequest) => {
 
 const signRFQV1 = async (signRequest) => {
   console.log(signRequest)
-  const signedOrder = await buildRFQV1SignedOrder(
-    signer,
-    signRequest.rfqOrder,
+  const signature = await signRFQV1ByMMPSigner(
+    signRequest.orderSignDigest,
     signRequest.userAddr,
-    1,
-    '0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F',
+    signRequest.feeFactor,
+    signer,
     WalletType.MMP_VERSION_4
   )
-  console.log(signedOrder)
-  return signedOrder.makerWalletSignature
+  console.log(`signature: ${signature}`)
+  return signature
 }
 
 const signRFQV2 = async (signRequest) => {
   console.log(signRequest)
-  const signedOrder = await buildRFQV2SignedOrder(
-    signer,
-    signRequest.rfqOrder,
-    signRequest.userAddr,
-    1,
-    '0x91C986709Bb4fE0763edF8E2690EE9d5019Bea4a',
-    WalletType.MMP_VERSION_4,
-    PermitType.APPROVE_RFQV2
-  )
-  console.log(signedOrder)
-  return signedOrder.makerWalletSignature
+  let signature
+  if (walletType === WalletType.MMP_VERSION_4) {
+    signature = await signRFQV2ByMMPSigner(
+      signRequest.orderSignDigest,
+      signRequest.userAddr,
+      signRequest.feeFactor,
+      signer,
+      WalletType.MMP_VERSION_4
+    )
+  } else if (walletType === WalletType.ERC1271_EIP712) {
+    signature = await signOffer(
+      1,
+      '0x91C986709Bb4fE0763edF8E2690EE9d5019Bea4a',
+      signRequest.rfqOrder,
+      signer,
+      SignatureType.WalletBytes32
+    )
+  }
+  console.log(`signature: ${signature}`)
+  return signature
 }
 
 const sign = async (ctx) => {

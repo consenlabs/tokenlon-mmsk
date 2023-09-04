@@ -18,7 +18,7 @@ import { expect } from 'chai'
 import { generateSaltWithFeeFactor } from '../src/signer/pmmv5'
 import { toOffer } from '../src/signer/rfqv2'
 import { assetDataUtils } from '0x-v2-order-utils'
-import nock from 'nock'
+import * as nock from 'nock'
 
 const usdtHolders = {
   1: '0x15abb66bA754F05cBC0165A64A11cDed1543dE48',
@@ -134,6 +134,8 @@ describe('NewOrder', function () {
       expect(signedOrderResp).is.not.null
       // verify data object
       const order = signedOrderResp.order
+      console.log(`order`)
+      console.log(order)
       expect(order).is.not.null
       expect(order.protocol).eq(Protocol.AMMV1)
       expect(order.quoteId).eq('1--echo-testing-8888')
