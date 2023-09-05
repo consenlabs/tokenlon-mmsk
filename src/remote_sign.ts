@@ -3,7 +3,7 @@ import * as Router from 'koa-router'
 import * as Bodyparser from 'koa-bodyparser'
 import { Protocol } from './types'
 import { buildSignedOrder as buildPMMV5SignedOrder } from './signer/pmmv5'
-import { signByMMPSigner as signRFQV1ByMMPSigner } from './signer/rfqv1'
+import { signRFQOrder, signByMMPSigner as signRFQV1ByMMPSigner } from './signer/rfqv1'
 import { signOffer, signByMMPSigner as signRFQV2ByMMPSigner } from './signer/rfqv2'
 import * as ethers from 'ethers'
 import { SignatureType, WalletType } from './signer/types'
@@ -23,7 +23,7 @@ const signPMMV5 = async (signRequest) => {
     signer,
     signRequest.pmmOrder,
     signRequest.userAddr,
-    1,
+    signRequest.chainId,
     '0x8D90113A1e286a5aB3e496fbD1853F265e5913c6'
   )
   console.log(signedOrder)
@@ -32,13 +32,25 @@ const signPMMV5 = async (signRequest) => {
 
 const signRFQV1 = async (signRequest) => {
   console.log(signRequest)
-  const signature = await signRFQV1ByMMPSigner(
-    signRequest.orderSignDigest,
-    signRequest.userAddr,
-    signRequest.feeFactor,
-    signer,
-    WalletType.MMP_VERSION_4
-  )
+  let signature
+  if (walletType === WalletType.MMP_VERSION_4) {
+    signature = await signRFQV1ByMMPSigner(
+      signRequest.orderSignDigest,
+      signRequest.userAddr,
+      signRequest.feeFactor,
+      signer,
+      WalletType.MMP_VERSION_4
+    )
+  } else if (walletType === WalletType.ERC1271_EIP712) {
+    signature = await signRFQOrder(
+      signRequest.chainId,
+      `0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F`,
+      signRequest.rfqOrder,
+      signer,
+      signRequest.feeFactor,
+      SignatureType.WalletBytes32
+    )
+  }
   console.log(`signature: ${signature}`)
   return signature
 }
