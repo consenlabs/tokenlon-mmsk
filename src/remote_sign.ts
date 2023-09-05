@@ -2,11 +2,17 @@ import * as Koa from 'koa'
 import * as Router from 'koa-router'
 import * as Bodyparser from 'koa-bodyparser'
 import { Protocol } from './types'
-import { buildSignedOrder as buildPMMV5SignedOrder } from './signer/pmmv5'
+import { signByEOA as signPMMV5EOA, signByMMPSigner as signPMMV5ByMMPSigner } from './signer/pmmv5'
 import { signRFQOrder, signByMMPSigner as signRFQV1ByMMPSigner } from './signer/rfqv1'
 import { signOffer, signByMMPSigner as signRFQV2ByMMPSigner } from './signer/rfqv2'
 import * as ethers from 'ethers'
-import { SignatureType, WalletType } from './signer/types'
+import {
+  RemoteSigningPMMV5Request,
+  RemoteSigningRFQV1Request,
+  RemoteSigningRFQV2Request,
+  SignatureType,
+  WalletType,
+} from './signer/types'
 import * as config from '../app/mmConfig.js'
 
 const privateKey = config.WALLET_PRIVATE_KEY as string
@@ -16,24 +22,38 @@ const walletType = WalletType.MMP_VERSION_4
 
 const port = 3000
 
-const signPMMV5 = async (signRequest) => {
+const signPMMV5 = async (signRequest: RemoteSigningPMMV5Request) => {
   console.log(signRequest)
-  signRequest.pmmOrder.feeFactor = signRequest.feeFactor
-  const signedOrder = await buildPMMV5SignedOrder(
-    signer,
-    signRequest.pmmOrder,
-    signRequest.userAddr,
-    signRequest.chainId,
-    '0x8D90113A1e286a5aB3e496fbD1853F265e5913c6'
-  )
-  console.log(signedOrder)
-  return signedOrder.makerWalletSignature
+  const pmmOrder = signRequest.pmmOrder
+  let signature
+  if (signer.address.toLowerCase() === pmmOrder.makerAddress.toLowerCase()) {
+    signature = signPMMV5EOA(signRequest.orderSignDigest, signer)
+  } else {
+    signature = await signPMMV5ByMMPSigner(
+      signRequest.orderSignDigest,
+      signRequest.userAddr,
+      signRequest.feeFactor,
+      signer
+    )
+  }
+  console.log(signature)
+  return signature
 }
 
-const signRFQV1 = async (signRequest) => {
+const signRFQV1 = async (signRequest: RemoteSigningRFQV1Request) => {
   console.log(signRequest)
+  const rfqOrder = signRequest.rfqOrder
   let signature
-  if (walletType === WalletType.MMP_VERSION_4) {
+  if (signer.address.toLowerCase() === rfqOrder.makerAddr.toLowerCase()) {
+    signature = await signRFQOrder(
+      signRequest.chainId,
+      `0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F`,
+      signRequest.rfqOrder,
+      signer,
+      signRequest.feeFactor,
+      SignatureType.EIP712
+    )
+  } else if (walletType === WalletType.MMP_VERSION_4) {
     signature = await signRFQV1ByMMPSigner(
       signRequest.orderSignDigest,
       signRequest.userAddr,
@@ -55,10 +75,19 @@ const signRFQV1 = async (signRequest) => {
   return signature
 }
 
-const signRFQV2 = async (signRequest) => {
+const signRFQV2 = async (signRequest: RemoteSigningRFQV2Request) => {
   console.log(signRequest)
+  const rfqOrder = signRequest.rfqOrder
   let signature
-  if (walletType === WalletType.MMP_VERSION_4) {
+  if (signer.address.toLowerCase() === rfqOrder.maker.toLowerCase()) {
+    signature = await signOffer(
+      signRequest.chainId,
+      '0x91C986709Bb4fE0763edF8E2690EE9d5019Bea4a',
+      signRequest.rfqOrder,
+      signer,
+      SignatureType.EIP712
+    )
+  } else if (walletType === WalletType.MMP_VERSION_4) {
     signature = await signRFQV2ByMMPSigner(
       signRequest.orderSignDigest,
       signRequest.userAddr,
@@ -68,7 +97,7 @@ const signRFQV2 = async (signRequest) => {
     )
   } else if (walletType === WalletType.ERC1271_EIP712) {
     signature = await signOffer(
-      1,
+      signRequest.chainId,
       '0x91C986709Bb4fE0763edF8E2690EE9d5019Bea4a',
       signRequest.rfqOrder,
       signer,

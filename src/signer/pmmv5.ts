@@ -92,7 +92,7 @@ export async function signWithUserAndFee(
 // +------|---------|---------|---------+
 // |  v   |    R    |    S    | type(3) |
 // +------|---------|---------|---------+
-async function signByEOA(orderSignDigest: string, wallet: Wallet): Promise<string> {
+export async function signByEOA(orderSignDigest: string, wallet: Wallet): Promise<string> {
   const hashArray = utils.arrayify(orderSignDigest)
   let signature = await wallet.signMessage(hashArray)
   signature = signature.slice(2)
@@ -107,7 +107,7 @@ async function signByEOA(orderSignDigest: string, wallet: Wallet): Promise<strin
 // +------|---------|---------|---------|---------|---------+
 // |  V   |    R    |    S    |userAddr |feeFactor| type(4) |
 // +------|---------|---------|---------|---------|---------+
-async function signByMMPSigner(
+export async function signByMMPSigner(
   orderSignDigest: string,
   userAddr: string,
   feeFactor: number,
