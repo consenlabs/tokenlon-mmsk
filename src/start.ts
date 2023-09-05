@@ -15,6 +15,7 @@ import {
   dealOrder,
   exceptionOrder,
   version,
+  signOrder,
 } from './handler'
 import { setConfig, getWallet } from './config'
 import { ConfigForStart } from './types'
@@ -101,6 +102,7 @@ export const startMMSK = async (config: ConfigForStart) => {
 
     // Respond to Tokenlon quoting server
     router.get('/getRate', getRate)
+    router.post('/signOrder', signOrder)
     router.get('/newOrder', newOrder)
     router.get('/version', version)
     router.get('/getSupportedTokenList', getSupportedTokenList)
