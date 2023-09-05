@@ -15,6 +15,7 @@ import {
   dealOrder,
   exceptionOrder,
   version,
+  signOrder,
 } from './handler'
 import { setConfig, getWallet } from './config'
 import { ConfigForStart } from './types'
@@ -88,8 +89,10 @@ export const startMMSK = async (config: ConfigForStart) => {
       version: VERSION,
       signerAddress: config.WALLET_ADDRESS,
       mmpType: config.WALLET_TYPE || WalletType.MMP_VERSION_4,
+      permitType: config.PERMIT_TYPE || PermitType.ALLOWANCE_TARGET,
       chainId: config.CHAIN_ID,
       exchangeUrl: config.EXCHANGE_URL,
+      signingUrl: config.SIGNING_URL,
     })
 
     // init sentry
@@ -99,6 +102,7 @@ export const startMMSK = async (config: ConfigForStart) => {
 
     // Respond to Tokenlon quoting server
     router.get('/getRate', getRate)
+    router.post('/signOrder', signOrder)
     router.get('/newOrder', newOrder)
     router.get('/version', version)
     router.get('/getSupportedTokenList', getSupportedTokenList)

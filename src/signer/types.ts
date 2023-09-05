@@ -1,5 +1,6 @@
 import { BigNumber } from '../utils'
-import { MarketMakerConfig, Token, TokenConfig } from '../types'
+import { MarketMakerConfig, Protocol, Token, TokenConfig } from '../types'
+import { Order as ZXOrder } from '0x-v2-order-utils'
 
 export interface SimpleOrder {
   side: string
@@ -26,9 +27,9 @@ export interface RFQOrder {
   makerAddr: string
   takerAssetAddr: string
   makerAssetAddr: string
-  takerAssetAmount: BigNumber
-  makerAssetAmount: BigNumber
-  salt: BigNumber
+  takerAssetAmount: BigNumber | string
+  makerAssetAmount: BigNumber | string
+  salt: BigNumber | string
   deadline: number
   feeFactor: number
 }
@@ -37,17 +38,71 @@ export interface Offer {
   taker: string
   maker: string
   takerToken: string
-  takerTokenAmount: BigNumber
+  takerTokenAmount: BigNumber | string
   makerToken: string
-  makerTokenAmount: BigNumber
+  makerTokenAmount: BigNumber | string
   feeFactor: number
   expiry: number
   salt: BigNumber | string
 }
 
-export interface RFQV2Order {
-  offer: Offer
-  recipient: string
+export interface ExtendedZXOrder {
+  senderAddress: string
+  makerAddress: string
+  makerAssetAddress: string
+  takerAddress: string
+  takerAssetAddress: string
+  makerFee: BigNumber | string
+  takerFee: BigNumber | string
+  makerAssetAmount: BigNumber | string
+  takerAssetAmount: BigNumber | string
+  makerAssetData: string
+  takerAssetData: string
+  salt?: string | BigNumber | string
+  exchangeAddress: string
+  feeRecipientAddress: string
+  expirationTimeSeconds: BigNumber | string
+  feeFactor: number
+  quoteId: number | string
+  protocol: Protocol
+  makerWalletSignature?: string
+  payload?: string
+}
+
+export interface RemoteSigningPMMV5Request {
+  quoteId: number | string
+  protocol: Protocol
+  pmmOrder: ZXOrder
+  feeFactor: number
+  orderHash: string
+  orderSignDigest: string
+  userAddr: string
+  chainId: number
+  pmmAddr: string
+}
+
+export interface RemoteSigningRFQV1Request {
+  quoteId: number | string
+  protocol: Protocol
+  rfqOrder: RFQOrder
+  feeFactor: number
+  orderHash: string
+  orderSignDigest: string
+  userAddr: string
+  chainId: number
+  rfqAddr: string
+}
+
+export interface RemoteSigningRFQV2Request {
+  quoteId: number | string
+  protocol: Protocol
+  rfqOrder: Offer
+  feeFactor: number
+  orderHash: string
+  orderSignDigest: string
+  userAddr: string
+  chainId: number
+  rfqAddr: string
 }
 
 export enum SignatureType {

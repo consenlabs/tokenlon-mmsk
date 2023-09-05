@@ -1,12 +1,20 @@
 import { utils, Wallet } from 'ethers'
 import { orderBNToString } from '../utils'
 import { getOfferHash, getOfferSignDigest } from './orderHash'
-import { Offer, PermitType, WalletType, SignatureType } from './types'
+import {
+  Offer,
+  PermitType,
+  WalletType,
+  SignatureType,
+  ExtendedZXOrder,
+  RemoteSigningRFQV2Request,
+} from './types'
 import * as ethUtils from 'ethereumjs-util'
 import axios from 'axios'
 import { generatePseudoRandomSalt } from '0x-v2-order-utils'
 import { signWithUserAndFee } from './pmmv5'
 import { Protocol } from '../types'
+import { BigNumber } from '0x-v2-utils'
 
 // spec of RFQV2
 // - taker address point to userAddr
@@ -68,9 +76,17 @@ export async function signByMMPSigner(
   }
 }
 
-export const forwardUnsignedOrder = async (signingUrl: string, orderInfo: any): Promise<string> => {
+export const forwardUnsignedOrder = async (
+  signingUrl: string,
+  orderInfo: RemoteSigningRFQV2Request
+): Promise<string> => {
+  console.log(`Signing url: ${signingUrl}`)
+  console.log(`RFQV2 order:`)
+  console.log(orderInfo)
   const resp = await axios.post(signingUrl, orderInfo)
   const body = resp.data
+  console.log(`response:`)
+  console.log(body)
   if (body.signature) {
     return body.signature
   } else {
@@ -117,8 +133,8 @@ export const signOffer = async (
 }
 
 export const buildSignedOrder = async (
-  signer: Wallet,
-  order: any,
+  signer: Wallet | undefined,
+  order: ExtendedZXOrder,
   userAddr: string,
   chainId: number,
   rfqAddr: string,
@@ -128,17 +144,22 @@ export const buildSignedOrder = async (
     signingUrl?: string
     salt?: string
   }
-): Promise<any> => {
+): Promise<ExtendedZXOrder> => {
   // inject fee factor to salt
   const feeFactor = order.feeFactor
   order.takerAddress = userAddr.toLowerCase()
   const salt = options ? options.salt : undefined
-  order.salt = salt ? salt : generatePseudoRandomSalt()
+  const rfqV2Order = {
+    ...order,
+    salt: salt ? salt : generatePseudoRandomSalt(),
+  }
 
+  console.log(`rfqV2Order:`)
+  console.log(orderBNToString(rfqV2Order))
   const signingUrl = options ? options.signingUrl : undefined
-  const rfqOrder = toOffer(order)
-  console.log(`rfqOrder`)
-  console.log(rfqOrder)
+  const rfqOrder = toOffer(rfqV2Order)
+  console.log(`offer:`)
+  console.log(orderBNToString(rfqOrder))
   const orderHash = getOfferHash(rfqOrder)
   console.log(`orderHash: ${orderHash}`)
   const orderSignDigest = getOfferSignDigest(rfqOrder, chainId, rfqAddr)
@@ -176,8 +197,12 @@ export const buildSignedOrder = async (
     }
   } else {
     makerWalletSignature = await forwardUnsignedOrder(signingUrl, {
+      quoteId: order.quoteId,
       protocol: Protocol.RFQV2,
-      rfqOrder: rfqOrder,
+      rfqOrder: orderBNToString(rfqOrder),
+      feeFactor: feeFactor,
+      orderHash: orderHash,
+      orderSignDigest: orderSignDigest,
       userAddr: userAddr,
       chainId: chainId,
       rfqAddr: rfqAddr,
@@ -185,7 +210,7 @@ export const buildSignedOrder = async (
   }
 
   const signedOrder = {
-    ...order,
+    ...rfqV2Order,
     payload: Buffer.from(JSON.stringify({ makerTokenPermit: permitType })).toString('base64'),
     makerWalletSignature,
   }
@@ -193,7 +218,9 @@ export const buildSignedOrder = async (
   return orderBNToString(signedOrder)
 }
 
-export function toOffer(order): Offer {
+const toNumber = (obj: BigNumber | string): number => new BigNumber(obj).toNumber()
+
+export function toOffer(order: ExtendedZXOrder): Offer {
   return {
     taker: order.takerAddress,
     maker: order.makerAddress,
@@ -201,8 +228,8 @@ export function toOffer(order): Offer {
     takerTokenAmount: order.takerAssetAmount.toString(),
     makerToken: order.makerAssetAddress,
     makerTokenAmount: order.makerAssetAmount.toString(),
-    feeFactor: order.feeFactor.toString(),
-    expiry: order.expirationTimeSeconds.toString(),
+    feeFactor: order.feeFactor,
+    expiry: toNumber(order.expirationTimeSeconds),
     salt: order.salt.toString(),
   }
 }
