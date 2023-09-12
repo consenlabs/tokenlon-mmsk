@@ -38,7 +38,7 @@ const usdtHolders = {
 
 const USDT_ADDRESS: Record<number, string> = {
   1: '0xdac17f958d2ee523a2206206994597c13d831ec7',
-  5: '0xa93Ef9215b907c19e739E2214e1AA5412a0401B5',
+  5: '0xa93ef9215b907c19e739e2214e1aa5412a0401b5',
 }
 
 const IS_VALID_SIGNATURE = [
@@ -698,10 +698,10 @@ describe('NewOrder', function () {
           },
         },
         query: {
-          base: 'ETH',
-          quote: 'USDT',
+          base: 'USDT',
+          quote: 'ETH',
           side: 'SELL',
-          amount: 0.1,
+          amount: 1,
           uniqId: 'testing-1111',
           userAddr: userAddr,
           protocol: Protocol.RFQV2,
@@ -715,18 +715,18 @@ describe('NewOrder', function () {
       expect(order.protocol).eq(Protocol.RFQV2)
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(signer.address.toLowerCase())
-      expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
+      expect(order.makerAssetAmount).eq('1000000000000000000')
+      expect(order.makerAssetAddress).eq(WETH[chainId].toLowerCase())
       expect(
         order.makerAssetData,
-        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
+        `0xf47261b0000000000000000000000000${WETH[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
-      expect(order.takerAssetAmount).eq('100000000000000000')
-      expect(order.takerAssetAddress).eq(ZERO[chainId].toLowerCase())
+      expect(order.takerAssetAmount).eq('1000000')
+      expect(order.takerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(
         order.takerAssetData,
-        `0xf47261b0000000000000000000000000${ZERO[chainId].toLowerCase().slice(2)}`
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
       expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
