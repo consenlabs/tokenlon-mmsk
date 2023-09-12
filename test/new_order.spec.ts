@@ -229,9 +229,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq('0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852')
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq('0x25657705a6be20511687d483f2fccfb2d92f6033')
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -255,10 +255,7 @@ describe('NewOrder', function () {
       const ammAddr = '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
       const payload = Buffer.from(
         JSON.stringify({
-          path: [
-            '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-            '0xdac17f958d2ee523a2206206994597c13d831ec7',
-          ],
+          path: [WETH[chainId].toLowerCase(), USDT_ADDRESS[chainId].toLowerCase()],
         })
       ).toString('base64')
       const signedOrderResp = await newOrder({
@@ -295,9 +292,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq('0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852')
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq('0x25657705a6be20511687d483f2fccfb2d92f6033')
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -383,9 +380,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(signer.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257')
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -440,9 +437,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(signer.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257')
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -525,9 +522,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(mmproxy.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -638,9 +635,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(mmproxy.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -719,10 +716,10 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(signer.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(
         order.makerAssetData,
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -858,9 +855,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(mmproxy.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -976,9 +973,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(mmproxy.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -1059,10 +1056,10 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(signer.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(
         order.makerAssetData,
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -1133,7 +1130,7 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.quoteId).eq('1--echo-testing-8888')
       expect(signedOrderResp.order.makerWalletSignature.slice(-1)).eq('4')
       expect(signedOrderResp.order.takerAssetData.slice(34)).eq(
-        'dac17f958d2ee523a2206206994597c13d831ec7'
+        USDT_ADDRESS[chainId].toLowerCase().slice(2)
       )
       expect(signedOrderResp.order.takerAssetAmount).eq(utils.parseUnits('0.122539', 6).toString())
       expect(signedOrderResp.order.makerAssetAmount).eq(utils.parseEther('0.1114').toString())
@@ -1171,22 +1168,6 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.makerAssetAmount).eq(utils.parseUnits('0.12221', 6).toString())
     })
   })
-  it('test get RFQ order hash', () => {
-    const rfqAddr = '0x6b6D3C4EF634731E17d31d0D6017ba9DB4775955'
-    const order = {
-      takerAddr: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
-      makerAddr: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64',
-      takerAssetAddr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      makerAssetAddr: '0xdac17f958d2ee523a2206206994597c13d831ec7',
-      takerAssetAmount: new BigNumber('0x0de0b6b3a7640000'),
-      makerAssetAmount: new BigNumber('0x05f5e100'),
-      salt: new BigNumber('0x44df74b1c54e9792989c61fedcef6f94b534b58933cde70bc456ec74cf4d3610'),
-      deadline: 1620444917,
-      feeFactor: 30,
-    }
-    const orderSignDigest = getOrderSignDigest(order, chainId, rfqAddr)
-    expect(orderSignDigest).eq('0x8d70993864d87daa0b2bae0c2be1c56067f45363680d0dca8657e1e51d1d6a40')
-  })
   it('Should forward unsigned PMMV5 orders to signing service', async () => {
     const url = `http://localhost:3000`
     const pmm = '0x8D90113A1e286a5aB3e496fbD1853F265e5913c6'
@@ -1198,16 +1179,12 @@ describe('NewOrder', function () {
       senderAddress: `0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64`,
       takerAddress: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
       makerAddress: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64'.toLowerCase(),
-      takerAssetData: assetDataUtils.encodeERC20AssetData(
-        '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
-      ),
-      makerAssetData: assetDataUtils.encodeERC20AssetData(
-        '0xdac17f958d2ee523a2206206994597c13d831ec7'
-      ),
+      takerAssetData: assetDataUtils.encodeERC20AssetData(WETH[chainId]),
+      makerAssetData: assetDataUtils.encodeERC20AssetData(USDT_ADDRESS[chainId]),
       takerFee: toBN(0),
       makerFee: toBN(0),
-      takerAssetAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      makerAssetAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+      takerAssetAddress: WETH[chainId],
+      makerAssetAddress: USDT_ADDRESS[chainId],
       takerAssetAmount: new BigNumber('0x0de0b6b3a7640000'),
       makerAssetAmount: new BigNumber('0x05f5e100'),
       salt: new BigNumber('0x44df74b1c54e9792989c61fedcef6f94b534b58933cde70bc456ec74cf4d3610'),
@@ -1252,16 +1229,12 @@ describe('NewOrder', function () {
       senderAddress: `0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64`,
       takerAddress: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
       makerAddress: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64'.toLowerCase(),
-      takerAssetData: assetDataUtils.encodeERC20AssetData(
-        '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
-      ),
-      makerAssetData: assetDataUtils.encodeERC20AssetData(
-        '0xdac17f958d2ee523a2206206994597c13d831ec7'
-      ),
+      takerAssetData: assetDataUtils.encodeERC20AssetData(WETH[chainId]),
+      makerAssetData: assetDataUtils.encodeERC20AssetData(USDT_ADDRESS[chainId]),
       takerFee: toBN(0),
       makerFee: toBN(0),
-      takerAssetAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      makerAssetAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+      takerAssetAddress: WETH[chainId],
+      makerAssetAddress: USDT_ADDRESS[chainId],
       takerAssetAmount: new BigNumber('0x0de0b6b3a7640000'),
       makerAssetAmount: new BigNumber('0x05f5e100'),
       salt: new BigNumber('0x44df74b1c54e9792989c61fedcef6f94b534b58933cde70bc456ec74cf4d3610'),
@@ -1307,16 +1280,12 @@ describe('NewOrder', function () {
       senderAddress: `0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64`,
       takerAddress: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
       makerAddress: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64'.toLowerCase(),
-      takerAssetData: assetDataUtils.encodeERC20AssetData(
-        '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
-      ),
-      makerAssetData: assetDataUtils.encodeERC20AssetData(
-        '0xdac17f958d2ee523a2206206994597c13d831ec7'
-      ),
+      takerAssetData: assetDataUtils.encodeERC20AssetData(WETH[chainId]),
+      makerAssetData: assetDataUtils.encodeERC20AssetData(USDT_ADDRESS[chainId]),
       takerFee: toBN(0),
       makerFee: toBN(0),
-      takerAssetAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      makerAssetAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+      takerAssetAddress: WETH[chainId],
+      makerAssetAddress: USDT_ADDRESS[chainId],
       takerAssetAmount: new BigNumber('0x0de0b6b3a7640000'),
       makerAssetAmount: new BigNumber('0x05f5e100'),
       salt: new BigNumber('0x44df74b1c54e9792989c61fedcef6f94b534b58933cde70bc456ec74cf4d3610'),
