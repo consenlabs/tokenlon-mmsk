@@ -10,13 +10,13 @@ interface Props {
 
 export default class Updater {
   INTERVAL_UPDAER_TIME: number
+  cacheResult: any = null
 
   constructor(props: Props) {
     this.name = props.name
     this.updater = props.updater
     this.INTERVAL_UPDAER_TIME = props.INTERVAL_UPDAER_TIME || INTERVAL_UPDAER_TIME
   }
-  cacheResult = null
 
   name = ''
   updater = () => {}

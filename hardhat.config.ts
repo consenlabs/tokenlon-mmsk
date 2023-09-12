@@ -35,6 +35,7 @@ const goerli = {
   gasPrice: 'auto',
   initialBaseFeePerGas: 1_000_000_000,
   forking: {
+    blockNumber: 9680758,
     url: FORK_NETWORK_POOLS.Goerli[weekday % FORK_NETWORK_POOLS.Goerli.length],
   },
 }
@@ -45,7 +46,7 @@ const mainnet = {
   gasPrice: 'auto',
   initialBaseFeePerGas: 1_000_000_000,
   forking: {
-    blockNumber: 14506930,
+    blockNumber: 18118950,
     url: FORK_NETWORK_POOLS.Mainnet[weekday % FORK_NETWORK_POOLS.Mainnet.length],
   },
 }
