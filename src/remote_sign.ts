@@ -45,14 +45,16 @@ const signRFQV1 = async (signRequest: RemoteSigningRFQV1Request) => {
   const rfqOrder = signRequest.rfqOrder
   let signature
   if (signer.address.toLowerCase() === rfqOrder.makerAddr.toLowerCase()) {
-    signature = await signRFQOrder(
+    const signatureTypedData = await signRFQOrder(
       signRequest.chainId,
       `0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F`,
       signRequest.rfqOrder,
       signer,
-      signRequest.feeFactor,
-      SignatureType.EIP712
+      signRequest.feeFactor
     )
+    const paddedNonce = '00'.repeat(32)
+    signature =
+      signatureTypedData + paddedNonce + SignatureType.EIP712.toString(16).padStart(2, '0')
   } else if (walletType === WalletType.MMP_VERSION_4) {
     signature = await signRFQV1ByMMPSigner(
       signRequest.orderSignDigest,
@@ -62,14 +64,14 @@ const signRFQV1 = async (signRequest: RemoteSigningRFQV1Request) => {
       WalletType.MMP_VERSION_4
     )
   } else if (walletType === WalletType.ERC1271_EIP712) {
-    signature = await signRFQOrder(
+    const signatureTypedData = await signRFQOrder(
       signRequest.chainId,
       `0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F`,
       signRequest.rfqOrder,
       signer,
-      signRequest.feeFactor,
-      SignatureType.WalletBytes32
+      signRequest.feeFactor
     )
+    signature = signatureTypedData + SignatureType.WalletBytes32.toString(16).padStart(2, '0')
   }
   console.log(`signature: ${signature}`)
   return signature

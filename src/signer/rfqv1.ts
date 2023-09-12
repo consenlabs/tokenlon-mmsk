@@ -14,23 +14,6 @@ import { Protocol } from '../types'
 // - SignatureType EthSign for EOA address
 // - SignatureType Wallet for contract address
 
-// Signature:
-// +------|---------|---------|-------------------|---------+
-// |  R   |    S    |    V    | reserved 32 bytes | type(3) |
-// +------|---------|---------|-------------------|---------+
-export async function signByEOA(orderSignDigest: string, wallet: Wallet): Promise<string> {
-  // signature: R+S+V
-  const hashArray = utils.arrayify(orderSignDigest)
-  let signature = await wallet.signMessage(hashArray)
-  const signatureBuffer = Buffer.concat([
-    ethUtils.toBuffer(signature),
-    ethUtils.toBuffer('0x' + '00'.repeat(32)),
-    ethUtils.toBuffer(SignatureType.EthSign),
-  ])
-  signature = '0x' + signatureBuffer.toString('hex')
-  return signature
-}
-
 export async function signByMMPSigner(
   orderSignDigest: string,
   userAddr: string,
@@ -91,8 +74,7 @@ export const signRFQOrder = async (
   rfqAddr: string,
   order: RFQOrder,
   maker: Wallet,
-  feeFactor = 30,
-  signatureType = SignatureType.EIP712
+  feeFactor = 30
 ): Promise<string> => {
   const domain = {
     name: 'Tokenlon',
@@ -130,13 +112,8 @@ export const signRFQOrder = async (
   }
 
   const signatureTypedData = await maker._signTypedData(domain, types, value)
-  const signature = Buffer.concat([
-    ethUtils.toBuffer(signatureTypedData),
-    ethUtils.toBuffer(signatureType),
-  ])
-  const eip712sig = '0x' + signature.toString('hex')
 
-  return eip712sig
+  return signatureTypedData
 }
 
 export const buildSignedOrder = async (
@@ -171,24 +148,27 @@ export const buildSignedOrder = async (
   let makerWalletSignature
   if (!signingUrl) {
     if (signer.address.toLowerCase() == order.makerAddress.toLowerCase()) {
-      makerWalletSignature = await signRFQOrder(
+      const signatureTypedData = await signRFQOrder(
         chainId,
         rfqAddr,
         rfqOrder,
         signer,
-        rfqOrder.feeFactor,
-        SignatureType.EIP712
+        rfqOrder.feeFactor
       )
+      const paddedNonce = '00'.repeat(32)
+      makerWalletSignature =
+        signatureTypedData + paddedNonce + SignatureType.EIP712.toString(16).padStart(2, '0')
     } else if (walletType === WalletType.ERC1271_EIP712) {
       // standard ERC1271 + ERC712 signature
-      makerWalletSignature = await signRFQOrder(
+      const signatureTypedData = await signRFQOrder(
         chainId,
         rfqAddr,
         rfqOrder,
         signer,
-        rfqOrder.feeFactor,
-        SignatureType.WalletBytes32
+        rfqOrder.feeFactor
       )
+      makerWalletSignature =
+        signatureTypedData + SignatureType.WalletBytes32.toString(16).padStart(2, '0')
     } else {
       // non-standard wallet contract signature checks
       makerWalletSignature = await signByMMPSigner(

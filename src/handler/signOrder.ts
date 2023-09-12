@@ -65,14 +65,16 @@ export const signOrder = async (ctx) => {
         break
       case Protocol.RFQV1:
         if (signer.address.toLowerCase() == order.rfqOrder.makerAddr.toLowerCase()) {
-          signature = await signRFQOrder(
+          const signatureTypedData = await signRFQOrder(
             chainID,
             config.addressBookV5.RFQ,
             order.rfqOrder,
             signer,
-            order.feeFactor,
-            SignatureType.EIP712
+            order.feeFactor
           )
+          const paddedNonce = '00'.repeat(32)
+          signature =
+            signatureTypedData + paddedNonce + SignatureType.EIP712.toString(16).padStart(2, '0')
         } else if (walletType === WalletType.MMP_VERSION_4) {
           signature = await signRFQV1ByMMPSigner(
             order.orderSignDigest,
@@ -82,14 +84,14 @@ export const signOrder = async (ctx) => {
             WalletType.MMP_VERSION_4
           )
         } else if (walletType === WalletType.ERC1271_EIP712) {
-          signature = await signRFQOrder(
+          const signatureTypedData = await signRFQOrder(
             chainID,
             config.addressBookV5.RFQ,
             order.rfqOrder,
             signer,
-            order.feeFactor,
-            SignatureType.WalletBytes32
+            order.feeFactor
           )
+          signature = signatureTypedData + SignatureType.WalletBytes32.toString(16).padStart(2, '0')
         }
         break
       case Protocol.RFQV2:
