@@ -19,18 +19,106 @@ import { generateSaltWithFeeFactor } from '../src/signer/pmmv5'
 import { toOffer } from '../src/signer/rfqv2'
 import { assetDataUtils } from '0x-v2-order-utils'
 import * as nock from 'nock'
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+
+const RFQV2: Record<number, string> = {
+  1: '0x91C986709Bb4fE0763edF8E2690EE9d5019Bea4a',
+  5: '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7',
+}
+
+const RFQV1: Record<number, string> = {
+  1: '0xfD6C2d2499b1331101726A8AC68CCc9Da3fAB54F',
+  5: '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0',
+}
 
 const usdtHolders = {
   1: '0x15abb66bA754F05cBC0165A64A11cDed1543dE48',
   5: '0x031BBFB9379c4e6E3F42fb93a9f09C060c7fA037',
 }
+
+const USDT_ADDRESS: Record<number, string> = {
+  1: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+  5: '0xa93ef9215b907c19e739e2214e1aa5412a0401b5',
+}
+
+const IS_VALID_SIGNATURE = [
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '_signerAddress',
+        type: 'address',
+      },
+      {
+        internalType: 'bytes32',
+        name: '_hash',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'bytes',
+        name: '_data',
+        type: 'bytes',
+      },
+      {
+        internalType: 'bytes',
+        name: '_sig',
+        type: 'bytes',
+      },
+    ],
+    name: 'isValidSignature',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: 'isValid',
+        type: 'bool',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+]
+
+const replaceMarketMakingAddress = (chainId: number, address: string, updaterStack) => {
+  const mockMarkerMakerConfigUpdater = new Updater({
+    name: 'mockMarkerMakerConfigUpdater',
+    updater() {
+      return Promise.resolve({})
+    },
+  })
+  const cacheResult = {
+    mmId: 1,
+    mmProxyContractAddress: address.toLowerCase(),
+    tokenlonExchangeContractAddress: '0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491',
+    exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
+    userProxyContractAddress: '0x25657705a6be20511687d483f2fccfb2d92f6033',
+    wethContractAddress: WETH[chainId].toLowerCase(),
+    orderExpirationSeconds: 600,
+    feeFactor: 30,
+    addressBookV5: {
+      Tokenlon: '0x085966eE3E32A0Da16467569512535D38626B547',
+      PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
+      AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
+      RFQ: RFQV1[chainId],
+      RFQV2: RFQV2[chainId],
+    },
+  }
+  mockMarkerMakerConfigUpdater.cacheResult = cacheResult
+  updaterStack['markerMakerConfigUpdater'] = mockMarkerMakerConfigUpdater
+}
+
 describe('NewOrder', function () {
-  const signer = Wallet.createRandom()
+  let signer: SignerWithAddress
   let chainId: number
+  let rfqv1: Contract
+  let rfqv2: Contract
   before(async () => {
+    const signers = await ethers.getSigners()
+    signer = signers[0]
     const networkInfo = await ethers.provider.getNetwork()
     chainId = networkInfo.chainId
     const usdtHolderAddr = usdtHolders[chainId]
+    rfqv1 = new ethers.Contract(RFQV1[chainId], IS_VALID_SIGNATURE, ethers.provider)
+    rfqv2 = new ethers.Contract(RFQV2[chainId], IS_VALID_SIGNATURE, ethers.provider)
     await network.provider.request({
       method: 'hardhat_impersonateAccount',
       params: [usdtHolderAddr],
@@ -56,8 +144,8 @@ describe('NewOrder', function () {
         Tokenlon: '0x085966eE3E32A0Da16467569512535D38626B547',
         PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
         AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
-        RFQ: '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0',
-        RFQV2: '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7',
+        RFQ: RFQV1[chainId],
+        RFQV2: RFQV2[chainId],
       },
     }
     const mockTokenConfigsFromImtokenUpdater = new Updater({
@@ -84,7 +172,7 @@ describe('NewOrder', function () {
       },
       {
         symbol: 'USDT',
-        contractAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        contractAddress: USDT_ADDRESS[chainId],
         decimal: 6,
         precision: 4,
         minTradeAmount: 1,
@@ -141,9 +229,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq('0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852')
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq('0x25657705a6be20511687d483f2fccfb2d92f6033')
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -167,10 +255,7 @@ describe('NewOrder', function () {
       const ammAddr = '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
       const payload = Buffer.from(
         JSON.stringify({
-          path: [
-            '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-            '0xdac17f958d2ee523a2206206994597c13d831ec7',
-          ],
+          path: [WETH[chainId].toLowerCase(), USDT_ADDRESS[chainId].toLowerCase()],
         })
       ).toString('base64')
       const signedOrderResp = await newOrder({
@@ -207,9 +292,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq('0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852')
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq('0x25657705a6be20511687d483f2fccfb2d92f6033')
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -295,9 +380,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(signer.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257')
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -352,9 +437,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(signer.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257')
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -393,38 +478,15 @@ describe('NewOrder', function () {
         await ethers.getContractFactory('MarketMakerProxy', deployer)
       ).deploy(mmpSigner.address)
       await usdt.connect(usdtHolder).transfer(mmproxy.address, ethers.utils.parseUnits('1000', 6))
-      await mmproxy.connect(deployer).setAllowance([USDT[chainId]], AllowanceTarget[chainId])
+      // approve tokens to RFQV2 contract directly
+      await mmproxy.connect(deployer).setAllowance([USDT[chainId]], RFQV2[chainId])
       const mmproxyUsdtBalance = await usdt.balanceOf(mmproxy.address)
-      const mmproxyUsdtAllowance = await usdt.allowance(mmproxy.address, AllowanceTarget[chainId])
+      const mmproxyUsdtAllowance = await usdt.allowance(mmproxy.address, RFQV2[chainId])
       console.log(`mmproxyUsdtBalance: ${ethers.utils.formatUnits(mmproxyUsdtBalance, 6)}`)
       console.log(`mmproxyUsdtAllowance: ${ethers.utils.formatUnits(mmproxyUsdtAllowance, 6)}`)
       console.log(`mmproxy: ${mmproxy.address}`)
       expect(mmproxy.address).is.not.null
-      const mockMarkerMakerConfigUpdater = new Updater({
-        name: 'mockMarkerMakerConfigUpdater',
-        updater() {
-          return Promise.resolve({})
-        },
-      })
-      const cacheResult = {
-        mmId: 1,
-        mmProxyContractAddress: mmproxy.address.toLowerCase(), // sign for v4 MMP contract
-        tokenlonExchangeContractAddress: '0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491',
-        exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
-        userProxyContractAddress: '0x25657705a6be20511687d483f2fccfb2d92f6033',
-        wethContractAddress: WETH[chainId].toLowerCase(),
-        orderExpirationSeconds: 600,
-        feeFactor: 30,
-        addressBookV5: {
-          Tokenlon: '0x085966eE3E32A0Da16467569512535D38626B547',
-          PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
-          AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
-          RFQ: '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0',
-          RFQV2: '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7',
-        },
-      }
-      mockMarkerMakerConfigUpdater.cacheResult = cacheResult
-      updaterStack['markerMakerConfigUpdater'] = mockMarkerMakerConfigUpdater
+      replaceMarketMakingAddress(chainId, mmproxy.address, updaterStack)
       const signedOrderResp = await newOrder({
         walletType: WalletType.MMP_VERSION_4,
         signer: mmpSigner,
@@ -460,9 +522,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(mmproxy.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -483,11 +545,11 @@ describe('NewOrder', function () {
       // verify random values
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
-      const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQV2
-      const orderHash = getOfferSignDigest(toOffer(signedOrderResp.order), chainId, rfqAddr)
+      const rfqAddr = RFQV2[chainId]
+      const orderSignDigest = getOfferSignDigest(toOffer(signedOrderResp.order), chainId, rfqAddr)
       const message = ethUtils.bufferToHex(
         Buffer.concat([
-          ethUtils.toBuffer(orderHash),
+          ethUtils.toBuffer(orderSignDigest),
           ethUtils.toBuffer(userAddr.toLowerCase()),
           ethUtils.toBuffer(order.feeFactor > 255 ? order.feeFactor : [0, order.feeFactor]),
         ])
@@ -501,9 +563,15 @@ describe('NewOrder', function () {
         s: s,
       })
       expect(recovered.toLowerCase()).eq(mmpSigner.address.toLowerCase())
+      const result = await rfqv2.callStatic.isValidSignature(
+        mmproxy.address,
+        orderSignDigest,
+        '0x',
+        order.makerWalletSignature
+      )
+      expect(result).true
     }).timeout(360000)
-
-    it('should sign rfqv2 order for a standard ERC1271 MMP contract', async () => {
+    it('should sign rfqv2 order for a ERC1271_EIP712_EIP191 MMP contract', async () => {
       const ethersNetwork = await ethers.provider.getNetwork()
       const chainId = ethersNetwork.chainId
       const usdtHolder = await ethers.provider.getSigner(usdtHolders[chainId])
@@ -522,38 +590,15 @@ describe('NewOrder', function () {
         await ethers.getContractFactory('MarketMakerProxy', deployer)
       ).deploy(mmpSigner.address)
       await usdt.connect(usdtHolder).transfer(mmproxy.address, ethers.utils.parseUnits('1000', 6))
-      await mmproxy.connect(deployer).setAllowance([USDT[chainId]], AllowanceTarget[chainId])
+      // approve tokens to RFQV2 contract directly
+      await mmproxy.connect(deployer).setAllowance([USDT[chainId]], RFQV2[chainId])
       const mmproxyUsdtBalance = await usdt.balanceOf(mmproxy.address)
-      const mmproxyUsdtAllowance = await usdt.allowance(mmproxy.address, AllowanceTarget[chainId])
+      const mmproxyUsdtAllowance = await usdt.allowance(mmproxy.address, RFQV2[chainId])
       console.log(`mmproxyUsdtBalance: ${ethers.utils.formatUnits(mmproxyUsdtBalance, 6)}`)
       console.log(`mmproxyUsdtAllowance: ${ethers.utils.formatUnits(mmproxyUsdtAllowance, 6)}`)
       console.log(`mmproxy: ${mmproxy.address}`)
       expect(mmproxy.address).is.not.null
-      const mockMarkerMakerConfigUpdater = new Updater({
-        name: 'mockMarkerMakerConfigUpdater',
-        updater() {
-          return Promise.resolve({})
-        },
-      })
-      const cacheResult = {
-        mmId: 1,
-        mmProxyContractAddress: mmproxy.address.toLowerCase(), // sign for v4 MMP contract
-        tokenlonExchangeContractAddress: '0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491',
-        exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
-        userProxyContractAddress: '0x25657705a6be20511687d483f2fccfb2d92f6033',
-        wethContractAddress: WETH[chainId].toLowerCase(),
-        orderExpirationSeconds: 600,
-        feeFactor: 30,
-        addressBookV5: {
-          Tokenlon: '0x085966eE3E32A0Da16467569512535D38626B547',
-          PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
-          AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
-          RFQ: '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0',
-          RFQV2: '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7',
-        },
-      }
-      mockMarkerMakerConfigUpdater.cacheResult = cacheResult
-      updaterStack['markerMakerConfigUpdater'] = mockMarkerMakerConfigUpdater
+      replaceMarketMakingAddress(chainId, mmproxy.address, updaterStack)
       const signedOrderResp = await newOrder({
         walletType: WalletType.ERC1271_EIP712_EIP191,
         signer: mmpSigner,
@@ -589,9 +634,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(mmproxy.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -612,7 +657,7 @@ describe('NewOrder', function () {
       // verify random values
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
-      const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQV2
+      const rfqAddr = RFQV2[chainId]
       const orderSignDigest = getOfferSignDigest(toOffer(signedOrderResp.order), chainId, rfqAddr)
       const r = utils.hexlify(sigBytes.slice(0, 32))
       const s = utils.hexlify(sigBytes.slice(32, 64))
@@ -628,12 +673,39 @@ describe('NewOrder', function () {
       expect(recovered.toLowerCase()).eq(mmpSigner.address.toLowerCase())
       console.log(`recovered.toLowerCase(): ${recovered.toLowerCase()}`)
       console.log(`mmpSigner.address.toLowerCase(): ${mmpSigner.address.toLowerCase()}`)
+      // TODO: test with a real ERC1271 wallet contract
     }).timeout(360000)
-    it('should sign rfqv2 order by EOA', async function () {
-      const userAddr = Wallet.createRandom().address.toLowerCase()
+    it('should sign rfqv2 order for a ERC1271_EIP712 MMP contract', async () => {
+      const ethersNetwork = await ethers.provider.getNetwork()
+      const chainId = ethersNetwork.chainId
+      const usdtHolder = await ethers.provider.getSigner(usdtHolders[chainId])
+      const usdt = await ethers.getContractAt(ABI.IERC20, USDT[chainId])
+      const [deployer, ethHolder] = await ethers.getSigners()
+      const privateKey = crypto.randomBytes(32)
+      const user = new ethers.Wallet(privateKey, ethers.provider)
+      const userAddr = user.address.toLowerCase()
+      await ethHolder.sendTransaction({
+        to: userAddr,
+        value: ethers.utils.parseEther('10'),
+      })
+      const mmpSigner = Wallet.createRandom()
+      console.log(`mmpSigner: ${mmpSigner.address}`)
+      const mmproxy: Contract = await (
+        await ethers.getContractFactory('MarketMakerProxy', deployer)
+      ).deploy(mmpSigner.address)
+      await usdt.connect(usdtHolder).transfer(mmproxy.address, ethers.utils.parseUnits('1000', 6))
+      // approve tokens to RFQV2 contract directly
+      await mmproxy.connect(deployer).setAllowance([USDT[chainId]], RFQV2[chainId])
+      const mmproxyUsdtBalance = await usdt.balanceOf(mmproxy.address)
+      const mmproxyUsdtAllowance = await usdt.allowance(mmproxy.address, RFQV2[chainId])
+      console.log(`mmproxyUsdtBalance: ${ethers.utils.formatUnits(mmproxyUsdtBalance, 6)}`)
+      console.log(`mmproxyUsdtAllowance: ${ethers.utils.formatUnits(mmproxyUsdtAllowance, 6)}`)
+      console.log(`mmproxy: ${mmproxy.address}`)
+      expect(mmproxy.address).is.not.null
+      replaceMarketMakingAddress(chainId, mmproxy.address, updaterStack)
       const signedOrderResp = await newOrder({
-        walletType: WalletType.EOA,
-        signer: signer,
+        walletType: WalletType.ERC1271_EIP712,
+        signer: mmpSigner,
         chainID: chainId,
         quoter: {
           getPrice: () => {
@@ -664,19 +736,132 @@ describe('NewOrder', function () {
       expect(order).is.not.null
       expect(order.protocol).eq(Protocol.RFQV2)
       expect(order.quoteId).eq('1--echo-testing-8888')
-      expect(order.makerAddress).eq(signer.address.toLowerCase())
+      expect(order.makerAddress).eq(mmproxy.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
-      expect(
-        order.makerAssetData,
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
+      expect(order.makerAssetData).eq(
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
       expect(order.takerAssetAddress).eq(ZERO[chainId].toLowerCase())
+      expect(order.takerAssetData).eq(
+        `0xf47261b0000000000000000000000000${ZERO[chainId].toLowerCase().slice(2)}`
+      )
+      expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
+      expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
+      expect(order.exchangeAddress).eq('0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
+      // The following fields are to be compatible `Order` struct.
+      expect(order.makerFee).eq('0')
+      expect(order.takerFee).eq('0')
+      // verify signature type
+      const sigBytes = utils.arrayify(signedOrderResp.order.makerWalletSignature)
+      expect(sigBytes.length).eq(66)
+      expect(sigBytes[65]).eq(SignatureType.WalletBytes32)
+      // verify random values
+      expect(signedOrderResp.order.salt.length > 0).is.true
+      expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
+      const offer = toOffer(signedOrderResp.order)
+      const r = utils.hexlify(sigBytes.slice(0, 32))
+      const s = utils.hexlify(sigBytes.slice(32, 64))
+      const v = utils.hexlify(sigBytes.slice(64, 65))
+      console.log(`r: ${r}`)
+      console.log(`s: ${s}`)
+      console.log(`v: ${v}`)
+      const domain = {
+        name: 'Tokenlon',
+        version: 'v5',
+        chainId: chainId,
+        verifyingContract: RFQV2[chainId],
+      }
+      // The named list of all type definitions
+      const types = {
+        Offer: [
+          { name: 'taker', type: 'address' },
+          { name: 'maker', type: 'address' },
+          { name: 'takerToken', type: 'address' },
+          { name: 'takerTokenAmount', type: 'uint256' },
+          { name: 'makerToken', type: 'address' },
+          { name: 'makerTokenAmount', type: 'uint256' },
+          { name: 'feeFactor', type: 'uint256' },
+          { name: 'expiry', type: 'uint256' },
+          { name: 'salt', type: 'uint256' },
+        ],
+      }
+      // The data to sign
+      const value = {
+        taker: offer.taker,
+        maker: offer.maker,
+        takerToken: offer.takerToken,
+        takerTokenAmount: offer.takerTokenAmount.toString(),
+        makerToken: offer.makerToken,
+        makerTokenAmount: offer.makerTokenAmount.toString(),
+        feeFactor: offer.feeFactor.toString(),
+        expiry: offer.expiry.toString(),
+        salt: offer.salt.toString(),
+      }
+      const recovered = ethers.utils.verifyTypedData(
+        domain,
+        types,
+        value,
+        order.makerWalletSignature.slice(0, -2)
+      )
+      expect(recovered.toLowerCase()).eq(mmpSigner.address.toLowerCase())
+      console.log(`recovered.toLowerCase(): ${recovered.toLowerCase()}`)
+      console.log(`mmpSigner.address.toLowerCase(): ${mmpSigner.address.toLowerCase()}`)
+      // TODO: test with a real ERC1271 wallet contract
+    }).timeout(360000)
+    it('should sign rfqv2 order by EIP712', async function () {
+      replaceMarketMakingAddress(chainId, signer.address, updaterStack)
+      const userAddr = Wallet.createRandom().address.toLowerCase()
+      const usdt = new ethers.Contract(USDT[chainId], ABI.IERC20, ethers.provider)
+      await usdt.connect(signer).approve(RFQV2[chainId], ethers.constants.MaxUint256)
+      const signedOrderResp = await newOrder({
+        walletType: WalletType.EOA,
+        signer: signer,
+        chainID: chainId,
+        quoter: {
+          getPrice: () => {
+            return Promise.resolve({
+              result: true,
+              exchangeable: true,
+              minAmount: 0,
+              maxAmount: 1000,
+              price: 1,
+              quoteId: 'echo-testing-8888',
+            })
+          },
+        },
+        query: {
+          base: 'USDT',
+          quote: 'ETH',
+          side: 'SELL',
+          amount: 1,
+          uniqId: 'testing-1111',
+          userAddr: userAddr,
+          protocol: Protocol.RFQV2,
+        },
+      })
+      expect(signedOrderResp).is.not.null
+      // verify data object
+      const order = signedOrderResp.order
+      console.log(order)
+      expect(order).is.not.null
+      expect(order.protocol).eq(Protocol.RFQV2)
+      expect(order.quoteId).eq('1--echo-testing-8888')
+      expect(order.makerAddress).eq(signer.address.toLowerCase())
+      expect(order.makerAssetAmount).eq('1000000000000000000')
+      expect(order.makerAssetAddress).eq(WETH[chainId].toLowerCase())
+      expect(
+        order.makerAssetData,
+        `0xf47261b0000000000000000000000000${WETH[chainId].toLowerCase().slice(2)}`
+      )
+      expect(order.takerAddress).eq(userAddr)
+      expect(order.takerAssetAmount).eq('1000000')
+      expect(order.takerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(
         order.takerAssetData,
-        `0xf47261b0000000000000000000000000${ZERO[chainId].toLowerCase().slice(2)}`
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
       expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
@@ -689,7 +874,7 @@ describe('NewOrder', function () {
       expect(sigBytes.length).eq(66)
       expect(sigBytes[65]).eq(SignatureType.EIP712)
       // verify signature
-      const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQV2
+      const rfqAddr = RFQV2[chainId]
       const signedOrder = toOffer(signedOrderResp.order)
       const domain = {
         name: 'Tokenlon',
@@ -729,7 +914,16 @@ describe('NewOrder', function () {
         value,
         signedOrderResp.order.makerWalletSignature.slice(0, -2)
       )
+      console.log(`sig: ${signedOrderResp.order.makerWalletSignature}`)
       expect(recovered.toLowerCase()).eq(signer.address.toLowerCase())
+      const result = await rfqv2.callStatic.isValidSignature(
+        signer.address,
+        getOfferSignDigest(toOffer(signedOrderResp.order), chainId, RFQV2[chainId]),
+        '0x',
+        order.makerWalletSignature
+      )
+      expect(result).true
+
       // verify random values
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
@@ -760,31 +954,7 @@ describe('NewOrder', function () {
       console.log(`mmproxyUsdtAllowance: ${ethers.utils.formatUnits(mmproxyUsdtAllowance, 6)}`)
       console.log(`mmproxy: ${mmproxy.address}`)
       expect(mmproxy.address).is.not.null
-      const mockMarkerMakerConfigUpdater = new Updater({
-        name: 'mockMarkerMakerConfigUpdater',
-        updater() {
-          return Promise.resolve({})
-        },
-      })
-      const cacheResult = {
-        mmId: 1,
-        mmProxyContractAddress: mmproxy.address.toLowerCase(), // sign for v4 MMP contract
-        tokenlonExchangeContractAddress: '0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491',
-        exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
-        userProxyContractAddress: '0x25657705a6be20511687d483f2fccfb2d92f6033',
-        wethContractAddress: WETH[chainId].toLowerCase(),
-        orderExpirationSeconds: 600,
-        feeFactor: 30,
-        addressBookV5: {
-          Tokenlon: '0x085966eE3E32A0Da16467569512535D38626B547',
-          PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
-          AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
-          RFQ: '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0',
-          RFQV2: '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7',
-        },
-      }
-      mockMarkerMakerConfigUpdater.cacheResult = cacheResult
-      updaterStack['markerMakerConfigUpdater'] = mockMarkerMakerConfigUpdater
+      replaceMarketMakingAddress(chainId, mmproxy.address, updaterStack)
       const signedOrderResp = await newOrder({
         walletType: WalletType.MMP_VERSION_4,
         signer: mmpSigner,
@@ -820,9 +990,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(mmproxy.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -843,11 +1013,15 @@ describe('NewOrder', function () {
       // verify random values
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
-      const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQ
-      const orderHash = getOrderSignDigest(toRFQOrder(signedOrderResp.order), chainId, rfqAddr)
+      const rfqAddr = RFQV1[chainId]
+      const orderSignDigest = getOrderSignDigest(
+        toRFQOrder(signedOrderResp.order),
+        chainId,
+        rfqAddr
+      )
       const message = ethUtils.bufferToHex(
         Buffer.concat([
-          ethUtils.toBuffer(orderHash),
+          ethUtils.toBuffer(orderSignDigest),
           ethUtils.toBuffer(userAddr.toLowerCase()),
           ethUtils.toBuffer(order.feeFactor > 255 ? order.feeFactor : [0, order.feeFactor]),
         ])
@@ -863,8 +1037,16 @@ describe('NewOrder', function () {
       console.log(`recovered: ${recovered}`)
       console.log(`mmpSigner.address: ${mmpSigner.address}`)
       expect(recovered.toLowerCase()).eq(mmpSigner.address.toLowerCase())
+      const result = await rfqv1.callStatic.isValidSignature(
+        mmproxy.address,
+        orderSignDigest,
+        '0x',
+        order.makerWalletSignature
+      )
+      console.log(`result: ${result}`)
+      expect(result).true
     }).timeout(360000)
-    it('should sign rfqv1 order for a standard ERC1271 MMP contract', async () => {
+    it('should sign rfqv1 order for a ERC1271_EIP712_EIP191 MMP contract', async () => {
       const ethersNetwork = await ethers.provider.getNetwork()
       const chainId = ethersNetwork.chainId
       const usdtHolder = await ethers.provider.getSigner(usdtHolders[chainId])
@@ -890,31 +1072,7 @@ describe('NewOrder', function () {
       console.log(`mmproxyUsdtAllowance: ${ethers.utils.formatUnits(mmproxyUsdtAllowance, 6)}`)
       console.log(`mmproxy: ${mmproxy.address}`)
       expect(mmproxy.address).is.not.null
-      const mockMarkerMakerConfigUpdater = new Updater({
-        name: 'mockMarkerMakerConfigUpdater',
-        updater() {
-          return Promise.resolve({})
-        },
-      })
-      const cacheResult = {
-        mmId: 1,
-        mmProxyContractAddress: mmproxy.address.toLowerCase(), // sign for v4 MMP contract
-        tokenlonExchangeContractAddress: '0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491',
-        exchangeContractAddress: '0x30589010550762d2f0d06f650d8e8b6ade6dbf4b',
-        userProxyContractAddress: '0x25657705a6be20511687d483f2fccfb2d92f6033',
-        wethContractAddress: WETH[chainId].toLowerCase(),
-        orderExpirationSeconds: 600,
-        feeFactor: 30,
-        addressBookV5: {
-          Tokenlon: '0x085966eE3E32A0Da16467569512535D38626B547',
-          PMM: '0x7bd7d025D4231aAD1233967b527FFd7416410257',
-          AMMWrapper: '0xCF011536f10e85e376E70905EED4CA9eA8Cded34',
-          RFQ: '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0',
-          RFQV2: '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7',
-        },
-      }
-      mockMarkerMakerConfigUpdater.cacheResult = cacheResult
-      updaterStack['markerMakerConfigUpdater'] = mockMarkerMakerConfigUpdater
+      replaceMarketMakingAddress(chainId, mmproxy.address, updaterStack)
       const signedOrderResp = await newOrder({
         walletType: WalletType.ERC1271_EIP712_EIP191,
         signer: mmpSigner,
@@ -950,9 +1108,9 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(mmproxy.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(order.makerAssetData).eq(
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -973,8 +1131,12 @@ describe('NewOrder', function () {
       // verify random values
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
-      const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQ
-      const orderSignDigest = getOrderSignDigest(toRFQOrder(signedOrderResp.order), chainId, rfqAddr)
+      const rfqAddr = RFQV1[chainId]
+      const orderSignDigest = getOrderSignDigest(
+        toRFQOrder(signedOrderResp.order),
+        chainId,
+        rfqAddr
+      )
       const r = utils.hexlify(sigBytes.slice(0, 32))
       const s = utils.hexlify(sigBytes.slice(32, 64))
       const v = utils.hexlify(sigBytes.slice(64, 65))
@@ -989,8 +1151,143 @@ describe('NewOrder', function () {
       expect(recovered.toLowerCase()).eq(mmpSigner.address.toLowerCase())
       console.log(`recovered.toLowerCase(): ${recovered.toLowerCase()}`)
       console.log(`mmpSigner.address.toLowerCase(): ${mmpSigner.address.toLowerCase()}`)
+      // TODO: call isValidSignature with a real ERC1271 wallet contract
     }).timeout(360000)
-    it('should sign rfqv1 order by EOA', async function () {
+    it('should sign rfqv1 order for a ERC1271_EIP712 MMP contract', async () => {
+      const ethersNetwork = await ethers.provider.getNetwork()
+      const chainId = ethersNetwork.chainId
+      const usdtHolder = await ethers.provider.getSigner(usdtHolders[chainId])
+      const usdt = await ethers.getContractAt(ABI.IERC20, USDT[chainId])
+      const [deployer, ethHolder] = await ethers.getSigners()
+      const privateKey = crypto.randomBytes(32)
+      const user = new ethers.Wallet(privateKey, ethers.provider)
+      const userAddr = user.address.toLowerCase()
+      await ethHolder.sendTransaction({
+        to: userAddr,
+        value: ethers.utils.parseEther('10'),
+      })
+      const mmpSigner = Wallet.createRandom()
+      console.log(`mmpSigner: ${mmpSigner.address}`)
+      const mmproxy: Contract = await (
+        await ethers.getContractFactory('MarketMakerProxy', deployer)
+      ).deploy(mmpSigner.address)
+      await usdt.connect(usdtHolder).transfer(mmproxy.address, ethers.utils.parseUnits('1000', 6))
+      await mmproxy.connect(deployer).setAllowance([USDT[chainId]], AllowanceTarget[chainId])
+      const mmproxyUsdtBalance = await usdt.balanceOf(mmproxy.address)
+      const mmproxyUsdtAllowance = await usdt.allowance(mmproxy.address, AllowanceTarget[chainId])
+      console.log(`mmproxyUsdtBalance: ${ethers.utils.formatUnits(mmproxyUsdtBalance, 6)}`)
+      console.log(`mmproxyUsdtAllowance: ${ethers.utils.formatUnits(mmproxyUsdtAllowance, 6)}`)
+      console.log(`mmproxy: ${mmproxy.address}`)
+      expect(mmproxy.address).is.not.null
+      replaceMarketMakingAddress(chainId, mmproxy.address, updaterStack)
+      const signedOrderResp = await newOrder({
+        walletType: WalletType.ERC1271_EIP712,
+        signer: mmpSigner,
+        chainID: chainId,
+        quoter: {
+          getPrice: () => {
+            return Promise.resolve({
+              result: true,
+              exchangeable: true,
+              minAmount: 0,
+              maxAmount: 1000,
+              price: 1,
+              quoteId: 'echo-testing-8888',
+            })
+          },
+        },
+        query: {
+          base: 'ETH',
+          quote: 'USDT',
+          side: 'SELL',
+          amount: 0.1,
+          uniqId: 'testing-1111',
+          userAddr: userAddr,
+          protocol: Protocol.RFQV1,
+        },
+      })
+      expect(signedOrderResp).is.not.null
+      // verify data object
+      const order = signedOrderResp.order
+      console.log(order)
+      expect(order).is.not.null
+      expect(order.protocol).eq(Protocol.RFQV1)
+      expect(order.quoteId).eq('1--echo-testing-8888')
+      expect(order.makerAddress).eq(mmproxy.address.toLowerCase())
+      expect(order.makerAssetAmount).eq('100000')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
+      expect(order.makerAssetData).eq(
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
+      )
+      expect(order.takerAddress).eq(userAddr)
+      expect(order.takerAssetAmount).eq('100000000000000000')
+      expect(order.takerAssetAddress).eq(WETH[chainId].toLowerCase())
+      expect(order.takerAssetData).eq(
+        `0xf47261b0000000000000000000000000${WETH[chainId].toLowerCase().slice(2)}`
+      )
+      expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
+      expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
+      expect(order.exchangeAddress).eq('0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
+      // The following fields are to be compatible `Order` struct.
+      expect(order.makerFee).eq('0')
+      expect(order.takerFee).eq('0')
+      // verify signature type
+      const sigBytes = utils.arrayify(signedOrderResp.order.makerWalletSignature)
+      expect(sigBytes.length).eq(66)
+      expect(sigBytes[65]).eq(SignatureType.WalletBytes32)
+      // verify random values
+      expect(signedOrderResp.order.salt.length > 0).is.true
+      expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
+      const r = utils.hexlify(sigBytes.slice(0, 32))
+      const s = utils.hexlify(sigBytes.slice(32, 64))
+      const v = utils.hexlify(sigBytes.slice(64, 65))
+      console.log(`r: ${r}`)
+      console.log(`s: ${s}`)
+      console.log(`v: ${v}`)
+      const rfqOrder = toRFQOrder(signedOrderResp.order)
+      const domain = {
+        name: 'Tokenlon',
+        version: 'v5',
+        chainId: chainId,
+        verifyingContract: RFQV1[chainId],
+      }
+      const types = {
+        Order: [
+          { name: 'takerAddr', type: 'address' },
+          { name: 'makerAddr', type: 'address' },
+          { name: 'takerAssetAddr', type: 'address' },
+          { name: 'makerAssetAddr', type: 'address' },
+          { name: 'takerAssetAmount', type: 'uint256' },
+          { name: 'makerAssetAmount', type: 'uint256' },
+          { name: 'salt', type: 'uint256' },
+          { name: 'deadline', type: 'uint256' },
+          { name: 'feeFactor', type: 'uint256' },
+        ],
+      }
+      const value = {
+        takerAddr: rfqOrder.takerAddr,
+        makerAddr: rfqOrder.makerAddr,
+        takerAssetAddr: rfqOrder.takerAssetAddr,
+        makerAssetAddr: rfqOrder.makerAssetAddr,
+        takerAssetAmount: rfqOrder.takerAssetAmount.toString(),
+        makerAssetAmount: rfqOrder.makerAssetAmount.toString(),
+        salt: rfqOrder.salt.toString(),
+        deadline: rfqOrder.deadline.toString(),
+        feeFactor: rfqOrder.feeFactor.toString(),
+      }
+      const recovered = ethers.utils.verifyTypedData(
+        domain,
+        types,
+        value,
+        order.makerWalletSignature.slice(0, -2)
+      )
+      expect(recovered.toLowerCase()).eq(mmpSigner.address.toLowerCase())
+      console.log(`recovered.toLowerCase(): ${recovered.toLowerCase()}`)
+      console.log(`mmpSigner.address.toLowerCase(): ${mmpSigner.address.toLowerCase()}`)
+      // TODO: call isValidSignature with a real ERC1271 wallet contract
+    }).timeout(360000)
+    it('should sign rfqv1 order by EIP712', async function () {
+      replaceMarketMakingAddress(chainId, signer.address, updaterStack)
       const userAddr = Wallet.createRandom().address.toLowerCase()
       const signedOrderResp = await newOrder({
         walletType: WalletType.EOA,
@@ -1027,10 +1324,10 @@ describe('NewOrder', function () {
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerAddress).eq(signer.address.toLowerCase())
       expect(order.makerAssetAmount).eq('100000')
-      expect(order.makerAssetAddress).eq('0xdac17f958d2ee523a2206206994597c13d831ec7')
+      expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
       expect(
         order.makerAssetData,
-        '0xf47261b0000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7'
+        `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
       )
       expect(order.takerAddress).eq(userAddr)
       expect(order.takerAssetAmount).eq('100000000000000000')
@@ -1047,50 +1344,23 @@ describe('NewOrder', function () {
       expect(order.takerFee).eq('0')
       // verify signature type
       const sigBytes = utils.arrayify(signedOrderResp.order.makerWalletSignature)
-      expect(sigBytes.length).eq(66)
-      expect(sigBytes[65]).eq(SignatureType.EIP712)
+      expect(sigBytes.length).eq(98)
+      expect(sigBytes[97]).eq(SignatureType.EIP712)
       // verify signature
-      const rfqAddr = updaterStack['markerMakerConfigUpdater'].cacheResult.addressBookV5.RFQ
-      const signedOrder = toRFQOrder(signedOrderResp.order)
-      const domain = {
-        name: 'Tokenlon',
-        version: 'v5',
-        chainId: chainId,
-        verifyingContract: rfqAddr,
-      }
-      // The named list of all type definitions
-      const types = {
-        Order: [
-          { name: 'takerAddr', type: 'address' },
-          { name: 'makerAddr', type: 'address' },
-          { name: 'takerAssetAddr', type: 'address' },
-          { name: 'makerAssetAddr', type: 'address' },
-          { name: 'takerAssetAmount', type: 'uint256' },
-          { name: 'makerAssetAmount', type: 'uint256' },
-          { name: 'salt', type: 'uint256' },
-          { name: 'deadline', type: 'uint256' },
-          { name: 'feeFactor', type: 'uint256' },
-        ],
-      }
-      // The data to sign
-      const value = {
-        takerAddr: signedOrder.takerAddr,
-        makerAddr: signedOrder.makerAddr,
-        takerAssetAddr: signedOrder.takerAssetAddr,
-        makerAssetAddr: signedOrder.makerAssetAddr,
-        takerAssetAmount: signedOrder.takerAssetAmount.toString(),
-        makerAssetAmount: signedOrder.makerAssetAmount.toString(),
-        salt: signedOrder.salt.toString(),
-        deadline: signedOrder.deadline.toString(),
-        feeFactor: signedOrder.feeFactor.toString(),
-      }
-      const recovered = ethers.utils.verifyTypedData(
-        domain,
-        types,
-        value,
-        signedOrderResp.order.makerWalletSignature.slice(0, -2)
+      const rfqAddr = RFQV1[chainId]
+      const orderSignDigest = getOrderSignDigest(
+        toRFQOrder(signedOrderResp.order),
+        chainId,
+        rfqAddr
       )
-      expect(recovered.toLowerCase()).eq(signer.address.toLowerCase())
+      const result = await rfqv1.callStatic.isValidSignature(
+        signer.address,
+        orderSignDigest,
+        '0x',
+        order.makerWalletSignature
+      )
+      console.log(`result: ${result}`)
+      expect(result).true
       // verify random values
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
@@ -1128,7 +1398,7 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.quoteId).eq('1--echo-testing-8888')
       expect(signedOrderResp.order.makerWalletSignature.slice(-1)).eq('4')
       expect(signedOrderResp.order.takerAssetData.slice(34)).eq(
-        'dac17f958d2ee523a2206206994597c13d831ec7'
+        USDT_ADDRESS[chainId].toLowerCase().slice(2)
       )
       expect(signedOrderResp.order.takerAssetAmount).eq(utils.parseUnits('0.122539', 6).toString())
       expect(signedOrderResp.order.makerAssetAmount).eq(utils.parseEther('0.1114').toString())
@@ -1166,25 +1436,9 @@ describe('NewOrder', function () {
       expect(signedOrderResp.order.makerAssetAmount).eq(utils.parseUnits('0.12221', 6).toString())
     })
   })
-  it('test get RFQ order hash', () => {
-    const rfqAddr = '0x6b6D3C4EF634731E17d31d0D6017ba9DB4775955'
-    const order = {
-      takerAddr: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
-      makerAddr: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64',
-      takerAssetAddr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      makerAssetAddr: '0xdac17f958d2ee523a2206206994597c13d831ec7',
-      takerAssetAmount: new BigNumber('0x0de0b6b3a7640000'),
-      makerAssetAmount: new BigNumber('0x05f5e100'),
-      salt: new BigNumber('0x44df74b1c54e9792989c61fedcef6f94b534b58933cde70bc456ec74cf4d3610'),
-      deadline: 1620444917,
-      feeFactor: 30,
-    }
-    const orderHash = getOrderSignDigest(order, 1, rfqAddr)
-    expect(orderHash).eq('0x8d70993864d87daa0b2bae0c2be1c56067f45363680d0dca8657e1e51d1d6a40')
-  })
   it('Should forward unsigned PMMV5 orders to signing service', async () => {
     const url = `http://localhost:3000`
-    const pmm = '0x7bd7d025D4231aAD1233967b527FFd7416410257'
+    const pmm = '0x8D90113A1e286a5aB3e496fbD1853F265e5913c6'
     const order: ExtendedZXOrder = {
       protocol: Protocol.PMMV5,
       quoteId: `0x123`,
@@ -1193,16 +1447,12 @@ describe('NewOrder', function () {
       senderAddress: `0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64`,
       takerAddress: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
       makerAddress: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64'.toLowerCase(),
-      takerAssetData: assetDataUtils.encodeERC20AssetData(
-        '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
-      ),
-      makerAssetData: assetDataUtils.encodeERC20AssetData(
-        '0xdac17f958d2ee523a2206206994597c13d831ec7'
-      ),
+      takerAssetData: assetDataUtils.encodeERC20AssetData(WETH[chainId]),
+      makerAssetData: assetDataUtils.encodeERC20AssetData(USDT_ADDRESS[chainId]),
       takerFee: toBN(0),
       makerFee: toBN(0),
-      takerAssetAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      makerAssetAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+      takerAssetAddress: WETH[chainId],
+      makerAssetAddress: USDT_ADDRESS[chainId],
       takerAssetAmount: new BigNumber('0x0de0b6b3a7640000'),
       makerAssetAmount: new BigNumber('0x05f5e100'),
       salt: new BigNumber('0x44df74b1c54e9792989c61fedcef6f94b534b58933cde70bc456ec74cf4d3610'),
@@ -1238,7 +1488,7 @@ describe('NewOrder', function () {
   })
   it('Should forward unsigned RFQV1 orders to signing service', async () => {
     const url = `http://localhost:3000`
-    const rfqAddr = '0x117CAf73eB142eDC431E707DC33D4dfeF7c5BAd0'
+    const rfqAddr = RFQV1[chainId]
     const order: ExtendedZXOrder = {
       protocol: Protocol.RFQV1,
       quoteId: `0x123`,
@@ -1247,16 +1497,12 @@ describe('NewOrder', function () {
       senderAddress: `0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64`,
       takerAddress: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
       makerAddress: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64'.toLowerCase(),
-      takerAssetData: assetDataUtils.encodeERC20AssetData(
-        '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
-      ),
-      makerAssetData: assetDataUtils.encodeERC20AssetData(
-        '0xdac17f958d2ee523a2206206994597c13d831ec7'
-      ),
+      takerAssetData: assetDataUtils.encodeERC20AssetData(WETH[chainId]),
+      makerAssetData: assetDataUtils.encodeERC20AssetData(USDT_ADDRESS[chainId]),
       takerFee: toBN(0),
       makerFee: toBN(0),
-      takerAssetAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      makerAssetAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+      takerAssetAddress: WETH[chainId],
+      makerAssetAddress: USDT_ADDRESS[chainId],
       takerAssetAmount: new BigNumber('0x0de0b6b3a7640000'),
       makerAssetAmount: new BigNumber('0x05f5e100'),
       salt: new BigNumber('0x44df74b1c54e9792989c61fedcef6f94b534b58933cde70bc456ec74cf4d3610'),
@@ -1293,7 +1539,7 @@ describe('NewOrder', function () {
   })
   it('Should forward unsigned RFQV2 orders to signing service', async () => {
     const url = `http://localhost:3000`
-    const rfqV2Addr = '0xaE5FDd548E5B107C54E5c0D36952fB8a089f10C7'
+    const rfqV2Addr = RFQV2[chainId]
     const order: ExtendedZXOrder = {
       protocol: Protocol.RFQV2,
       quoteId: `0x123`,
@@ -1302,16 +1548,12 @@ describe('NewOrder', function () {
       senderAddress: `0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64`,
       takerAddress: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
       makerAddress: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64'.toLowerCase(),
-      takerAssetData: assetDataUtils.encodeERC20AssetData(
-        '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
-      ),
-      makerAssetData: assetDataUtils.encodeERC20AssetData(
-        '0xdac17f958d2ee523a2206206994597c13d831ec7'
-      ),
+      takerAssetData: assetDataUtils.encodeERC20AssetData(WETH[chainId]),
+      makerAssetData: assetDataUtils.encodeERC20AssetData(USDT_ADDRESS[chainId]),
       takerFee: toBN(0),
       makerFee: toBN(0),
-      takerAssetAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      makerAssetAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+      takerAssetAddress: WETH[chainId],
+      makerAssetAddress: USDT_ADDRESS[chainId],
       takerAssetAmount: new BigNumber('0x0de0b6b3a7640000'),
       makerAssetAmount: new BigNumber('0x05f5e100'),
       salt: new BigNumber('0x44df74b1c54e9792989c61fedcef6f94b534b58933cde70bc456ec74cf4d3610'),
