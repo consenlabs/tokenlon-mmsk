@@ -1,16 +1,15 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.5.0;
 
-import "./LibDecoder.sol";
-import "./SafeToken.sol";
-import "hardhat/console.sol";
+import './LibDecoder.sol';
+import './SafeToken.sol';
+import 'hardhat/console.sol';
 
-contract MarketMakerProxy is
-    LibDecoder,
-    SafeToken
-{
-    uint256 constant MAX_UINT = 2**256 - 1;
+contract MarketMakerProxy is LibDecoder, SafeToken {
+    uint256 constant MAX_UINT = 2 ** 256 - 1;
     address public SIGNER;
-    constructor (address signer) public {
+
+    constructor(address signer) public {
         SIGNER = signer;
     }
 
@@ -24,7 +23,7 @@ contract MarketMakerProxy is
         }
     }
 
-    function recoverSignerFromSignature(uint8 v, bytes32 r, bytes32 s, bytes32 hash) public pure returns(address) {
+    function recoverSignerFromSignature(uint8 v, bytes32 r, bytes32 s, bytes32 hash) public pure returns (address) {
         address signer = ecrecover(hash, v, r, s);
         return signer;
     }
@@ -34,25 +33,13 @@ contract MarketMakerProxy is
         console.logBytes32(orderHash);
         console.log(recovered);
         console.log(SIGNER);
-        require(
-            SIGNER == recovered,
-            "INVALID_SIGNATURE"
-        );
-        return keccak256("isValidWalletSignature(bytes32,address,bytes)");
+        require(SIGNER == recovered, 'INVALID_SIGNATURE');
+        return keccak256('isValidWalletSignature(bytes32,address,bytes)');
     }
 
     function ecrecoverAddress(bytes32 orderHash, bytes memory signature) public pure returns (address) {
         (uint8 v, bytes32 r, bytes32 s, address user, uint16 feeFactor) = decodeMmSignature(signature);
 
-        return ecrecover(
-            keccak256(
-                abi.encodePacked(
-                    "\x19Ethereum Signed Message:\n54",
-                    orderHash,
-                    user,
-                    feeFactor
-                )),
-            v, r, s
-        );
+        return ecrecover(keccak256(abi.encodePacked('\x19Ethereum Signed Message:\n54', orderHash, user, feeFactor)), v, r, s);
     }
 }

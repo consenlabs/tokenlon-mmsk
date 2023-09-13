@@ -4,7 +4,6 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -18,7 +17,13 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm install
+      - run: npm run build:contracts
       - run: npm run build
-      - run: npm test
+      - run: npm run test:mainnet
         env:
           CI: true
+          ALCHEMY_TOKEN: ${{ secrets.ALCHEMY_TOKEN }}
+      - run: npm run test:goerli
+        env:
+          CI: true
+          ALCHEMY_TOKEN: ${{ secrets.ALCHEMY_TOKEN }}

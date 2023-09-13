@@ -4,5 +4,21 @@
   "bracketSpacing": true,
   "trailingComma": "es5",
   "semi": false,
-  "singleQuote": true
+  "singleQuote": true,
+  "overrides": [
+    {
+      "files": ["*.json", "*.yaml", "*.yml"],
+      "options": {
+        "tabWidth": 2
+      }
+    },
+    {
+      "files": ["*.sol"],
+      "options": {
+        "tabWidth": 4,
+        "printWidth": 160,
+        "semi": true
+      }
+    }
+  ]
 }
