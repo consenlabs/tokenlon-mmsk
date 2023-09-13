@@ -3,17 +3,29 @@ import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
 import 'hardhat-gas-reporter'
 
-const MAINNET_NODE_RPC_URL = process.env.MAINNET_NODE_RPC_URL || ''
+const ALCHEMY_TOKEN = process.env.ALCHEMY_TOKEN || ''
+const FORK_NETWORK = (process.env.FORK_NETWORK as string) || 'mainnet'
+
+const ForkedNetwork: Record<string, any> = {
+  mainnet: {
+    chainId: 1,
+    forking: {
+      url: `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_TOKEN}`,
+      blockNumber: 18118600,
+    },
+  },
+  goerli: {
+    chainId: 5,
+    forking: {
+      url: `https://eth-goerli.g.alchemy.com/v2/${ALCHEMY_TOKEN}`,
+      blockNumber: 9685800,
+    },
+  },
+}
 
 module.exports = {
   networks: {
-    hardhat: {
-      chainId: 1,
-      forking: {
-        url: `${MAINNET_NODE_RPC_URL}`,
-        blockNumber: 18118600,
-      },
-    },
+    hardhat: ForkedNetwork[FORK_NETWORK],
   },
   solidity: {
     compilers: [

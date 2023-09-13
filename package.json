@@ -27,7 +27,8 @@
     "check": "node ./app/check.js",
     "clean": "rm -rf ./lib",
     "start": "node ./app/start.js",
-    "test": "hardhat test",
+    "test:mainnet": "FORK_NETWORK=mainnet hardhat test",
+    "test:goerli": "FORK_NETWORK=goerli hardhat test",
     "watch": "tsc -w"
   },
   "devDependencies": {
