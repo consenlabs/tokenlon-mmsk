@@ -533,26 +533,27 @@ describe('NewOrder', function () {
       expect(result).true
     }).timeout(360000)
     it('should sign rfqv2 order for a ERC1271_EIP712_EIP191 MMP contract', async () => {
-      const ethersNetwork = await ethers.provider.getNetwork()
-      const chainId = ethersNetwork.chainId
       const usdtHolder = await ethers.provider.getSigner(usdtHolders[chainId])
       const usdt = await ethers.getContractAt(ABI.IERC20, USDT[chainId])
       const [deployer, ethHolder] = await ethers.getSigners()
-      const privateKey = crypto.randomBytes(32)
-      const user = new ethers.Wallet(privateKey, ethers.provider)
+      const user = new ethers.Wallet(ethers.utils.randomBytes(32), ethers.provider)
       const userAddr = user.address.toLowerCase()
       await ethHolder.sendTransaction({
         to: userAddr,
         value: ethers.utils.parseEther('10'),
       })
-      const mmpSigner = Wallet.createRandom()
+      const mmpSigner = new ethers.Wallet(ethers.utils.randomBytes(32), ethers.provider)
       console.log(`mmpSigner: ${mmpSigner.address}`)
+      await ethHolder.sendTransaction({
+        to: mmpSigner.address,
+        value: ethers.utils.parseEther('10'),
+      })
       const mmproxy: Contract = await (
-        await ethers.getContractFactory('MarketMakerProxy', deployer)
+        await ethers.getContractFactory('EIP1271Plus191Wallet', deployer)
       ).deploy(mmpSigner.address)
       await usdt.connect(usdtHolder).transfer(mmproxy.address, ethers.utils.parseUnits('1000', 6))
       // approve tokens to RFQV2 contract directly
-      await mmproxy.connect(deployer).setAllowance([USDT[chainId]], RFQV2[chainId])
+      await mmproxy.connect(mmpSigner).setAllowance([USDT[chainId]], RFQV2[chainId])
       const mmproxyUsdtBalance = await usdt.balanceOf(mmproxy.address)
       const mmproxyUsdtAllowance = await usdt.allowance(mmproxy.address, RFQV2[chainId])
       console.log(`mmproxyUsdtBalance: ${ethers.utils.formatUnits(mmproxyUsdtBalance, 6)}`)
@@ -611,30 +612,24 @@ describe('NewOrder', function () {
       // The following fields are to be compatible `Order` struct.
       expect(order.makerFee).eq('0')
       expect(order.takerFee).eq('0')
+
       // verify signature type
       const sigBytes = utils.arrayify(signedOrderResp.order.makerWalletSignature)
       expect(sigBytes.length).eq(66)
       expect(sigBytes[65]).eq(SignatureType.WalletBytes32)
+
+      // verify signature
+      const result = await rfqv2.callStatic.isValidSignature(
+        mmproxy.address,
+        getOfferSignDigest(toOffer(signedOrderResp.order), chainId, RFQV2[chainId]),
+        '0x',
+        order.makerWalletSignature
+      )
+      expect(result).true
+
       // verify random values
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
-      const rfqAddr = RFQV2[chainId]
-      const orderSignDigest = getOfferSignDigest(toOffer(signedOrderResp.order), chainId, rfqAddr)
-      const r = utils.hexlify(sigBytes.slice(0, 32))
-      const s = utils.hexlify(sigBytes.slice(32, 64))
-      const v = utils.hexlify(sigBytes.slice(64, 65))
-      console.log(`r: ${r}`)
-      console.log(`s: ${s}`)
-      console.log(`v: ${v}`)
-      const recovered = utils.verifyMessage(utils.arrayify(orderSignDigest), {
-        v: parseInt(v),
-        r: r,
-        s: s,
-      })
-      expect(recovered.toLowerCase()).eq(mmpSigner.address.toLowerCase())
-      console.log(`recovered.toLowerCase(): ${recovered.toLowerCase()}`)
-      console.log(`mmpSigner.address.toLowerCase(): ${mmpSigner.address.toLowerCase()}`)
-      // TODO: test with a real ERC1271 wallet contract
     }).timeout(360000)
     it('should sign rfqv2 order for a ERC1271_EIP712 MMP contract', async () => {
       const usdtHolder = await ethers.provider.getSigner(usdtHolders[chainId])
