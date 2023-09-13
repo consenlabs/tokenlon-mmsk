@@ -1,5 +1,5 @@
 import { assert } from 'chai'
-import { fromUnitToDecimalBN, toBN, truncateAmount } from '../src/utils'
+import { fromUnitToDecimalBN, toBN, truncateAmount } from '../../src/utils'
 
 describe('Numbers', function () {
   it('.fromUnitToDecimalBN works', function () {

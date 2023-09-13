@@ -163,8 +163,6 @@ export const buildSignedOrder = async (
   const orderHash = getOfferHash(rfqOrder)
   console.log(`orderHash: ${orderHash}`)
   const orderSignDigest = getOfferSignDigest(rfqOrder, chainId, rfqAddr)
-  console.log(`chainId: ${chainId}`)
-  console.log(`rfqAddr: ${rfqAddr}`)
   console.log(`orderSignDigest: ${orderSignDigest}`)
   let makerWalletSignature
   if (!signingUrl) {
