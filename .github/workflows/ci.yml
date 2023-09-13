@@ -4,7 +4,6 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -22,3 +21,4 @@ jobs:
       - run: npm test
         env:
           CI: true
+          MAINNET_NODE_RPC_URL: ${{ secrets.MAINNET_NODE_RPC_URL }}

@@ -41,43 +41,6 @@ const USDT_ADDRESS: Record<number, string> = {
   5: '0xa93ef9215b907c19e739e2214e1aa5412a0401b5',
 }
 
-const IS_VALID_SIGNATURE = [
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: '_signerAddress',
-        type: 'address',
-      },
-      {
-        internalType: 'bytes32',
-        name: '_hash',
-        type: 'bytes32',
-      },
-      {
-        internalType: 'bytes',
-        name: '_data',
-        type: 'bytes',
-      },
-      {
-        internalType: 'bytes',
-        name: '_sig',
-        type: 'bytes',
-      },
-    ],
-    name: 'isValidSignature',
-    outputs: [
-      {
-        internalType: 'bool',
-        name: 'isValid',
-        type: 'bool',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-]
-
 const replaceMarketMakingAddress = (chainId: number, address: string, updaterStack) => {
   const mockMarkerMakerConfigUpdater = new Updater({
     name: 'mockMarkerMakerConfigUpdater',
@@ -107,18 +70,16 @@ const replaceMarketMakingAddress = (chainId: number, address: string, updaterSta
 }
 
 describe('NewOrder', function () {
+  const chainId: number = network.config.chainId
   let signer: SignerWithAddress
-  let chainId: number
   let rfqv1: Contract
   let rfqv2: Contract
   before(async () => {
     const signers = await ethers.getSigners()
     signer = signers[0]
-    const networkInfo = await ethers.provider.getNetwork()
-    chainId = networkInfo.chainId
     const usdtHolderAddr = usdtHolders[chainId]
-    rfqv1 = new ethers.Contract(RFQV1[chainId], IS_VALID_SIGNATURE, ethers.provider)
-    rfqv2 = new ethers.Contract(RFQV2[chainId], IS_VALID_SIGNATURE, ethers.provider)
+    rfqv1 = await ethers.getContractAt('ISignatureValidator', RFQV1[chainId])
+    rfqv2 = await ethers.getContractAt('ISignatureValidator', RFQV2[chainId])
     await network.provider.request({
       method: 'hardhat_impersonateAccount',
       params: [usdtHolderAddr],
@@ -874,48 +835,6 @@ describe('NewOrder', function () {
       expect(sigBytes.length).eq(66)
       expect(sigBytes[65]).eq(SignatureType.EIP712)
       // verify signature
-      const rfqAddr = RFQV2[chainId]
-      const signedOrder = toOffer(signedOrderResp.order)
-      const domain = {
-        name: 'Tokenlon',
-        version: 'v5',
-        chainId: chainId,
-        verifyingContract: rfqAddr,
-      }
-      // The named list of all type definitions
-      const types = {
-        Offer: [
-          { name: 'taker', type: 'address' },
-          { name: 'maker', type: 'address' },
-          { name: 'takerToken', type: 'address' },
-          { name: 'takerTokenAmount', type: 'uint256' },
-          { name: 'makerToken', type: 'address' },
-          { name: 'makerTokenAmount', type: 'uint256' },
-          { name: 'feeFactor', type: 'uint256' },
-          { name: 'expiry', type: 'uint256' },
-          { name: 'salt', type: 'uint256' },
-        ],
-      }
-      // The data to sign
-      const value = {
-        taker: signedOrder.taker,
-        maker: signedOrder.maker,
-        takerToken: signedOrder.takerToken,
-        takerTokenAmount: signedOrder.takerTokenAmount.toString(),
-        makerToken: signedOrder.makerToken,
-        makerTokenAmount: signedOrder.makerTokenAmount.toString(),
-        feeFactor: signedOrder.feeFactor.toString(),
-        expiry: signedOrder.expiry.toString(),
-        salt: signedOrder.salt.toString(),
-      }
-      const recovered = ethers.utils.verifyTypedData(
-        domain,
-        types,
-        value,
-        signedOrderResp.order.makerWalletSignature.slice(0, -2)
-      )
-      console.log(`sig: ${signedOrderResp.order.makerWalletSignature}`)
-      expect(recovered.toLowerCase()).eq(signer.address.toLowerCase())
       const result = await rfqv2.callStatic.isValidSignature(
         signer.address,
         getOfferSignDigest(toOffer(signedOrderResp.order), chainId, RFQV2[chainId]),
@@ -1131,11 +1050,10 @@ describe('NewOrder', function () {
       // verify random values
       expect(signedOrderResp.order.salt.length > 0).is.true
       expect(Number(signedOrderResp.order.expirationTimeSeconds) > 0).is.true
-      const rfqAddr = RFQV1[chainId]
       const orderSignDigest = getOrderSignDigest(
         toRFQOrder(signedOrderResp.order),
         chainId,
-        rfqAddr
+        RFQV1[chainId]
       )
       const r = utils.hexlify(sigBytes.slice(0, 32))
       const s = utils.hexlify(sigBytes.slice(32, 64))
@@ -1347,11 +1265,10 @@ describe('NewOrder', function () {
       expect(sigBytes.length).eq(98)
       expect(sigBytes[97]).eq(SignatureType.EIP712)
       // verify signature
-      const rfqAddr = RFQV1[chainId]
       const orderSignDigest = getOrderSignDigest(
         toRFQOrder(signedOrderResp.order),
         chainId,
-        rfqAddr
+        RFQV1[chainId]
       )
       const result = await rfqv1.callStatic.isValidSignature(
         signer.address,

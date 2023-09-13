@@ -26,7 +26,7 @@
     "check": "node ./app/check.js",
     "clean": "rm -rf ./lib",
     "start": "node ./app/start.js",
-    "test": "chainId=1 npx hardhat --network hardhat test",
+    "test": "hardhat test",
     "watch": "tsc -w"
   },
   "devDependencies": {
