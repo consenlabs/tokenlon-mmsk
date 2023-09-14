@@ -55,8 +55,8 @@ describe('PMM NewOrder', function () {
     )
   })
   it('should sign pmmv5 order by EOA', async function () {
-    const marketMakingInfo = getMarketMakingInfo()
     replaceMarketMakingAddress(chainId, signer.address, updaterStack)
+    const marketMakingInfo = getMarketMakingInfo()
     const userAddr = Wallet.createRandom().address.toLowerCase()
     const order = await callNewOrder({
       chainId: chainId,
@@ -99,13 +99,13 @@ describe('PMM NewOrder', function () {
     expect(recovered.toLowerCase()).eq(signer.address.toLowerCase())
   })
   it('should sign pmmv5 order for MMPv4', async function () {
-    const marketMakingInfo = getMarketMakingInfo()
     const usdtHolder = await ethers.provider.getSigner(usdtHolders[chainId])
     const usdt = await ethers.getContractAt(ABI.IERC20, USDT_ADDRESS[chainId])
     const mmpSigner = Wallet.createRandom()
     const [deployer] = await ethers.getSigners()
     const mmproxy = await deployMMPV4Wallet(mmpSigner, deployer)
     replaceMarketMakingAddress(chainId, mmproxy.address, updaterStack)
+    const marketMakingInfo = getMarketMakingInfo()
     await usdt.connect(usdtHolder).transfer(mmproxy.address, ethers.utils.parseUnits('1000', 6))
     const userAddr = Wallet.createRandom().address.toLowerCase()
     const order = await callNewOrder({

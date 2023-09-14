@@ -46,8 +46,8 @@ describe('RFQV1 NewOrder', function () {
     init(chainId, signer)
   })
   it('should sign rfqv1 order by EIP712', async function () {
-    const marketMakingInfo = getMarketMakingInfo()
     replaceMarketMakingAddress(chainId, signer.address, updaterStack)
+    const marketMakingInfo = getMarketMakingInfo()
     const userAddr = Wallet.createRandom().address.toLowerCase()
     const order = await callNewOrder({
       chainId: chainId,
@@ -90,7 +90,6 @@ describe('RFQV1 NewOrder', function () {
     expect(Number(order.expirationTimeSeconds)).gt(0)
   })
   it('should sign rfqv1 order for MMPv4', async () => {
-    const marketMakingInfo = getMarketMakingInfo()
     const user = Wallet.createRandom()
     const userAddr = user.address.toLowerCase()
     const [deployer] = await ethers.getSigners()
@@ -100,6 +99,7 @@ describe('RFQV1 NewOrder', function () {
     console.log(`mmproxy: ${mmproxy.address}`)
     expect(mmproxy.address).is.not.null
     replaceMarketMakingAddress(chainId, mmproxy.address, updaterStack)
+    const marketMakingInfo = getMarketMakingInfo()
     const order = await callNewOrder({
       base: 'ETH',
       quote: 'USDT',
@@ -141,7 +141,6 @@ describe('RFQV1 NewOrder', function () {
     expect(isValid).true
   }).timeout(360000)
   it('should sign rfqv1 order for a ERC1271_EIP712_EIP191 MMP contract', async () => {
-    const marketMakingInfo = getMarketMakingInfo()
     const [deployer] = await ethers.getSigners()
     const privateKey = crypto.randomBytes(32)
     const user = new ethers.Wallet(privateKey, ethers.provider)
@@ -151,6 +150,7 @@ describe('RFQV1 NewOrder', function () {
     const walletContract = await deployEIP1271Plus191Wallet(allowSigner, deployer)
     expect(walletContract.address).is.not.null
     replaceMarketMakingAddress(chainId, walletContract.address, updaterStack)
+    const marketMakingInfo = getMarketMakingInfo()
     const order = await callNewOrder({
       base: 'ETH',
       quote: 'USDT',
@@ -192,7 +192,6 @@ describe('RFQV1 NewOrder', function () {
     expect(isValid).true
   }).timeout(360000)
   it('should sign rfqv1 order for a ERC1271_EIP712 MMP contract', async () => {
-    const marketMakingInfo = getMarketMakingInfo()
     const [deployer] = await ethers.getSigners()
     const user = Wallet.createRandom()
     const userAddr = user.address.toLowerCase()
@@ -201,6 +200,7 @@ describe('RFQV1 NewOrder', function () {
     const walletContract = await deployERC1271Wallet(allowSigner, deployer)
     expect(walletContract.address).is.not.null
     replaceMarketMakingAddress(chainId, walletContract.address, updaterStack)
+    const marketMakingInfo = getMarketMakingInfo()
     const order = await callNewOrder({
       base: 'ETH',
       quote: 'USDT',
