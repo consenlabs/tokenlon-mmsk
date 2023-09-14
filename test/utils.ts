@@ -10,6 +10,10 @@ import { WalletType } from '../src/signer/types'
 import { Order, newOrder } from '../src/handler/newOrder'
 import { updaterStack } from '../src/worker'
 import { NULL_ADDRESS } from '../src/constants'
+import * as chai from 'chai'
+import { solidity } from 'ethereum-waffle'
+chai.use(solidity)
+const { expect } = chai
 
 export const WALLET_TYPE_MAGIC_VALUE = ethers.utils.keccak256(
   Buffer.from('isValidWalletSignature(bytes32,address,bytes)')
@@ -238,4 +242,61 @@ export const init = (chainId: number, signer: SignerWithAddress | Wallet): void 
   updaterStack['pairsFromMMUpdater'] = mockPairsFromMMUpdater
   updaterStack['markerMakerConfigUpdater'] = mockMarkerMakerConfigUpdater
   updaterStack['tokenConfigsFromImtokenUpdater'] = mockTokenConfigsFromImtokenUpdater
+}
+
+export const getMarketMakingInfo = (): any => {
+  return updaterStack['markerMakerConfigUpdater'].cacheResult
+}
+
+export const expectOrder = ({
+  order,
+  expectedProtocol,
+  expectedTakerAddress,
+  expectedMakerAddress,
+  expectedTakerAssetAddress,
+  expectedMakerAssetAddress,
+  expectedTakerAssetAmount,
+  expectedMakerAssetAmount,
+  expectedFeeRecipient,
+  expectedSenderAddress,
+}: {
+  order: Order
+  expectedProtocol: Protocol
+  expectedTakerAddress: string
+  expectedMakerAddress: string
+  expectedTakerAssetAddress: string
+  expectedMakerAssetAddress: string
+  expectedTakerAssetAmount: string
+  expectedMakerAssetAmount: string
+  expectedFeeRecipient: string
+  expectedSenderAddress: string
+}): void => {
+  const cacheResult = updaterStack['markerMakerConfigUpdater'].cacheResult
+  expect(cacheResult).is.not.null
+  expect(order).is.not.null
+  expect(order.protocol).eq(expectedProtocol)
+  expect(order.quoteId).eq('1--echo-testing-8888')
+  expect(order.makerAddress).to.hexEqual(expectedMakerAddress)
+  expect(order.makerAssetAmount).eq(expectedMakerAssetAmount)
+  expect(order.makerAssetAddress).to.hexEqual(expectedMakerAssetAddress)
+  expect(order.makerAssetData).eq(
+    `0xf47261b0000000000000000000000000${expectedMakerAssetAddress.toLowerCase().slice(2)}`
+  )
+  expect(order.takerAddress).to.hexEqual(expectedTakerAddress)
+  expect(order.takerAssetAmount).eq(expectedTakerAssetAmount)
+  expect(order.takerAssetAddress).to.hexEqual(expectedTakerAssetAddress)
+  expect(order.takerAssetData).eq(
+    `0xf47261b0000000000000000000000000${expectedTakerAssetAddress.toLowerCase().slice(2)}`
+  )
+  expect(order.senderAddress).to.hexEqual(expectedSenderAddress)
+  expect(order.feeRecipientAddress).to.hexEqual(expectedFeeRecipient)
+  expect(order.exchangeAddress).to.hexEqual(cacheResult.exchangeContractAddress)
+  // The following fields are to be compatible `Order` struct.
+  expect(order.makerFee).eq('0')
+  expect(order.takerFee).eq('0')
+  // verify signature length, the signature is generated ramdonly.
+  expect(order.makerWalletSignature?.length).gt(0)
+  // verify random values
+  expect(order.salt?.toString().length).gt(0)
+  expect(Number(order.expirationTimeSeconds)).gt(0)
 }

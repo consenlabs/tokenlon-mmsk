@@ -15,6 +15,8 @@ import {
   WALLET_TYPE_MAGIC_VALUE,
   callNewOrder,
   deployMMPV4Wallet,
+  expectOrder,
+  getMarketMakingInfo,
   init,
   replaceMarketMakingAddress,
   toZXOrder,
@@ -53,6 +55,7 @@ describe('PMM NewOrder', function () {
     )
   })
   it('should sign pmmv5 order by EOA', async function () {
+    const marketMakingInfo = getMarketMakingInfo()
     replaceMarketMakingAddress(chainId, signer.address, updaterStack)
     const userAddr = Wallet.createRandom().address.toLowerCase()
     const order = await callNewOrder({
@@ -66,32 +69,18 @@ describe('PMM NewOrder', function () {
       signer,
       walletType: WalletType.EOA,
     })
-    expect(order).is.not.null
-    expect(order.protocol).eq(Protocol.PMMV5)
-    expect(order.quoteId).eq('1--echo-testing-8888')
-    expect(order.makerAddress).eq(signer.address.toLowerCase())
-    expect(order.makerAssetAmount).eq('100000')
-    expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
-    expect(order.makerAssetData).eq(
-      `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
-    )
-    expect(order.takerAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257')
-    expect(order.takerAssetAmount).eq('100000000000000000')
-    expect(order.takerAssetAddress).eq(WETH[chainId].toLowerCase())
-    expect(order.takerAssetData).eq(
-      `0xf47261b0000000000000000000000000${WETH[chainId].toLowerCase().slice(2)}`
-    )
-    expect(order.senderAddress).eq('0x7bd7d025d4231aad1233967b527ffd7416410257')
-    expect(order.feeRecipientAddress).eq(userAddr)
-    expect(order.exchangeAddress).eq('0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
-    // The following fields are to be compatible `Order` struct.
-    expect(order.makerFee).eq('0')
-    expect(order.takerFee).eq('0')
-    // verify signature type
-    expect(order.makerWalletSignature?.slice(-1)).eq('3')
-    // verify random values
-    expect(order.salt?.toString().length).gt(0)
-    expect(Number(order.expirationTimeSeconds)).gt(0)
+    expectOrder({
+      order: order,
+      expectedProtocol: Protocol.PMMV5,
+      expectedTakerAddress: marketMakingInfo.addressBookV5.PMM,
+      expectedMakerAddress: signer.address,
+      expectedTakerAssetAddress: WETH[chainId],
+      expectedMakerAssetAddress: USDT_ADDRESS[chainId],
+      expectedTakerAssetAmount: utils.parseEther('0.1').toString(),
+      expectedMakerAssetAmount: utils.parseUnits('0.1', 6).toString(),
+      expectedFeeRecipient: userAddr,
+      expectedSenderAddress: marketMakingInfo.addressBookV5.PMM,
+    })
     const zxOrder = toZXOrder(order)
     const orderHashBuffer = eip712Utils.structHash(EIP712_ORDER_SCHEMA, zxOrder)
     const orderHash = '0x' + orderHashBuffer.toString('hex')
@@ -110,6 +99,7 @@ describe('PMM NewOrder', function () {
     expect(recovered.toLowerCase()).eq(signer.address.toLowerCase())
   })
   it('should sign pmmv5 order for MMPv4', async function () {
+    const marketMakingInfo = getMarketMakingInfo()
     const usdtHolder = await ethers.provider.getSigner(usdtHolders[chainId])
     const usdt = await ethers.getContractAt(ABI.IERC20, USDT_ADDRESS[chainId])
     const mmpSigner = Wallet.createRandom()
@@ -129,6 +119,18 @@ describe('PMM NewOrder', function () {
       signer: mmpSigner,
       makerAddress: mmproxy.address,
       walletType: WalletType.MMP_VERSION_4,
+    })
+    expectOrder({
+      order: order,
+      expectedProtocol: Protocol.PMMV5,
+      expectedTakerAddress: marketMakingInfo.addressBookV5.PMM,
+      expectedMakerAddress: mmproxy.address,
+      expectedTakerAssetAddress: WETH[chainId],
+      expectedMakerAssetAddress: USDT_ADDRESS[chainId],
+      expectedTakerAssetAmount: utils.parseEther('0.1').toString(),
+      expectedMakerAssetAmount: utils.parseUnits('0.1', 6).toString(),
+      expectedFeeRecipient: userAddr,
+      expectedSenderAddress: marketMakingInfo.addressBookV5.PMM,
     })
     console.log(`order.makerWalletSignature: ${order.makerWalletSignature}`)
     const magicValue = await mmproxy.callStatic.isValidSignature(

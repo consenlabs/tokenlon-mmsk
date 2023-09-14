@@ -3,11 +3,13 @@ import { Wallet, utils } from 'ethers'
 import { Protocol } from '../src/types'
 import { WalletType } from '../src/signer/types'
 import * as ethUtils from 'ethereumjs-util'
-import { WETH } from '@tokenlon/sdk'
+import { WETH, ZERO } from '@tokenlon/sdk'
 import { expect } from 'chai'
 import { generateSaltWithFeeFactor } from '../src/signer/pmmv5'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { USDT_ADDRESS, callNewOrder, init } from './utils'
+import { USDT_ADDRESS, callNewOrder, expectOrder, getMarketMakingInfo, init } from './utils'
+import { assetDataUtils } from '0x-v2-order-utils'
+import { FEE_RECIPIENT_ADDRESS } from '../src/constants'
 
 describe('AMM NewOrder', function () {
   const chainId: number = network.config.chainId!
@@ -20,6 +22,7 @@ describe('AMM NewOrder', function () {
     init(chainId, signer)
   })
   it('should create ammv1 order by uniswap v2', async function () {
+    const marketMakingInfo = getMarketMakingInfo()
     const ammAddr = '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
     const order = await callNewOrder({
       chainId: chainId,
@@ -32,36 +35,21 @@ describe('AMM NewOrder', function () {
       protocol: Protocol.AMMV1,
       makerAddress: ammAddr,
     })
-    console.log(`order`)
-    console.log(order)
-    expect(order).is.not.null
-    expect(order.protocol).eq(Protocol.AMMV1)
-    expect(order.quoteId).eq('1--echo-testing-8888')
-    expect(order.makerAddress).eq('0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852')
-    expect(order.makerAssetAmount).eq('100000')
-    expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
-    expect(order.makerAssetData).eq(
-      `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
-    )
-    expect(order.takerAddress).eq('0x25657705a6be20511687d483f2fccfb2d92f6033')
-    expect(order.takerAssetAmount).eq('100000000000000000')
-    expect(order.takerAssetAddress).eq('0x0000000000000000000000000000000000000000')
-    expect(order.takerAssetData).eq(
-      '0xf47261b00000000000000000000000000000000000000000000000000000000000000000'
-    )
-    expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
-    expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
-    expect(order.exchangeAddress).eq('0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
-    // The following fields are to be compatible `Order` struct.
-    expect(order.makerFee).eq('0')
-    expect(order.takerFee).eq('0')
-    // verify signature length, the signature is generated ramdonly.
-    expect(order.makerWalletSignature?.length).eq(40)
-    // verify random values
-    expect(order.salt?.toString().length).gt(0)
-    expect(Number(order.expirationTimeSeconds)).gt(0)
+    expectOrder({
+      order: order,
+      expectedProtocol: Protocol.AMMV1,
+      expectedTakerAddress: marketMakingInfo.userProxyContractAddress,
+      expectedMakerAddress: ammAddr,
+      expectedTakerAssetAddress: ZERO[chainId],
+      expectedMakerAssetAddress: USDT_ADDRESS[chainId],
+      expectedTakerAssetAmount: utils.parseEther('0.1').toString(),
+      expectedMakerAssetAmount: utils.parseUnits('0.1', 6).toString(),
+      expectedFeeRecipient: FEE_RECIPIENT_ADDRESS,
+      expectedSenderAddress: marketMakingInfo.tokenlonExchangeContractAddress,
+    })
   })
   it('should create ammv2 order by uniswap v2', async function () {
+    const marketMakingInfo = getMarketMakingInfo()
     const ammAddr = '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
     const payload = Buffer.from(
       JSON.stringify({
@@ -80,32 +68,18 @@ describe('AMM NewOrder', function () {
       makerAddress: ammAddr,
       payload: payload,
     })
-    expect(order).is.not.null
-    expect(order.protocol).eq(Protocol.AMMV2)
-    expect(order.quoteId).eq('1--echo-testing-8888')
-    expect(order.makerAddress).eq('0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852')
-    expect(order.makerAssetAmount).eq('100000')
-    expect(order.makerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
-    expect(order.makerAssetData).eq(
-      `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
-    )
-    expect(order.takerAddress).eq('0x25657705a6be20511687d483f2fccfb2d92f6033')
-    expect(order.takerAssetAmount).eq('100000000000000000')
-    expect(order.takerAssetAddress).eq('0x0000000000000000000000000000000000000000')
-    expect(order.takerAssetData).eq(
-      '0xf47261b00000000000000000000000000000000000000000000000000000000000000000'
-    )
-    expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
-    expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
-    expect(order.exchangeAddress).eq('0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
-    // The following fields are to be compatible `Order` struct.
-    expect(order.makerFee).eq('0')
-    expect(order.takerFee).eq('0')
-    // verify signature length, the signature is generated ramdonly.
-    expect(order.makerWalletSignature?.length).eq(40)
-    // verify random values
-    expect(order.salt?.toString().length).gt(0)
-    expect(Number(order.expirationTimeSeconds)).gt(0)
+    expectOrder({
+      order: order,
+      expectedProtocol: Protocol.AMMV2,
+      expectedTakerAddress: marketMakingInfo.userProxyContractAddress,
+      expectedMakerAddress: ammAddr,
+      expectedTakerAssetAddress: ZERO[chainId],
+      expectedMakerAssetAddress: USDT_ADDRESS[chainId],
+      expectedTakerAssetAmount: utils.parseEther('0.1').toString(),
+      expectedMakerAssetAmount: utils.parseUnits('0.1', 6).toString(),
+      expectedFeeRecipient: FEE_RECIPIENT_ADDRESS,
+      expectedSenderAddress: marketMakingInfo.tokenlonExchangeContractAddress,
+    })
     expect(order.payload).eq(payload)
   })
   describe('handle token precision and decimals', () => {
@@ -124,7 +98,7 @@ describe('AMM NewOrder', function () {
       expect(order).is.not.null
       expect(order.quoteId).eq('1--echo-testing-8888')
       expect(order.makerWalletSignature?.toString().slice(-1)).eq('4')
-      expect(order.takerAssetData.slice(34)).eq(USDT_ADDRESS[chainId].toLowerCase().slice(2))
+      expect(order.takerAssetData).eq(assetDataUtils.encodeERC20AssetData(USDT_ADDRESS[chainId]))
       expect(order.takerAssetAmount).eq(utils.parseUnits('0.1114', 6).toString())
       expect(order.makerAssetAmount).eq(utils.parseEther('0.1114').toString())
     })

@@ -20,10 +20,13 @@ import {
   deployEIP1271Plus191Wallet,
   deployERC1271Wallet,
   deployMMPV4Wallet,
+  expectOrder,
+  getMarketMakingInfo,
   init,
   replaceMarketMakingAddress,
   usdtHolders,
 } from './utils'
+import { FEE_RECIPIENT_ADDRESS } from '../src/constants'
 
 describe('RFQV2 NewOrder', function () {
   const chainId: number = network.config.chainId!
@@ -44,6 +47,7 @@ describe('RFQV2 NewOrder', function () {
   })
   it('should sign rfqv2 order by EIP712', async function () {
     replaceMarketMakingAddress(chainId, signer.address, updaterStack)
+    const marketMakingInfo = getMarketMakingInfo()
     const userAddr = Wallet.createRandom().address.toLowerCase()
     const usdt = new ethers.Contract(USDT_ADDRESS[chainId], ABI.IERC20, ethers.provider)
     await usdt.connect(signer).approve(RFQV2[chainId], ethers.constants.MaxUint256)
@@ -58,29 +62,18 @@ describe('RFQV2 NewOrder', function () {
       userAddr: userAddr,
       protocol: Protocol.RFQV2,
     })
-    expect(order).is.not.null
-    expect(order.protocol).eq(Protocol.RFQV2)
-    expect(order.quoteId).eq('1--echo-testing-8888')
-    expect(order.makerAddress).eq(signer.address.toLowerCase())
-    expect(order.makerAssetAmount).eq('1000000000000000000')
-    expect(order.makerAssetAddress).eq(WETH[chainId].toLowerCase())
-    expect(
-      order.makerAssetData,
-      `0xf47261b0000000000000000000000000${WETH[chainId].toLowerCase().slice(2)}`
-    )
-    expect(order.takerAddress).eq(userAddr)
-    expect(order.takerAssetAmount).eq('1000000')
-    expect(order.takerAssetAddress).eq(USDT_ADDRESS[chainId].toLowerCase())
-    expect(
-      order.takerAssetData,
-      `0xf47261b0000000000000000000000000${USDT_ADDRESS[chainId].toLowerCase().slice(2)}`
-    )
-    expect(order.senderAddress).eq('0xd489f1684cf5e78d933e254bd7ac8a9a6a70d491')
-    expect(order.feeRecipientAddress).eq('0xb9e29984fe50602e7a619662ebed4f90d93824c7')
-    expect(order.exchangeAddress).eq('0x30589010550762d2f0d06f650d8e8b6ade6dbf4b')
-    // The following fields are to be compatible `Order` struct.
-    expect(order.makerFee).eq('0')
-    expect(order.takerFee).eq('0')
+    expectOrder({
+      order: order,
+      expectedProtocol: Protocol.RFQV2,
+      expectedTakerAddress: userAddr,
+      expectedMakerAddress: signer.address,
+      expectedTakerAssetAddress: USDT_ADDRESS[chainId],
+      expectedMakerAssetAddress: WETH[chainId],
+      expectedTakerAssetAmount: utils.parseUnits('1', 6).toString(),
+      expectedMakerAssetAmount: utils.parseEther('1').toString(),
+      expectedFeeRecipient: FEE_RECIPIENT_ADDRESS,
+      expectedSenderAddress: marketMakingInfo.tokenlonExchangeContractAddress,
+    })
     // verify signature type
     const sigBytes = utils.arrayify(order.makerWalletSignature!)
     expect(sigBytes.length).eq(66)
@@ -106,6 +99,7 @@ describe('RFQV2 NewOrder', function () {
     console.log(`mmpSigner: ${mmpSigner.address}`)
     const mmproxy = await deployMMPV4Wallet(mmpSigner, deployer)
     replaceMarketMakingAddress(chainId, mmproxy.address, updaterStack)
+    const marketMakingInfo = getMarketMakingInfo()
     const order = await callNewOrder({
       chainId: chainId,
       base: 'ETH',
@@ -118,10 +112,18 @@ describe('RFQV2 NewOrder', function () {
       protocol: Protocol.RFQV2,
     })
     // taker asset would be a ZERO address in RFQV2 protocol
-    expect(order.takerAssetAddress).eq(ZERO[chainId].toLowerCase())
-    expect(order.takerAssetData).eq(
-      `0xf47261b0000000000000000000000000${ZERO[chainId].toLowerCase().slice(2)}`
-    )
+    expectOrder({
+      order: order,
+      expectedProtocol: Protocol.RFQV2,
+      expectedTakerAddress: userAddr,
+      expectedMakerAddress: mmproxy.address,
+      expectedTakerAssetAddress: ZERO[chainId],
+      expectedMakerAssetAddress: USDT_ADDRESS[chainId],
+      expectedTakerAssetAmount: utils.parseEther('0.1').toString(),
+      expectedMakerAssetAmount: utils.parseUnits('0.1', 6).toString(),
+      expectedFeeRecipient: FEE_RECIPIENT_ADDRESS,
+      expectedSenderAddress: marketMakingInfo.tokenlonExchangeContractAddress,
+    })
     // verify signature type
     const sigBytes = utils.arrayify(order.makerWalletSignature!)
     expect(sigBytes.length).eq(88)
@@ -145,6 +147,7 @@ describe('RFQV2 NewOrder', function () {
     const allowSigner = Wallet.createRandom()
     const walletContract = await deployEIP1271Plus191Wallet(allowSigner, deployer)
     replaceMarketMakingAddress(chainId, walletContract.address, updaterStack)
+    const marketMakingInfo = getMarketMakingInfo()
     const order = await callNewOrder({
       base: 'ETH',
       quote: 'USDT',
@@ -155,6 +158,19 @@ describe('RFQV2 NewOrder', function () {
       chainId: chainId,
       userAddr: userAddr,
       protocol: Protocol.RFQV2,
+    })
+
+    expectOrder({
+      order: order,
+      expectedProtocol: Protocol.RFQV2,
+      expectedTakerAddress: userAddr,
+      expectedMakerAddress: walletContract.address,
+      expectedTakerAssetAddress: ZERO[chainId],
+      expectedMakerAssetAddress: USDT_ADDRESS[chainId],
+      expectedTakerAssetAmount: utils.parseEther('0.1').toString(),
+      expectedMakerAssetAmount: utils.parseUnits('0.1', 6).toString(),
+      expectedFeeRecipient: FEE_RECIPIENT_ADDRESS,
+      expectedSenderAddress: marketMakingInfo.tokenlonExchangeContractAddress,
     })
 
     // verify signature type
@@ -177,6 +193,7 @@ describe('RFQV2 NewOrder', function () {
     const allowSigner = Wallet.createRandom()
     const walletContract = await deployERC1271Wallet(allowSigner, deployer)
     replaceMarketMakingAddress(chainId, walletContract.address, updaterStack)
+    const marketMakingInfo = getMarketMakingInfo()
     const order = await callNewOrder({
       walletType: WalletType.ERC1271_EIP712,
       signer: allowSigner,
@@ -187,6 +204,18 @@ describe('RFQV2 NewOrder', function () {
       amount: 0.1,
       userAddr: userAddr,
       protocol: Protocol.RFQV2,
+    })
+    expectOrder({
+      order: order,
+      expectedProtocol: Protocol.RFQV2,
+      expectedTakerAddress: userAddr,
+      expectedMakerAddress: walletContract.address,
+      expectedTakerAssetAddress: ZERO[chainId],
+      expectedMakerAssetAddress: USDT_ADDRESS[chainId],
+      expectedTakerAssetAmount: utils.parseEther('0.1').toString(),
+      expectedMakerAssetAmount: utils.parseUnits('0.1', 6).toString(),
+      expectedFeeRecipient: FEE_RECIPIENT_ADDRESS,
+      expectedSenderAddress: marketMakingInfo.tokenlonExchangeContractAddress,
     })
     // verify signature type
     const sigBytes = utils.arrayify(order.makerWalletSignature!)
@@ -212,11 +241,11 @@ describe('RFQV2 NewOrder', function () {
       senderAddress: `0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64`,
       takerAddress: '0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69',
       makerAddress: '0x86B9F429C3Ef44c599EB560Eb531A0E3f2E36f64'.toLowerCase(),
-      takerAssetData: assetDataUtils.encodeERC20AssetData(WETH[chainId]),
+      takerAssetData: assetDataUtils.encodeERC20AssetData(ZERO[chainId]),
       makerAssetData: assetDataUtils.encodeERC20AssetData(USDT_ADDRESS[chainId]),
       takerFee: toBN(0),
       makerFee: toBN(0),
-      takerAssetAddress: WETH[chainId],
+      takerAssetAddress: ZERO[chainId],
       makerAssetAddress: USDT_ADDRESS[chainId],
       takerAssetAmount: new BigNumber('0x0de0b6b3a7640000'),
       makerAssetAmount: new BigNumber('0x05f5e100'),
