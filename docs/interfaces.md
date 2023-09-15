@@ -243,7 +243,7 @@ POST
 #### Request return
 |Name|Type|Description|
 |----|----|----|
-|result|Boolean|<span style="color:#FF4136;font-weight:bold;">We suggest you just return `true`, If you return `false`，imToken will always retry to send this notification to you, and it maybe repeat your hedge.</span>|
+|result|Boolean|<span style="color:#FF4136;font-weight:bold;">We suggest you just return `true`. If you return `false`, Tokenlon will always retry to send this notification to you, and it maybe repeat your hedge.</span>|
 
 
 ### exception interface
@@ -280,4 +280,4 @@ curl -X POST \
 #### return
 |Name|Type|Description|
 |----|----|----|
-|result|Boolean|<span style="color:#FF4136;font-weight:bold;">We suggest you just return `true`, **If you return `false`，imToken will always retry to send this notification to you, and it maybe repeat your processing.</span>|
+|result|Boolean|<span style="color:#FF4136;font-weight:bold;">We suggest you just return `true`. If you return `false`, Tokenlon will always retry to send this notification to you, and it maybe repeat your processing.</span>|
