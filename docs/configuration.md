@@ -20,7 +20,7 @@ Program setup,
     - WALLET_TYPE, a type of market making wallet contract.
         - types.WalletType.MMP_VERSION_4 (see [example contract](https://gist.github.com/NIC619/a3db1a743175bf592f2db983f17680dd#file-mmpv4-sol-L1236))
         - types.WalletType.ERC1271_EIP712: your market making contract could verify standard EIP712 signatures.
-        - types.WalletType.ERC1271_EIP712_EIP191: your market making contract could verify signatures correspond to the digest of EIP712 struct hash with a EIP191 prefix.
+        - types.WalletType.ERC1271_EIP712_EIP191: your market making contract could verify signatures correspond to the digest of EIP712 struct hash with an EIP191 prefix.
         - types.WalletType.EOA
     - SIGNING_URL, If you wanna sign orders in your own service instead of the mmsk,
    please set the SIGNING_URL to your service endpoint. the mmsk would post every unsigned PMMV5/RFQV1/RFQV2 orders to your service. Remember to set the WALLET_ADDRESS as well. Example PMMV5/RFQV1/RFQV2 requests are shown below:
