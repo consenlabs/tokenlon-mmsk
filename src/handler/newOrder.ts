@@ -63,7 +63,7 @@ export interface Order {
   payload?: string
 }
 
-interface Response {
+export interface Response {
   rate: NumberOrString
   minAmount: NumberOrString
   maxAmount: NumberOrString
@@ -205,7 +205,7 @@ const _getBaseTokenByAddress = (baseTokenAddr, tokenList) => {
 
 const getBaseTokenByAddress = memoize(_getBaseTokenByAddress)
 
-export const newOrder = async (ctx) => {
+export const newOrder = async (ctx): Promise<Response> => {
   const { quoter, signer, chainID, walletType, signingUrl, permitType } = ctx
   const req: QueryInterface = {
     protocol: Protocol.PMMV5, // by default is v2 protocol

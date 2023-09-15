@@ -1,5 +1,5 @@
 import { assert } from 'chai'
-import { applyFeeToAmount } from '../src/quoting'
+import { applyFeeToAmount } from '../../src/quoting'
 
 describe('quoting.ts', function () {
   it('applyFeeToAmount', function () {

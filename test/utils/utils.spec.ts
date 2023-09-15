@@ -1,6 +1,6 @@
 import { expect } from 'chai'
-import { QueryInterface } from '../src/types'
-import { ensureCorrectSymbolCase } from '../src/quoting'
+import { QueryInterface } from '../../src/types'
+import { ensureCorrectSymbolCase } from '../../src/quoting'
 
 const supportTokens = [
   {
@@ -87,7 +87,7 @@ const supportTokens = [
 
 describe('translateBaseQuote()', function () {
   it('does not change correct symbol', function () {
-    let pair: QueryInterface = { base: 'DAI', quote: 'ETH', side: 'BUY' }
+    const pair: QueryInterface = { base: 'DAI', quote: 'ETH', side: 'BUY' }
     expect(ensureCorrectSymbolCase(pair, supportTokens)).to.eql({
       base: 'DAI',
       baseAddress: '0x5c964665b6379527b625be996020d861f27aa31d',
@@ -98,7 +98,7 @@ describe('translateBaseQuote()', function () {
   })
 
   it('correct symbol in pair', function () {
-    let pair: QueryInterface = { base: 'DAI', quote: 'Eth', side: 'BUY' }
+    const pair: QueryInterface = { base: 'DAI', quote: 'Eth', side: 'BUY' }
     expect(ensureCorrectSymbolCase(pair, supportTokens)).to.eql({
       base: 'DAI',
       baseAddress: '0x5c964665b6379527b625be996020d861f27aa31d',
@@ -109,7 +109,7 @@ describe('translateBaseQuote()', function () {
   })
 
   it('correct symbol case in pair', function () {
-    let pair: QueryInterface = { base: 'IMBTC', quote: 'ETH', side: 'BUY' }
+    const pair: QueryInterface = { base: 'IMBTC', quote: 'ETH', side: 'BUY' }
     expect(ensureCorrectSymbolCase(pair, supportTokens)).to.eql({
       base: 'imBTC',
       baseAddress: '0x5c964665b6379527b625be996020d861f27aa31d',
@@ -120,7 +120,7 @@ describe('translateBaseQuote()', function () {
   })
 
   it('correct symbol when query by token address', function () {
-    let pair: QueryInterface = {
+    const pair: QueryInterface = {
       base: '',
       quote: '',
       baseAddress: '0x5c964665b6379527b625be996020d861f27aa31d',

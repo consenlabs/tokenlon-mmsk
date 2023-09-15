@@ -14,7 +14,7 @@ import { Protocol } from '../types'
 import { ExtendedZXOrder, RemoteSigningPMMV5Request } from './types'
 import { Order as ZXOrder } from '0x-v2-order-utils'
 
-const EIP712_ORDER_SCHEMA = {
+export const EIP712_ORDER_SCHEMA = {
   name: 'Order',
   parameters: [
     { name: 'makerAddress', type: EIP712Types.Address },
