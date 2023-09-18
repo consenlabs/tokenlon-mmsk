@@ -73,8 +73,6 @@ GET
 |quote|String|YES|quote symbol|
 |side|String|YES|'BUY' or 'SELL'|
 |amount|Number|**NO**|**BUY** or **SELL** base amount|
-protocol|String|YES|'PMMV5', 'RFQV1' and 'RFQV2'
-|feefactor|Number|YES|fee in bps unit
 
 #### request return
 #### Returned in normal conditions
@@ -143,6 +141,9 @@ GET
 |userAddr|String|YES|user's address|
 |amount|Number|**YES**|**BUY** or **SELL** base amount|
 |uniqId|String|**YES**|represents the user's unique Id|
+protocol|String|YES|'PMMV5', 'RFQV1' and 'RFQV2'
+|feefactor|Number|YES|fee in bps unit
+
 
 #### request return
 
