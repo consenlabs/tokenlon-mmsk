@@ -73,6 +73,8 @@ GET
 |quote|String|YES|quote symbol|
 |side|String|YES|'BUY' or 'SELL'|
 |amount|Number|**NO**|**BUY** or **SELL** base amount|
+protocol|String|YES|'PMMV5', 'RFQV1' and 'RFQV2'
+|feefactor|Number|YES|fee in bps unit
 
 #### request return
 #### Returned in normal conditions
@@ -120,7 +122,8 @@ GET
     "salt": "59572482685924225672407231424301404205239289582722616080644908172098386763718",
     "makerWalletSignature": "0x1b66353b9b6cff19d5acbdf275d55e988c2a077c6c6074bcf49705e09b7efd3a61212821ff244b96623fa5181507da0b796a6693b1d511e9355a83c4c06ac88a66fba2ff8436171ddd3653cd2ca1c5595046144d7f04",
     "quoteId": "TD-190109-173025-NqGaWun",
-    "feeFactor": 10
+    "feeFactor": 10,
+    "protocol": "PMMV5"
   }
 }
 ```
