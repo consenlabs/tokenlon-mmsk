@@ -79,14 +79,14 @@ export const getSupportedTokens = (): SupportedToken[] => {
     pairsFromMMUpdater.cacheResult
   )
   const tokenList: Token[] = tokenListFromImtokenUpdater.cacheResult
-  const lists = {
-    tokenList: tokenList,
-    tokenStack: tokenStack
-  }
-  return mapTokens(
-    JSON.stringify(lists),
-    lists
+  const tokensWithoutMinMaxAmount = tokenList.map(
+    ({ minTradeAmount, maxTradeAmount, ...rest }) => rest
   )
+  const lists = {
+    tokenList: tokensWithoutMinMaxAmount,
+    tokenStack: tokenStack,
+  }
+  return mapTokens(JSON.stringify(lists), lists)
 }
 
 export const isSupportedBaseQuote = (
