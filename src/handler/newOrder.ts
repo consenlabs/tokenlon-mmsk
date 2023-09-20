@@ -1,7 +1,7 @@
 import { memoize } from 'lodash'
 import { Quoter } from '../request/marketMaker'
 import { updaterStack } from '../worker'
-import { Protocol, QueryInterface } from '../types'
+import { Protocol, QueryInterface, Token } from '../types'
 import { validateNewOrderRequest, validateRequest } from '../validations'
 import { ValidationError } from './errors'
 import { addQuoteIdPrefix, constructQuoteResponse, preprocessQuote } from '../quoting'
@@ -223,10 +223,10 @@ export const newOrder = async (ctx): Promise<Response> => {
     const rateBody = await requestMarketMaker(quoter, query)
     const config = updaterStack.markerMakerConfigUpdater.cacheResult
     const tokenConfigs = updaterStack.tokenConfigsFromImtokenUpdater.cacheResult
-    const tokenList = getSupportedTokens()
-
+    const tokensWithoutMinMaxAmount = getSupportedTokens()
+    const tokensWithMinMaxAmount: Token[] = updaterStack.tokenListFromImtokenUpdater.cacheResult
     const { rate, minAmount, maxAmount, quoteId, salt } = rateBody
-    const order = getOrderAndFeeFactor(query, rate, tokenList, tokenConfigs, config)
+    const order = getOrderAndFeeFactor(query, rate, tokensWithoutMinMaxAmount, tokenConfigs, config)
     const resp: Response = {
       rate,
       minAmount,
@@ -237,7 +237,10 @@ export const newOrder = async (ctx): Promise<Response> => {
         // directly use system token config
         {
           const baseTokenAddr = query.baseAddress
-          const baseToken = getBaseTokenByAddress(baseTokenAddr.toLowerCase(), tokenList)
+          const baseToken = getBaseTokenByAddress(
+            baseTokenAddr.toLowerCase(),
+            tokensWithMinMaxAmount
+          )
           resp.minAmount = baseToken.minTradeAmount
           resp.maxAmount = baseToken.maxTradeAmount
         }
@@ -246,7 +249,10 @@ export const newOrder = async (ctx): Promise<Response> => {
       case Protocol.AMMV2:
         {
           const baseTokenAddr = query.baseAddress
-          const baseToken = getBaseTokenByAddress(baseTokenAddr.toLowerCase(), tokenList)
+          const baseToken = getBaseTokenByAddress(
+            baseTokenAddr.toLowerCase(),
+            tokensWithMinMaxAmount
+          )
           resp.minAmount = baseToken.minTradeAmount
           resp.maxAmount = baseToken.maxTradeAmount
         }
