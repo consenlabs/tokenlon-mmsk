@@ -1,4 +1,4 @@
-import { utils, Wallet } from 'ethers'
+import { utils } from 'ethers'
 import { orderBNToString } from '../utils'
 import { getOfferHash, getOfferSignDigest } from './orderHash'
 import {
@@ -15,6 +15,7 @@ import { generatePseudoRandomSalt } from '0x-v2-order-utils'
 import { signWithUserAndFee } from './pmmv5'
 import { Protocol } from '../types'
 import { BigNumber } from '0x-v2-utils'
+import { AbstractSigner } from '@toolchainx/ethers-gcp-kms-signer'
 
 // spec of RFQV2
 // - taker address point to userAddr
@@ -26,7 +27,7 @@ import { BigNumber } from '0x-v2-utils'
 // +------|---------|---------|-------------------|---------+
 // |  R   |    S    |    V    | reserved 32 bytes | type(3) |
 // +------|---------|---------|-------------------|---------+
-export async function signByEOA(orderSignDigest: string, wallet: Wallet): Promise<string> {
+export async function signByEOA(orderSignDigest: string, wallet: AbstractSigner): Promise<string> {
   // signature: R+S+V
   const hashArray = utils.arrayify(orderSignDigest)
   let signature = await wallet.signMessage(hashArray)
@@ -43,7 +44,7 @@ export async function signByMMPSigner(
   orderSignDigest: string,
   userAddr: string,
   feeFactor: number,
-  wallet: Wallet,
+  wallet: AbstractSigner,
   walletType: WalletType
 ): Promise<string> {
   if (walletType === WalletType.MMP_VERSION_4) {
@@ -98,7 +99,7 @@ export const signOffer = async (
   chainId: number,
   rfqAddr: string,
   order: Offer,
-  maker: Wallet,
+  maker: AbstractSigner,
   signatureType = SignatureType.EIP712
 ): Promise<string> => {
   const domain = {
@@ -133,7 +134,7 @@ export const signOffer = async (
 }
 
 export const buildSignedOrder = async (
-  signer: Wallet | undefined,
+  signer: AbstractSigner | undefined,
   order: ExtendedZXOrder,
   userAddr: string,
   chainId: number,
@@ -166,7 +167,8 @@ export const buildSignedOrder = async (
   console.log(`orderSignDigest: ${orderSignDigest}`)
   let makerWalletSignature
   if (!signingUrl) {
-    if (signer.address.toLowerCase() == order.makerAddress.toLowerCase()) {
+    const signerAddress = await signer.getAddress()
+    if (signerAddress.toLowerCase() == order.makerAddress.toLowerCase()) {
       makerWalletSignature = await signOffer(
         chainId,
         rfqAddr,

@@ -35,6 +35,7 @@ export interface ConfigForStart {
   EXCHANGE_URL: string
   PROVIDER_URL: string
   SIGNING_URL: string
+  AMM_ONLY: string
   PERMIT_TYPE: string
 
   WALLET_ADDRESS: string

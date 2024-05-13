@@ -1,6 +1,9 @@
 import * as readlineSync from 'readline-sync'
 import { ConfigForStart } from './types'
-import { Wallet } from 'ethers'
+import { ethers, Wallet } from 'ethers'
+import { GcpKmsSignerCredentials, GcpKmsSigner } from '@toolchainx/ethers-gcp-kms-signer'
+import { TypedDataSigner } from '@ethersproject/abstract-signer'
+import * as path from 'path'
 
 const config = {
   EXCHANGE_URL: null,
@@ -8,6 +11,7 @@ const config = {
 
   WALLET_ADDRESS: null,
   WALLET_PRIVATE_KEY: null,
+  WALLET_KEY_VERSION_NAME: null,
   USE_KEYSTORE: true,
 
   WALLET_KEYSTORE: null,
@@ -30,12 +34,33 @@ const setConfig = (conf: ConfigForStart) => {
   return Object.assign(config, conf)
 }
 
-const getWallet = () => {
-  return new Wallet(
-    config.WALLET_PRIVATE_KEY.startsWith('0x')
-      ? config.WALLET_PRIVATE_KEY
-      : '0x' + config.WALLET_PRIVATE_KEY
-  )
+const getWallet = async (): Promise<ethers.Signer & TypedDataSigner> => {
+  if (config.WALLET_PRIVATE_KEY) {
+    return new Wallet(
+      config.WALLET_PRIVATE_KEY.startsWith('0x')
+        ? config.WALLET_PRIVATE_KEY
+        : '0x' + config.WALLET_PRIVATE_KEY
+    )
+  } else if (config.WALLET_KEY_VERSION_NAME) {
+    const signer = new GcpKmsSigner(getKmsCredentials(config.WALLET_KEY_VERSION_NAME))
+    return signer
+  } else {
+    return null
+  }
+}
+
+const getKmsCredentials = (fullVersionedKeyName: string): GcpKmsSignerCredentials => {
+  if (!fullVersionedKeyName || fullVersionedKeyName.length === 0) {
+    return null
+  }
+  const strSplits = fullVersionedKeyName.split(path.sep)
+  return {
+    projectId: strSplits[1],
+    locationId: strSplits[3],
+    keyRingId: strSplits[5],
+    keyId: strSplits[7],
+    keyVersion: strSplits[9],
+  }
 }
 
 export { config, setConfig, getWallet }

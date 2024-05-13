@@ -26,6 +26,12 @@ module.exports = {
    */
   WALLET_PRIVATE_KEY: process.env.WALLET_PRIVATE_KEY,
 
+  /**
+   * GoogleCloud KMS keyVersionName, used unless both of SIGNING_URL and WALLET_PRIVATE_KEY are not set.
+   * Txs or messages are signed by GoogleCloud KMS remotely
+   */
+  WALLET_KEY_VERSION_NAME: process.env.WALLET_KEY_VERSION_NAME,
+
   // AMM
   AMMWRAPPER_CONTRACT_ADDRESS: process.env.AMMWRAPPER_CONTRACT_ADDRESS,
 

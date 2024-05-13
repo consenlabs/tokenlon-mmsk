@@ -30,8 +30,9 @@ export const checkMMSK = async (config: ConfigForStart) => {
   } else {
     quoter = new QuoteDispatcher(config.HTTP_SERVER_ENDPOINT, QuoterProtocol.HTTP)
   }
-  const wallet = getWallet()
-  await startUpdater(quoter, wallet.address)
+  const wallet = await getWallet()
+  const walletAddress = await wallet.getAddress()
+  await startUpdater(quoter, walletAddress)
 
   for (let i = 0; i < arr.length; i += 1) {
     const item = arr[i]
