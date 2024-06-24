@@ -50,7 +50,8 @@ export const signOrder = async (ctx) => {
   const { chainID, walletType } = ctx
   const order = ctx.request.body
   const protocol = ctx.request.body.protocol
-  const signer = getWallet()
+  const signer = await getWallet()
+  const signerAddress = await signer.getAddress()
   console.log('signer')
   console.log(signer)
   const config = updaterStack.markerMakerConfigUpdater.cacheResult
@@ -59,12 +60,12 @@ export const signOrder = async (ctx) => {
     switch (protocol) {
       case Protocol.PMMV5:
         signature =
-          signer.address.toLowerCase() == order.pmmOrder.makerAddress.toLowerCase()
+          signerAddress.toLowerCase() == order.pmmOrder.makerAddress.toLowerCase()
             ? await signPMMV5ByEOA(order.orderSignDigest, signer)
             : await signByMMPSigner(order.orderSignDigest, order.userAddr, order.feeFactor, signer)
         break
       case Protocol.RFQV1:
-        if (signer.address.toLowerCase() == order.rfqOrder.makerAddr.toLowerCase()) {
+        if (signerAddress.toLowerCase() == order.rfqOrder.makerAddr.toLowerCase()) {
           const signatureTypedData = await signRFQOrder(
             chainID,
             config.addressBookV5.RFQ,
@@ -95,7 +96,7 @@ export const signOrder = async (ctx) => {
         }
         break
       case Protocol.RFQV2:
-        if (signer.address.toLowerCase() == order.rfqOrder.maker.toLowerCase()) {
+        if (signerAddress.toLowerCase() == order.rfqOrder.maker.toLowerCase()) {
           signature = await signOffer(
             chainID,
             config.addressBookV5.RFQV2,

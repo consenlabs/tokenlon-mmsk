@@ -23,7 +23,3 @@ jobs:
         env:
           CI: true
           ALCHEMY_TOKEN: ${{ secrets.ALCHEMY_TOKEN }}
-      - run: npm run test:goerli
-        env:
-          CI: true
-          ALCHEMY_TOKEN: ${{ secrets.ALCHEMY_TOKEN }}

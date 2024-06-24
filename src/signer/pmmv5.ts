@@ -7,12 +7,13 @@ import {
   EIP712Types,
 } from '0x-v2-order-utils'
 import * as ethUtils from 'ethereumjs-util'
-import { utils, Wallet } from 'ethers'
+import { utils } from 'ethers'
 import axios from 'axios'
 import { BigNumber, orderBNToString } from '../utils'
 import { Protocol } from '../types'
 import { ExtendedZXOrder, RemoteSigningPMMV5Request } from './types'
 import { Order as ZXOrder } from '0x-v2-order-utils'
+import { AbstractSigner } from '@toolchainx/ethers-gcp-kms-signer'
 
 export const EIP712_ORDER_SCHEMA = {
   name: 'Order',
@@ -62,7 +63,7 @@ export const generateSaltWithFeeFactor = (feeFactor: number, prefixSalt?: string
 // |  V   |    R    |    S    |userAddr |feeFactor|
 // +------|---------|---------|---------|---------+
 export async function signWithUserAndFee(
-  signer: Wallet,
+  signer: AbstractSigner,
   orderSignDigest: string,
   userAddr: string,
   feeFactor: number
@@ -92,7 +93,7 @@ export async function signWithUserAndFee(
 // +------|---------|---------|---------+
 // |  v   |    R    |    S    | type(3) |
 // +------|---------|---------|---------+
-export async function signByEOA(orderSignDigest: string, wallet: Wallet): Promise<string> {
+export async function signByEOA(orderSignDigest: string, wallet: AbstractSigner): Promise<string> {
   const hashArray = utils.arrayify(orderSignDigest)
   let signature = await wallet.signMessage(hashArray)
   signature = signature.slice(2)
@@ -111,7 +112,7 @@ export async function signByMMPSigner(
   orderSignDigest: string,
   userAddr: string,
   feeFactor: number,
-  wallet: Wallet
+  wallet: AbstractSigner
 ): Promise<string> {
   const walletSign = await signWithUserAndFee(wallet, orderSignDigest, userAddr, feeFactor)
   return signatureUtils.convertToSignatureWithType(walletSign, SignatureType.Wallet)
@@ -137,7 +138,7 @@ export const forwardUnsignedOrder = async (
 
 // Move fee factor to salt field
 export const buildSignedOrder = async (
-  signer: Wallet | undefined,
+  signer: AbstractSigner | undefined,
   order: ExtendedZXOrder,
   userAddr: string,
   chainId: number,
@@ -179,8 +180,9 @@ export const buildSignedOrder = async (
   console.log(`orderSignDigest: ${orderSignDigest}`)
   let makerWalletSignature
   if (!signingUrl) {
+    const signerAddress = await signer.getAddress()
     makerWalletSignature =
-      signer.address.toLowerCase() == o.makerAddress.toLowerCase()
+      signerAddress.toLowerCase() == o.makerAddress.toLowerCase()
         ? await signByEOA(orderSignDigest, signer)
         : await signByMMPSigner(orderSignDigest, userAddr, feeFactor, signer)
   } else {

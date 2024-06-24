@@ -74,12 +74,13 @@ export const startMMSK = async (config: ConfigForStart) => {
   setConfig(config)
   try {
     console.log(config.SIGNING_URL)
-    if (!config.SIGNING_URL) {
-      wallet = getWallet()
+    if (!config.SIGNING_URL && config.AMM_ONLY !== 'true') {
+      wallet = await getWallet()
       if (!wallet) {
         throw new Error(`Please set either WALLET_PRIVATE_KEY or SIGNING_URL`)
       }
-      if (wallet.address.toLowerCase() != config.WALLET_ADDRESS.toLowerCase()) {
+      const walletAddress = await wallet.getAddress()
+      if (walletAddress.toLowerCase() != config.WALLET_ADDRESS.toLowerCase()) {
         throw `wallet's address${wallet.address} and ${
           config.USE_KEYSTORE ? 'keystore' : 'privateKey'
         }(${config.WALLET_ADDRESS}) not matched`

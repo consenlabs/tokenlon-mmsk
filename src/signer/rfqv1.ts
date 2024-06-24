@@ -1,4 +1,4 @@
-import { Wallet, utils } from 'ethers'
+import { utils } from 'ethers'
 import { orderBNToString, BigNumber } from '../utils'
 import { generateSaltWithFeeFactor, signWithUserAndFee } from './pmmv5'
 import { getOrderHash, getOrderSignDigest } from './orderHash'
@@ -7,6 +7,7 @@ import * as ethUtils from 'ethereumjs-util'
 import { SignatureType } from './types'
 import axios from 'axios'
 import { Protocol } from '../types'
+import { AbstractSigner } from '@toolchainx/ethers-gcp-kms-signer'
 
 // spec of RFQV1
 // - taker address point to userAddr
@@ -18,7 +19,7 @@ export async function signByMMPSigner(
   orderSignDigest: string,
   userAddr: string,
   feeFactor: number,
-  wallet: Wallet,
+  wallet: AbstractSigner,
   walletType: WalletType
 ): Promise<string> {
   if (walletType === WalletType.MMP_VERSION_4) {
@@ -73,7 +74,7 @@ export const signRFQOrder = async (
   chainId: number,
   rfqAddr: string,
   order: RFQOrder,
-  maker: Wallet,
+  maker: AbstractSigner,
   feeFactor = 30
 ): Promise<string> => {
   const domain = {
@@ -117,7 +118,7 @@ export const signRFQOrder = async (
 }
 
 export const buildSignedOrder = async (
-  signer: Wallet | undefined,
+  signer: AbstractSigner | undefined,
   order: ExtendedZXOrder,
   userAddr: string,
   chainId: number,
@@ -147,7 +148,8 @@ export const buildSignedOrder = async (
   console.log(`orderSignDigest: ${orderSignDigest}`)
   let makerWalletSignature
   if (!signingUrl) {
-    if (signer.address.toLowerCase() == order.makerAddress.toLowerCase()) {
+    const signerAddress = await signer.getAddress()
+    if (signerAddress.toLowerCase() == order.makerAddress.toLowerCase()) {
       const signatureTypedData = await signRFQOrder(
         chainId,
         rfqAddr,
