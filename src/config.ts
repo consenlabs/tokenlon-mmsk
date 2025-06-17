@@ -1,8 +1,7 @@
 import * as readlineSync from 'readline-sync'
 import { ConfigForStart } from './types'
-import { ethers, Wallet } from 'ethers'
-import { GcpKmsSignerCredentials, GcpKmsSigner } from '@toolchainx/ethers-gcp-kms-signer'
-import { TypedDataSigner } from '@ethersproject/abstract-signer'
+import { Wallet } from 'ethers'
+import { GcpKmsSignerCredentials, GcpKmsSigner } from '@tokenlon/ethers-gcp-kms-signer'
 import * as path from 'path'
 
 const config = {
@@ -34,13 +33,14 @@ const setConfig = (conf: ConfigForStart) => {
   return Object.assign(config, conf)
 }
 
-const getWallet = async (): Promise<ethers.Signer & TypedDataSigner> => {
+const getWallet = async (): Promise<GcpKmsSigner> => {
   if (config.WALLET_PRIVATE_KEY) {
-    return new Wallet(
+    const wallet = new Wallet(
       config.WALLET_PRIVATE_KEY.startsWith('0x')
         ? config.WALLET_PRIVATE_KEY
         : '0x' + config.WALLET_PRIVATE_KEY
     )
+    return wallet as any as GcpKmsSigner
   } else if (config.WALLET_KEY_VERSION_NAME) {
     const signer = new GcpKmsSigner(getKmsCredentials(config.WALLET_KEY_VERSION_NAME))
     return signer

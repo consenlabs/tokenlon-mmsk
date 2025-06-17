@@ -15,7 +15,7 @@ import { generatePseudoRandomSalt } from '0x-v2-order-utils'
 import { signWithUserAndFee } from './pmmv5'
 import { Protocol } from '../types'
 import { BigNumber } from '0x-v2-utils'
-import { AbstractSigner } from '@toolchainx/ethers-gcp-kms-signer'
+import { GcpKmsSigner } from '@tokenlon/ethers-gcp-kms-signer'
 
 // spec of RFQV2
 // - taker address point to userAddr
@@ -27,7 +27,7 @@ import { AbstractSigner } from '@toolchainx/ethers-gcp-kms-signer'
 // +------|---------|---------|-------------------|---------+
 // |  R   |    S    |    V    | reserved 32 bytes | type(3) |
 // +------|---------|---------|-------------------|---------+
-export async function signByEOA(orderSignDigest: string, wallet: AbstractSigner): Promise<string> {
+export async function signByEOA(orderSignDigest: string, wallet: GcpKmsSigner): Promise<string> {
   // signature: R+S+V
   const hashArray = utils.arrayify(orderSignDigest)
   let signature = await wallet.signMessage(hashArray)
@@ -44,7 +44,7 @@ export async function signByMMPSigner(
   orderSignDigest: string,
   userAddr: string,
   feeFactor: number,
-  wallet: AbstractSigner,
+  wallet: GcpKmsSigner,
   walletType: WalletType
 ): Promise<string> {
   if (walletType === WalletType.MMP_VERSION_4) {
@@ -99,7 +99,7 @@ export const signOffer = async (
   chainId: number,
   rfqAddr: string,
   order: Offer,
-  maker: AbstractSigner,
+  maker: GcpKmsSigner,
   signatureType = SignatureType.EIP712
 ): Promise<string> => {
   const domain = {
@@ -134,7 +134,7 @@ export const signOffer = async (
 }
 
 export const buildSignedOrder = async (
-  signer: AbstractSigner | undefined,
+  signer: GcpKmsSigner | undefined,
   order: ExtendedZXOrder,
   userAddr: string,
   chainId: number,
