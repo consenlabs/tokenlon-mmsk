@@ -7,7 +7,7 @@ import * as ethUtils from 'ethereumjs-util'
 import { SignatureType } from './types'
 import axios from 'axios'
 import { Protocol } from '../types'
-import { AbstractSigner } from '@toolchainx/ethers-gcp-kms-signer'
+import { GcpKmsSigner } from '@tokenlon/ethers-gcp-kms-signer'
 
 // spec of RFQV1
 // - taker address point to userAddr
@@ -19,7 +19,7 @@ export async function signByMMPSigner(
   orderSignDigest: string,
   userAddr: string,
   feeFactor: number,
-  wallet: AbstractSigner,
+  wallet: GcpKmsSigner,
   walletType: WalletType
 ): Promise<string> {
   if (walletType === WalletType.MMP_VERSION_4) {
@@ -74,7 +74,7 @@ export const signRFQOrder = async (
   chainId: number,
   rfqAddr: string,
   order: RFQOrder,
-  maker: AbstractSigner,
+  maker: GcpKmsSigner,
   feeFactor = 30
 ): Promise<string> => {
   const domain = {
@@ -118,7 +118,7 @@ export const signRFQOrder = async (
 }
 
 export const buildSignedOrder = async (
-  signer: AbstractSigner | undefined,
+  signer: GcpKmsSigner | undefined,
   order: ExtendedZXOrder,
   userAddr: string,
   chainId: number,
