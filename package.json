@@ -70,7 +70,7 @@
     "@sentry/node": "4.5.3",
     "0x-v2-order-utils": "npm:@0xproject/order-utils@^1.0.1",
     "0x-v2-utils": "npm:@0xproject/utils@^2.0.0",
-    "axios": "0.21.2",
+    "axios": "1.13.5",
     "axios-logger": "^2.3.1",
     "babel-polyfill": "6.26.0",
     "bignumber.js": "^9.0.1",
