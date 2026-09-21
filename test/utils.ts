@@ -71,7 +71,9 @@ export const replaceMarketMakingAddress = (
   updaterStack['markerMakerConfigUpdater'] = mockMarkerMakerConfigUpdater
 }
 
-export const callNewOrder = async ({
+// The whole response, not just the order: the min/max a quote reports are part of what newOrder
+// decides, and returning only the order made them untestable.
+export const callNewOrderResponse = async ({
   chainId,
   base,
   quote,
@@ -106,6 +108,8 @@ export const callNewOrder = async ({
           result: true,
           exchangeable: true,
           minAmount: 0,
+          // Deliberately unequal to any maxTradeAmount in the token list stub below, so a test
+          // can tell which of the two a response carried.
           maxAmount: 1000,
           makerAddress: makerAddress,
           price: 1,
@@ -124,7 +128,11 @@ export const callNewOrder = async ({
       protocol: protocol,
     },
   })
-  return signedOrderResp.order as Order
+  return signedOrderResp
+}
+
+export const callNewOrder = async (args: Parameters<typeof callNewOrderResponse>[0]) => {
+  return (await callNewOrderResponse(args)).order as Order
 }
 
 export const deployMMPV4Wallet = async (
