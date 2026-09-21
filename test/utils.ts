@@ -7,7 +7,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { Contract, Wallet } from 'ethers'
 import { Protocol } from '../src/types'
 import { WalletType } from '../src/signer/types'
-import { Order, newOrder } from '../src/handler/newOrder'
+import { Order, Response, newOrder } from '../src/handler/newOrder'
 import { updaterStack } from '../src/worker'
 import { NULL_ADDRESS } from '../src/constants'
 import * as chai from 'chai'
@@ -97,7 +97,7 @@ export const callNewOrderResponse = async ({
   walletType?: WalletType
   makerAddress?: string
   payload?: string
-}): Promise<Order> => {
+}): Promise<Response> => {
   const signedOrderResp = await newOrder({
     walletType: walletType,
     signer: signer,
@@ -131,7 +131,9 @@ export const callNewOrderResponse = async ({
   return signedOrderResp
 }
 
-export const callNewOrder = async (args: Parameters<typeof callNewOrderResponse>[0]) => {
+export const callNewOrder = async (
+  args: Parameters<typeof callNewOrderResponse>[0]
+): Promise<Order> => {
   return (await callNewOrderResponse(args)).order as Order
 }
 

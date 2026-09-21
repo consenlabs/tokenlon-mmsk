@@ -100,47 +100,57 @@ describe('AMM NewOrder', function () {
     const configuredEthMaxTradeAmount = 10
     const configuredEthMinTradeAmount = 0.01
 
+    const sides: ('SELL' | 'BUY')[] = ['SELL', 'BUY']
+
     for (const protocol of [Protocol.AMMV1, Protocol.AMMV2]) {
-      it(`${protocol} reports the quote's maxAmount, not the configured ceiling`, async function () {
-        const resp = await callNewOrderResponse({
-          chainId: chainId,
-          base: 'ETH',
-          quote: 'USDT',
-          side: 'SELL',
-          amount: 0.1,
-          signer,
-          userAddr: Wallet.createRandom().address.toLowerCase(),
-          protocol,
-          makerAddress: '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852',
-          payload: Buffer.from(
-            JSON.stringify({ path: [WETH[chainId].toLowerCase(), USDT_ADDRESS[chainId].toLowerCase()] })
-          ).toString('base64'),
+      // Both sides: the branch does not read `side`, but that is the thing being asserted — a
+      // later change that reintroduced the override on one side only would otherwise pass.
+      for (const side of sides) {
+        it(`${protocol} ${side} reports the quote's maxAmount, not the configured ceiling`, async function () {
+          const resp = await callNewOrderResponse({
+            chainId: chainId,
+            base: 'ETH',
+            quote: 'USDT',
+            side,
+            amount: 0.1,
+            signer,
+            userAddr: Wallet.createRandom().address.toLowerCase(),
+            protocol,
+            makerAddress: '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852',
+            payload: Buffer.from(
+              JSON.stringify({
+                path: [WETH[chainId].toLowerCase(), USDT_ADDRESS[chainId].toLowerCase()],
+              })
+            ).toString('base64'),
+          })
+
+          expect(resp.maxAmount).to.equal(quotedMaxAmount)
+          expect(resp.maxAmount).to.not.equal(configuredEthMaxTradeAmount)
         })
 
-        expect(resp.maxAmount).to.equal(quotedMaxAmount)
-        expect(resp.maxAmount).to.not.equal(configuredEthMaxTradeAmount)
-      })
+        // minAmount deliberately still comes from the token config: a quoter reports one figure for
+        // every pair it serves, so there is nothing per-token to replace it with. Only max moved.
+        it(`${protocol} ${side} still reports the configured minAmount`, async function () {
+          const resp = await callNewOrderResponse({
+            chainId: chainId,
+            base: 'ETH',
+            quote: 'USDT',
+            side,
+            amount: 0.1,
+            signer,
+            userAddr: Wallet.createRandom().address.toLowerCase(),
+            protocol,
+            makerAddress: '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852',
+            payload: Buffer.from(
+              JSON.stringify({
+                path: [WETH[chainId].toLowerCase(), USDT_ADDRESS[chainId].toLowerCase()],
+              })
+            ).toString('base64'),
+          })
 
-      // minAmount deliberately still comes from the token config: a quoter reports one figure for
-      // every pair it serves, so there is nothing per-token to replace it with. Only max moved.
-      it(`${protocol} still reports the configured minAmount`, async function () {
-        const resp = await callNewOrderResponse({
-          chainId: chainId,
-          base: 'ETH',
-          quote: 'USDT',
-          side: 'SELL',
-          amount: 0.1,
-          signer,
-          userAddr: Wallet.createRandom().address.toLowerCase(),
-          protocol,
-          makerAddress: '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852',
-          payload: Buffer.from(
-            JSON.stringify({ path: [WETH[chainId].toLowerCase(), USDT_ADDRESS[chainId].toLowerCase()] })
-          ).toString('base64'),
+          expect(resp.minAmount).to.equal(configuredEthMinTradeAmount)
         })
-
-        expect(resp.minAmount).to.equal(configuredEthMinTradeAmount)
-      })
+      }
     }
   })
 
