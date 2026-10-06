@@ -1,4 +1,3 @@
-import { memoize } from 'lodash'
 import { Quoter } from '../request/marketMaker'
 import { updaterStack } from '../worker'
 import { Protocol, QueryInterface, Token } from '../types'
@@ -199,11 +198,31 @@ function getOrderAndFeeFactor(
   }
 }
 
-const _getBaseTokenByAddress = (baseTokenAddr, tokenList) => {
-  return tokenList.find((token) => token.contractAddress.toLowerCase() === baseTokenAddr)
-}
+// One address index per token list. The updater swaps in a fresh list every few minutes, so
+// keying on the list itself rebuilds the index once per refresh and lets the old one be
+// collected; every quote in between is a single lookup instead of a scan of the whole list.
+//
+// This replaces a lodash `memoize`, which keys on the first argument only: the token object
+// found on the first quote for an address was kept until restart, and every later refresh of
+// the list — the tl_token.min_trade_amount the fee service rewrites as gas moves — never
+// reached a quote.
+const tokenIndexByList = new WeakMap<Token[], Map<string, Token>>()
 
-const getBaseTokenByAddress = memoize(_getBaseTokenByAddress)
+export const getBaseTokenByAddress = (baseTokenAddr: string, tokenList: Token[]) => {
+  let index = tokenIndexByList.get(tokenList)
+  if (!index) {
+    index = new Map()
+    for (const token of tokenList) {
+      const addr = token.contractAddress.toLowerCase()
+      // Keep the first match, as Array.prototype.find did.
+      if (!index.has(addr)) {
+        index.set(addr, token)
+      }
+    }
+    tokenIndexByList.set(tokenList, index)
+  }
+  return index.get(baseTokenAddr)
+}
 
 /*
  * Why the two AMM branches below still reach for the token config, and why only for minAmount.
