@@ -15,7 +15,6 @@ import {
   dealOrder,
   exceptionOrder,
   version,
-  signOrder,
 } from './handler'
 import { setConfig, getWallet } from './config'
 import { ConfigForStart } from './types'
@@ -66,6 +65,22 @@ const beforeStart = async (config: ConfigForStart, triedTimes?: number) => {
   }
 }
 
+export const registerRoutes = (router: Router): Router => {
+  // Respond to Tokenlon quoting server
+  router.get('/getRate', getRate)
+  router.get('/newOrder', newOrder)
+  router.get('/version', version)
+  router.get('/getSupportedTokenList', getSupportedTokenList)
+  router.post('/dealOrder', dealOrder)
+  router.post('/exceptionOrder', exceptionOrder)
+  // Respond to market maker backend
+  router.get('/getOrderState', getOrderState)
+  router.get('/getOrdersHistory', getOrdersHistory)
+  router.get('/getBalance', getBalance)
+  router.get('/getBalances', getBalances)
+  return router
+}
+
 export const startMMSK = async (config: ConfigForStart) => {
   const app = new Koa()
   const router = new Router()
@@ -101,19 +116,7 @@ export const startMMSK = async (config: ConfigForStart) => {
 
     const quoter = await beforeStart(config)
 
-    // Respond to Tokenlon quoting server
-    router.get('/getRate', getRate)
-    router.post('/signOrder', signOrder)
-    router.get('/newOrder', newOrder)
-    router.get('/version', version)
-    router.get('/getSupportedTokenList', getSupportedTokenList)
-    router.post('/dealOrder', dealOrder)
-    router.post('/exceptionOrder', exceptionOrder)
-    // Respond to market maker backend
-    router.get('/getOrderState', getOrderState)
-    router.get('/getOrdersHistory', getOrdersHistory)
-    router.get('/getBalance', getBalance)
-    router.get('/getBalances', getBalances)
+    registerRoutes(router)
 
     app.context.chainID = config.CHAIN_ID || 5
     app.context.quoter = quoter
