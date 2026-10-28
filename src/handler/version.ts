@@ -1,4 +1,4 @@
-export const VERSION = '6.0.0'
+export const VERSION = '5.3.6'
 
 export const version = (ctx) => {
   ctx.body = {
