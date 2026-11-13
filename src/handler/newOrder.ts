@@ -1,4 +1,3 @@
-import { memoize } from 'lodash'
 import { Quoter } from '../request/marketMaker'
 import { updaterStack } from '../worker'
 import { Protocol, QueryInterface, Token } from '../types'
@@ -199,11 +198,49 @@ function getOrderAndFeeFactor(
   }
 }
 
-const _getBaseTokenByAddress = (baseTokenAddr, tokenList) => {
-  return tokenList.find((token) => token.contractAddress.toLowerCase() === baseTokenAddr)
+// One address index per token list. The updater swaps in a fresh list every few minutes, so
+// keying on the list itself rebuilds the index once per refresh and lets the old one be
+// collected; every quote in between is a single lookup instead of a scan of the whole list.
+//
+// This replaces a lodash `memoize`, which keys on the first argument only: the token object
+// found on the first quote for an address was kept until restart, and every later refresh of
+// the list — the tl_token.min_trade_amount the fee service rewrites as gas moves — never
+// reached a quote.
+const tokenIndexByList = new WeakMap<Token[], Map<string, Token>>()
+
+export const getBaseTokenByAddress = (baseTokenAddr: string, tokenList: Token[]) => {
+  let index = tokenIndexByList.get(tokenList)
+  if (!index) {
+    index = new Map()
+    for (const token of tokenList) {
+      const addr = token.contractAddress.toLowerCase()
+      // Keep the first match, as Array.prototype.find did.
+      if (!index.has(addr)) {
+        index.set(addr, token)
+      }
+    }
+    tokenIndexByList.set(tokenList, index)
+  }
+  return index.get(baseTokenAddr)
 }
 
-const getBaseTokenByAddress = memoize(_getBaseTokenByAddress)
+/*
+ * Why the two AMM branches below still reach for the token config, and why only for minAmount.
+ *
+ * They used to overwrite both bounds — "directly use system token config" — which made an AMM
+ * quote's maxAmount the configured `tl_token.max_trade_amount` rather than anything the quoter
+ * said. That is no longer right for max: the AMM quoter derives its maxAmount from the pair's
+ * own caps (`tl_amm_trade_pairs.max_trade_amount0/1`, narrowed to the tighter side at the quoted
+ * price), so the quote knows the real ceiling and the configured value does not. Overwriting it
+ * also contradicts the V5 rule that the configured figure is a display hint for the first amount
+ * a user types, not the trading ceiling — and it closed a loop: a refresh job that probes an AMM
+ * maker to learn its ceiling was handed back the value it had itself stored.
+ *
+ * minAmount stays. There is nothing better to replace it with: a quoter reports one figure for
+ * every pair it serves (the AMM quoter in the deployment repo returns a constant), so dropping
+ * the override would trade a per-token minimum for a single number that means nothing in
+ * particular. Only the max side has a real quote-derived value to move to.
+ */
 
 export const newOrder = async (ctx): Promise<Response> => {
   const { quoter, signer, chainID, walletType, signingUrl, permitType } = ctx
@@ -234,7 +271,6 @@ export const newOrder = async (ctx): Promise<Response> => {
     }
     switch (protocol) {
       case Protocol.AMMV1:
-        // directly use system token config
         {
           const baseTokenAddr = query.baseAddress
           const baseToken = getBaseTokenByAddress(
@@ -242,7 +278,6 @@ export const newOrder = async (ctx): Promise<Response> => {
             tokensWithMinMaxAmount
           )
           resp.minAmount = baseToken.minTradeAmount
-          resp.maxAmount = baseToken.maxTradeAmount
         }
         resp.order = buildAMMV1Order(order, rateBody.makerAddress, config.wethContractAddress)
         break
@@ -254,7 +289,6 @@ export const newOrder = async (ctx): Promise<Response> => {
             tokensWithMinMaxAmount
           )
           resp.minAmount = baseToken.minTradeAmount
-          resp.maxAmount = baseToken.maxTradeAmount
         }
         resp.order = buildAMMV2Order(
           order,
