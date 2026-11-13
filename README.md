@@ -6,6 +6,10 @@ See [docs](/docs/index.md)
 
 The smart contract files under the `/contracts` directory are intended for internal unit testing purposes. They have not undergone any formal auditing and are not recommended for use in any production environments.
 
+## Security: restrict network access
+
+The MMSK HTTP API has no authentication. A self-hosted MMSK instance should only be reachable from Tokenlon's servers (and your own market maker backend): put it behind a network allowlist (firewall / security group / reverse proxy) and never expose it to the public internet.
+
 ## Version Release
 
 1. bump version in `package.json`, please follow [semantic versioning](https://semver.org/).

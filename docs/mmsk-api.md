@@ -2,6 +2,8 @@
 
 **tokenlon-mmsk** also provides following public APIs to marker makers.
 
+> **Security:** these endpoints are unauthenticated. Restrict access to your MMSK instance with a network allowlist so that only Tokenlon's servers and your own market maker backend can reach it.
+
 ## getSupportedTokenList
 
 > example
